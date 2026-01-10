@@ -1,0 +1,29 @@
+User-agent: facebookexternalhit
+Allow: /property/
+Allow: /sold/
+
+User-agent: Twitterbot
+Allow: /property/
+Allow: /sold/
+
+User-agent: *
+Disallow: /property/
+Disallow: /customizer-live-preview
+Disallow: /search-results
+
+User-agent: yandex
+Disallow: /
+
+User-agent: baidu
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: GPTBot
+Disallow: /
+
+Sitemap: https://www.edgeofliberty.us/sitemap.xml
+Sitemap: https://www.edgeofliberty.us/post-sitemap.xml
+Sitemap: https://www.edgeofliberty.us/page-sitemap.xml
+Sitemap: https://www.edgeofliberty.us/page-sitemap2.xml
