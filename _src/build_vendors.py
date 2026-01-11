@@ -104,20 +104,56 @@ for v in data["vendors"]:
         if text:
             f.write(render_markdownish(text))
 
-        if images:
-            f.write('<h3>Photos</h3>')
-            f.write('<div class="vendor-masonry">')
-            for img in images:
-                src = f'/{slug}/images/{img}'
-                f.write(f'<img class="vendor-photo" src="{src}" alt="{name}">')
-            f.write('</div>')
+        # Contact & Links block
+        contact_fields = [
+            ("website", ""),
+            ("store", ""),
+            ("facebook", ""),
+            ("instagram", ""),
+            ("youtube", ""),
+            ("public_email", "mailto:"),
+            ("public_phone", "tel:"),
+        ]
+        links = []
+        for field, prefix in contact_fields:
+            val = v.get(field, "").strip()
+            if val:
+                if field == "public_email":
+                    links.append(f'<li><a href="mailto:{val}">Email</a></li>')
+                elif field == "public_phone":
+                    links.append(f'<li><a href="tel:{val}">Phone</a></li>')
+                else:
+                    links.append(f'<li><a href="{val}">{field.capitalize()}</a></li>')
 
-        f.write("</div>\n")
+        if links:
+            f.write("<h3>Contact & Links</h3>\n")
+            f.write("<ul>\n")
+            for link in links:
+                f.write(link + "\n")
+            f.write("</ul>\n")
+        else:
+            f.write('<p class="vendor-inperson-only">This vendor sells in person at our craft fairs.</p>\n')
 
-        f.write("<h3>Find us at:</h3>\n<ul>\n")
+        # Dates section
+        f.write('<div class="vendor-dates">\n')
+        f.write("<h3>Craft Fair Dates</h3>\n<ul>\n")
         for d in sorted(v["dates"], key=lambda x: x.get("display", "")):
             f.write(f'<li><a href="/{d["slug"]}/">{d["display"]}</a></li>\n')
         f.write("</ul>\n")
+        f.write("</div>\n")
+
+        # Photos section
+        if images:
+            f.write("<h3>Gallery</h3>\n")
+            f.write('<div class="vendor-photos">\n')
+            f.write('<div class="vendor-masonry">\n')
+            for img in images:
+                src = f'/{slug}/images/{img}'
+                f.write(f'<img class="vendor-photo" src="{src}" alt="{name}">\n')
+            f.write("</div>\n")
+            f.write("</div>\n")
+
+        f.write("</div>\n")
 
         f.write("</section>\n")
         f.write(footer_html)
