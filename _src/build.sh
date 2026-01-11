@@ -102,6 +102,7 @@ with open(CSV_FILE, encoding="utf-8-sig", newline="") as f:
             "youtube": row.get("Youtube","").strip(),
             "public_email": row.get("Public email","").strip(),
             "public_phone": row.get("Public phone","").strip(),
+            "short_description": row.get("Short Description","").strip(),
             "dates": []
         }
 
@@ -186,8 +187,8 @@ for v in data["vendors"]:
     desc=os.path.join(d,"description.txt")
     if not os.path.exists(desc):
         with open(desc,"w") as f:
-            f.write(f"{v['name']}\n\nAdd description here.\n")
-        print("Created",desc)
+            f.write("")
+        print("Created", desc)
     count += 1
 print(f"Scaffolded {count} vendor include directories", file=sys.stderr)
 PY
@@ -237,11 +238,27 @@ for v in data["vendors"]:
 """)
         f.write(f"<h2>{v['name']}</h2>\n")
 
-        src=os.path.join(VENDORS_SRC,v["slug"])
-        desc=os.path.join(src,"description.txt")
+        src = os.path.join(VENDORS_SRC, v["slug"])
+        desc = os.path.join(src, "description.txt")
+
+        text = ""
         if os.path.exists(desc):
-            import subprocess
-            html=subprocess.check_output(["bash","-c",f"cat '{desc}' | _src/build.sh render_md"]).decode()
+            with open(desc, encoding="utf-8") as df:
+                text = df.read().strip()
+
+        if not text:
+            text = v.get("short_description", "").strip()
+
+        if text:
+            import subprocess, shlex, tempfile
+            p = subprocess.Popen(
+                ["bash", "-c", "_src/build.sh render_md"],
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+            html, _ = p.communicate(text)
             f.write(html)
 
         f.write("<h3>Find us at:</h3><ul>")
@@ -392,7 +409,18 @@ for date_slug, date_info in sorted_dates:
             for v in vendors_sorted:
                 vslug = v.get("slug","")
                 vname = v.get("name","")
-                f.write(f'<li><a href="/{vslug}/">{vname}</a></li>\n')
+                vshort = ""
+
+                # Look up full vendor record for short description
+                for full in data.get("vendors", []):
+                    if full.get("slug") == vslug:
+                        vshort = full.get("short_description", "").strip()
+                        break
+
+                if vshort:
+                    f.write(f'<li><a href="/{vslug}/">{vname}</a> — {vshort}</li>\n')
+                else:
+                    f.write(f'<li><a href="/{vslug}/">{vname}</a></li>\n')
             f.write("</ul>\n")
         else:
             f.write("<p><em>Vendor list coming soon.</em></p>\n")
