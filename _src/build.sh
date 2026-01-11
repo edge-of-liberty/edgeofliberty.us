@@ -159,6 +159,7 @@ PY
 ###############################################################################
 
 scaffold_vendors() {
+  echo "[INFO] Scaffolding vendor include directories..." >&2
   json="$(parse_csv)" || exit 1
   echo "[DEBUG] parse_csv output length: ${#json}" >&2
   if [[ -z "$(echo "$json" | tr -d '[:space:]')" ]]; then
@@ -173,6 +174,7 @@ VENDORS_SRC=os.path.join(ROOT,"_vendors")
 
 data=json.load(sys.stdin)
 
+count = 0
 for v in data["vendors"]:
     d=os.path.join(VENDORS_SRC,v["slug"])
     os.makedirs(d,exist_ok=True)
@@ -181,6 +183,8 @@ for v in data["vendors"]:
         with open(desc,"w") as f:
             f.write(f"{v['name']}\n\nAdd description here.\n")
         print("Created",desc)
+    count += 1
+print(f"Scaffolded {count} vendor include directories", file=sys.stderr)
 PY
 }
 
@@ -189,6 +193,7 @@ PY
 ###############################################################################
 
 build_vendors() {
+  echo "[INFO] Generating vendor pages..." >&2
   json="$(parse_csv)" || exit 1
   echo "[DEBUG] parse_csv output length: ${#json}" >&2
   if [[ -z "$(echo "$json" | tr -d '[:space:]')" ]]; then
@@ -204,6 +209,7 @@ VENDORS_SRC=os.path.join(ROOT,"_vendors")
 
 data=json.load(sys.stdin)
 
+count = 0
 for v in data["vendors"]:
     outdir=os.path.join(ROOT,v["slug"])
     os.makedirs(outdir, exist_ok=True)
@@ -225,6 +231,8 @@ for v in data["vendors"]:
         f.write("</ul>")
 
         f.write(open(os.path.join(PARTIALS,"footer.html")).read())
+    count += 1
+print(f"Generated {count} vendor pages", file=sys.stderr)
 PY
 }
 
@@ -233,6 +241,7 @@ PY
 ###############################################################################
 
 build_dates() {
+  echo "[INFO] Generating date pages..." >&2
   json="$(parse_csv)" || exit 1
   if [[ -z "$(echo "$json" | tr -d '[:space:]')" ]]; then
     echo "parse_csv produced no output (only whitespace)" >&2
@@ -240,7 +249,7 @@ build_dates() {
   fi
 
   python3 - <<'PY' <<< "$json"
-import json, os, re
+import json, os, re, sys
 
 ROOT=os.getcwd()
 PARTIALS=os.path.join(ROOT,"_partials")
@@ -294,6 +303,7 @@ footer_html=open(os.path.join(PARTIALS,"footer.html"), encoding="utf-8").read()
 # Sort date slugs chronologically
 sorted_dates = sorted(data["dates"].items(), key=lambda kv: slug_to_ymd(kv[0]) or (9999,99,99))
 
+count = 0
 for date_slug, date_info in sorted_dates:
     ymd = slug_to_ymd(date_slug)
     if not ymd:
@@ -354,6 +364,8 @@ for date_slug, date_info in sorted_dates:
             f.write("<p><em>Vendor list coming soon.</em></p>\n")
 
         f.write(footer_html)
+    count += 1
+print(f"Generated {count} date pages", file=sys.stderr)
 PY
 }
 
@@ -362,6 +374,7 @@ PY
 ###############################################################################
 
 build_home() {
+  echo "[INFO] Generating home page..." >&2
   json="$(parse_csv)" || exit 1
   if [[ -z "$(echo "$json" | tr -d '[:space:]')" ]]; then
     echo "parse_csv produced no output (only whitespace)" >&2
@@ -369,7 +382,7 @@ build_home() {
   fi
 
   python3 - <<'PY' <<< "$json"
-import json, os, re
+import json, os, re, sys
 
 ROOT=os.getcwd()
 PARTIALS=os.path.join(ROOT,"_partials")
@@ -420,6 +433,7 @@ with open(os.path.join(ROOT, "index.html"), "w", encoding="utf-8") as f:
     f.write("</ul>\n")
 
     f.write(footer_html)
+print("Generated home page", file=sys.stderr)
 PY
 }
 
@@ -433,10 +447,28 @@ case "${1:-}" in
   dates) build_dates ;;
   home) build_home ;;
   all)
+    echo "[INFO] Starting full site build..." >&2
     scaffold_vendors
     build_vendors
     build_dates
     build_home
+
+    if ! git diff --cached --quiet; then
+      msg="Site build $(date '+%Y-%m-%d %H:%M:%S')"
+      git commit -m "$msg"
+      echo "[OK] Committed: $msg"
+
+      echo "[INFO] Pushing to origin..."
+      if git push; then
+        echo "[OK] Push successful."
+      else
+        echo "[WARN] Push failed. Resolve manually." >&2
+      fi
+    else
+      echo "[INFO] No changes to commit."
+    fi
+
+    echo "[INFO] Build complete."
     ;;
   render_md)
     render_markdownish
