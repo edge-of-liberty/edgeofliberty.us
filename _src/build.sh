@@ -4,7 +4,7 @@
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DATA_DIR="$ROOT/_data"
 VENDORS_SRC="$ROOT/_vendors"
-PARTIALS="$ROOT/_partials"
+INCLUDES="$ROOT/_includes"
 IMAGES="$ROOT/_images"
 
 YEAR=2026
@@ -204,7 +204,7 @@ build_vendors() {
 import json, os, sys
 
 ROOT=os.getcwd()
-PARTIALS=os.path.join(ROOT,"_partials")
+INCLUDES=os.path.join(ROOT,"_includes")
 VENDORS_SRC=os.path.join(ROOT,"_vendors")
 
 data=json.load(sys.stdin)
@@ -215,7 +215,7 @@ for v in data["vendors"]:
     os.makedirs(outdir, exist_ok=True)
 
     with open(os.path.join(outdir,"index.html"),"w") as f:
-        f.write(open(os.path.join(PARTIALS,"header.html")).read())
+        f.write(open(os.path.join(INCLUDES,"header.html")).read())
         f.write(f"<h2>{v['name']}</h2>\n")
 
         src=os.path.join(VENDORS_SRC,v["slug"])
@@ -230,7 +230,7 @@ for v in data["vendors"]:
             f.write(f'<li><a href="/{d["slug"]}/">{d["display"]}</a></li>')
         f.write("</ul>")
 
-        f.write(open(os.path.join(PARTIALS,"footer.html")).read())
+        f.write(open(os.path.join(INCLUDES,"footer.html")).read())
     count += 1
 print(f"Generated {count} vendor pages", file=sys.stderr)
 PY
@@ -252,7 +252,7 @@ build_dates() {
 import json, os, re, sys
 
 ROOT=os.getcwd()
-PARTIALS=os.path.join(ROOT,"_partials")
+INCLUDES=os.path.join(ROOT,"_includes")
 
 DEFAULT_EVENT_IMAGE = "/_images/event-default.jpg"
 EVENT_NAME = "The Edge of Liberty Craft Fair"
@@ -297,8 +297,8 @@ def slug_to_ymd(slug: str):
 
 data=json.load(sys.stdin)
 
-header_html=open(os.path.join(PARTIALS,"header.html"), encoding="utf-8").read()
-footer_html=open(os.path.join(PARTIALS,"footer.html"), encoding="utf-8").read()
+header_html=open(os.path.join(INCLUDES,"header.html"), encoding="utf-8").read()
+footer_html=open(os.path.join(INCLUDES,"footer.html"), encoding="utf-8").read()
 
 # Sort date slugs chronologically
 sorted_dates = sorted(data["dates"].items(), key=lambda kv: slug_to_ymd(kv[0]) or (9999,99,99))
@@ -385,7 +385,7 @@ build_home() {
 import json, os, re, sys
 
 ROOT=os.getcwd()
-PARTIALS=os.path.join(ROOT,"_partials")
+INCLUDES=os.path.join(ROOT,"_includes")
 
 MONTHS = {
   "january": 1, "february": 2, "march": 3, "april": 4, "may": 5, "june": 6,
@@ -406,8 +406,8 @@ def slug_to_ymd(slug: str):
 
 data=json.load(sys.stdin)
 
-header_html=open(os.path.join(PARTIALS,"header.html"), encoding="utf-8").read()
-footer_html=open(os.path.join(PARTIALS,"footer.html"), encoding="utf-8").read()
+header_html=open(os.path.join(INCLUDES,"header.html"), encoding="utf-8").read()
+footer_html=open(os.path.join(INCLUDES,"footer.html"), encoding="utf-8").read()
 
 # Dates, chronologically
 sorted_dates = sorted(data["dates"].items(), key=lambda kv: slug_to_ymd(kv[0]) or (9999,99,99))
