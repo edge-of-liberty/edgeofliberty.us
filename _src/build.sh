@@ -423,78 +423,73 @@ build_home() {
   fi
   echo "[DEBUG] Using build data: $BUILD_JSON ($(wc -c < "$BUILD_JSON") bytes)" >&2
   python3 - "$BUILD_JSON" <<PY
-import json, os, re, sys, traceback
+import json, os, sys, traceback
 
 try:
     ROOT = os.path.abspath("${ROOT}")
     print("[PYDEBUG] ROOT =", ROOT, file=sys.stderr)
 
-    if not os.path.isdir(ROOT):
-        raise RuntimeError(f"ROOT directory does not exist: {ROOT}")
-
     INCLUDES = os.path.join(ROOT, "_includes")
+    IMAGES = os.path.join(ROOT, "_images")
+
     header_path = os.path.join(INCLUDES, "header.html")
     footer_path = os.path.join(INCLUDES, "footer.html")
 
-    print("[PYDEBUG] header path:", header_path, file=sys.stderr)
-    print("[PYDEBUG] footer path:", footer_path, file=sys.stderr)
+    intro_path = os.path.join(INCLUDES, "home_intro.html")
+    dates_path = os.path.join(INCLUDES, "home_dates.html")
+    vendors_path = os.path.join(INCLUDES, "home_vendors.html")
 
-    if not os.path.exists(header_path):
-        raise RuntimeError(f"Missing header: {header_path}")
-    if not os.path.exists(footer_path):
-        raise RuntimeError(f"Missing footer: {footer_path}")
+    hero_image = "/_images/hero.jpg"
+    logo_image = "/_images/logo-white.png"
+
+    for p in [header_path, footer_path, intro_path, dates_path, vendors_path]:
+        if not os.path.exists(p):
+            raise RuntimeError(f"Missing required include: {p}")
 
     header_html = open(header_path, encoding="utf-8").read()
     footer_html = open(footer_path, encoding="utf-8").read()
 
-    with open(sys.argv[1], encoding="utf-8") as f:
-        data = json.load(f)
-
-    MONTHS = {
-      "january": 1, "february": 2, "march": 3, "april": 4, "may": 5, "june": 6,
-      "july": 7, "august": 8, "september": 9, "october": 10, "november": 11, "december": 12
-    }
-
-    def slug_to_ymd(slug: str):
-        m = re.match(r"^([a-z]+)-(\d{2})-(\d{4})$", slug)
-        if not m:
-            return None
-        mon = m.group(1)
-        day = int(m.group(2))
-        year = int(m.group(3))
-        if mon not in MONTHS:
-            return None
-        return (year, MONTHS[mon], day)
-
-    sorted_dates = sorted(data["dates"].items(), key=lambda kv: slug_to_ymd(kv[0]) or (9999,99,99))
-    vendors_sorted = sorted(data.get("vendors", []), key=lambda v: (v.get("name") or "").lower())
+    intro_html = open(intro_path, encoding="utf-8").read()
+    dates_html = open(dates_path, encoding="utf-8").read()
+    vendors_html = open(vendors_path, encoding="utf-8").read()
 
     outpath = os.path.join(ROOT, "index.html")
-    print("[PYDEBUG] CWD =", os.getcwd(), file=sys.stderr)
-    print("[PYDEBUG] Target file =", outpath, file=sys.stderr)
     print("[PYDEBUG] Writing home page to:", outpath, file=sys.stderr)
 
     with open(outpath, "w", encoding="utf-8") as f:
         f.write(header_html)
-        f.write('<section class="home-page">\n')
 
-        f.write("<h2>2026 Edge of Liberty Craft Fair Dates</h2>\n")
-        f.write("<ul>\n")
-        for date_slug, date_info in sorted_dates:
-            display = date_info.get("display", date_slug)
-            f.write(f'<li><a href="/{date_slug}/">{display}</a></li>\n')
-        f.write("</ul>\n")
+        # Hero section
+        f.write(f'''
+<section class="hero" style="background-image: url('{hero_image}');">
+  <div class="hero-overlay">
+    <img src="{logo_image}" alt="The Edge of Liberty" class="hero-logo">
+    <div class="hero-content">
+''')
 
-        f.write("<h2>Vendors</h2>\n")
-        f.write("<ul>\n")
-        for v in vendors_sorted:
-            f.write(f'<li><a href="/{v.get("slug","")}/">{v.get("name","")}</a></li>\n')
-        f.write("</ul>\n")
+        # You will style these later — content-first
+        f.write('''
+      <h1>Celebrate Life. Create Happiness.</h1>
+      <p>Every other Sunday from Mother’s Day through Halloween</p>
+    </div>
+  </div>
+</section>
+''')
 
+        # Content blocks
+        f.write('<section class="home-section intro-section">')
+        f.write(intro_html)
         f.write('</section>')
-        f.write(footer_html)
 
-    print("[PYDEBUG] Finished writing home page", file=sys.stderr)
+        f.write('<section class="home-section dates-section">')
+        f.write(dates_html)
+        f.write('</section>')
+
+        f.write('<section class="home-section vendors-section">')
+        f.write(vendors_html)
+        f.write('</section>')
+
+        f.write(footer_html)
 
     if not os.path.exists(outpath):
         raise RuntimeError("Home page write failed — file does not exist")
@@ -508,7 +503,7 @@ try:
     print("[OK] Home page generated successfully at", outpath, file=sys.stderr)
 
 except Exception:
-    print("\n[PYERROR] Home page generation failed:", file=sys.stderr)
+    print("\\n[PYERROR] Home page generation failed:", file=sys.stderr)
     traceback.print_exc()
     sys.exit(1)
 PY
