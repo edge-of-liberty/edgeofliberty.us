@@ -223,6 +223,18 @@ for v in data["vendors"]:
 
     with open(os.path.join(outdir,"index.html"),"w") as f:
         f.write(open(os.path.join(INCLUDES,"header.html")).read())
+        f.write("""
+<style>
+  body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; padding: 0; background: #f9fafb; color: #1f2937; }
+  main { max-width: 960px; margin: 0 auto; padding: 2rem; }
+  h1, h2, h3 { line-height: 1.25; }
+  a { color: #2563eb; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  ul { padding-left: 1.25rem; }
+  li { margin: 0.4rem 0; }
+</style>
+<main>
+""")
         f.write(f"<h2>{v['name']}</h2>\n")
 
         src=os.path.join(VENDORS_SRC,v["slug"])
@@ -237,6 +249,7 @@ for v in data["vendors"]:
             f.write(f'<li><a href="/{d["slug"]}/">{d["display"]}</a></li>')
         f.write("</ul>")
 
+        f.write("</main>")
         f.write(open(os.path.join(INCLUDES,"footer.html")).read())
     count += 1
 print(f"Generated {count} vendor pages", file=sys.stderr)
@@ -353,6 +366,18 @@ for date_slug, date_info in sorted_dates:
 
     with open(os.path.join(outdir, "index.html"), "w", encoding="utf-8") as f:
         f.write(header_html)
+        f.write("""
+<style>
+  body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; padding: 0; background: #f9fafb; color: #1f2937; }
+  main { max-width: 960px; margin: 0 auto; padding: 2rem; }
+  h1, h2, h3 { line-height: 1.25; }
+  a { color: #2563eb; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  ul { padding-left: 1.25rem; }
+  li { margin: 0.4rem 0; }
+</style>
+<main>
+""")
         f.write(f"<h2>{date_info.get('display','')}</h2>\n")
         f.write("<script type=\"application/ld+json\">\n")
         f.write(json.dumps(json_ld, ensure_ascii=False, indent=2))
@@ -372,6 +397,7 @@ for date_slug, date_info in sorted_dates:
         else:
             f.write("<p><em>Vendor list coming soon.</em></p>\n")
 
+        f.write("</main>")
         f.write(footer_html)
     count += 1
 print(f"Generated {count} date pages", file=sys.stderr)
@@ -444,6 +470,18 @@ try:
 
     with open(outpath, "w", encoding="utf-8") as f:
         f.write(header_html)
+        f.write("""
+<style>
+  body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; padding: 0; background: #f9fafb; color: #1f2937; }
+  main { max-width: 960px; margin: 0 auto; padding: 2rem; }
+  h1, h2, h3 { line-height: 1.25; }
+  a { color: #2563eb; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  ul { padding-left: 1.25rem; }
+  li { margin: 0.4rem 0; }
+</style>
+<main>
+""")
 
         f.write("<h2>2026 Edge of Liberty Craft Fair Dates</h2>\n")
         f.write("<ul>\n")
@@ -458,6 +496,7 @@ try:
             f.write(f'<li><a href="/{v.get("slug","")}/">{v.get("name","")}</a></li>\n')
         f.write("</ul>\n")
 
+        f.write("</main>")
         f.write(footer_html)
 
     print("[PYDEBUG] Finished writing home page", file=sys.stderr)
@@ -501,6 +540,9 @@ case "${1:-}" in
     build_vendors
     build_dates
     build_home
+
+    echo "[INFO] Staging all changes..."
+    git add .
 
     if ! git diff --cached --quiet; then
       msg="Site build $(date '+%Y-%m-%d %H:%M:%S')"
