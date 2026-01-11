@@ -14,7 +14,6 @@ CSV_FILE="$DATA_DIR/2026 Edge of Liberty Craft Fairs - Craft Fair Planning.csv"
 DEFAULT_EVENT_IMAGE="/_images/event-default.jpg"
 BUILD_JSON="$DATA_DIR/build.json"
 
-echo $ROOT
 ###############################################################################
 # Utilities
 ###############################################################################
@@ -163,6 +162,7 @@ PY
 ###############################################################################
 
 scaffold_vendors() {
+  echo "$ROOT" >&2
   echo "[INFO] Scaffolding vendor include directories..." >&2
   parse_csv > "$BUILD_JSON"
   if [[ ! -s "$BUILD_JSON" ]]; then
@@ -174,7 +174,7 @@ scaffold_vendors() {
 import json, os, sys
 
 ROOT="${ROOT}"
-print("[PYDEBUG] ROOT =", ROOT)
+print("[PYDEBUG] ROOT =", ROOT, file=sys.stderr)
 VENDORS_SRC=os.path.join(ROOT,"_vendors")
 
 with open(sys.argv[1], encoding="utf-8") as f:
@@ -199,6 +199,7 @@ PY
 ###############################################################################
 
 build_vendors() {
+  echo "$ROOT" >&2
   echo "[INFO] Generating vendor pages..." >&2
   parse_csv > "$BUILD_JSON"
   if [[ ! -s "$BUILD_JSON" ]]; then
@@ -207,10 +208,10 @@ build_vendors() {
   fi
   echo "[DEBUG] Using build data: $BUILD_JSON ($(wc -c < "$BUILD_JSON") bytes)" >&2
   python3 - "$BUILD_JSON" <<PY
-import json, os, sys
+import json, os, sys, shutil
 
 ROOT="${ROOT}"
-print("[PYDEBUG] ROOT =", ROOT)
+print("[PYDEBUG] ROOT =", ROOT, file=sys.stderr)
 INCLUDES=os.path.join(ROOT,"_includes")
 VENDORS_SRC=os.path.join(ROOT,"_vendors")
 
@@ -222,10 +223,35 @@ for v in data["vendors"]:
     outdir=os.path.join(ROOT,v["slug"])
     os.makedirs(outdir, exist_ok=True)
 
+    # Copy vendor images (if any) into a public folder under /<vendor-slug>/images/
+    src_dir = os.path.join(VENDORS_SRC, v["slug"])
+    public_images_dir = os.path.join(outdir, "images")
+    os.makedirs(public_images_dir, exist_ok=True)
+
+    exts = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+    images = []
+    if os.path.isdir(src_dir):
+        for fn in sorted(os.listdir(src_dir)):
+            if fn.startswith("."):
+                continue
+            if fn.lower() == "description.txt":
+                continue
+            _, ext = os.path.splitext(fn)
+            if ext.lower() in exts:
+                src_path = os.path.join(src_dir, fn)
+                dst_path = os.path.join(public_images_dir, fn)
+                try:
+                    shutil.copy2(src_path, dst_path)
+                except Exception:
+                    # If copy fails, still allow page generation
+                    pass
+                images.append(fn)
+
     with open(os.path.join(outdir,"index.html"),"w") as f:
         f.write(open(os.path.join(INCLUDES,"header.html")).read())
         f.write('<section class="vendor-page">\n')
         f.write(f"<h2>{v['name']}</h2>\n")
+        f.write('<div class="vendor-content">\n')
 
         src = os.path.join(VENDORS_SRC, v["slug"])
         desc = os.path.join(src, "description.txt")
@@ -250,8 +276,19 @@ for v in data["vendors"]:
             html, _ = p.communicate(text)
             f.write(html)
 
+        if images:
+            f.write('<h3>Photos</h3>')
+            f.write('<div class="vendor-masonry">')
+            for img in images:
+                # Images are copied to /<slug>/images/<filename>
+                src = f'/{v["slug"]}/images/{img}'
+                alt = v.get("name", "")
+                f.write(f'<img class="vendor-photo" src="{src}" alt="{alt}">')
+            f.write('</div>')
+
+        f.write('</div>')
         f.write("<h3>Find us at:</h3><ul>")
-        for d in v["dates"]:
+        for d in sorted(v["dates"], key=lambda x: x.get("display","")):
             f.write(f'<li><a href="/{d["slug"]}/">{d["display"]}</a></li>')
         f.write("</ul>")
 
@@ -267,6 +304,7 @@ PY
 ###############################################################################
 
 build_dates() {
+  echo "$ROOT" >&2
   echo "[INFO] Generating date pages..." >&2
   parse_csv > "$BUILD_JSON"
   if [[ ! -s "$BUILD_JSON" ]]; then
@@ -415,6 +453,7 @@ PY
 ###############################################################################
 
 build_home() {
+  echo "$ROOT" >&2
   echo "[INFO] Generating home page..." >&2
   parse_csv > "$BUILD_JSON"
   if [[ ! -s "$BUILD_JSON" ]]; then
@@ -515,11 +554,24 @@ PY
 ###############################################################################
 
 case "${1:-}" in
-  scaffold) scaffold_vendors ;;
-  vendors) build_vendors ;;
-  dates) build_dates ;;
-  home) build_home ;;
+  scaffold)
+    echo "$ROOT" >&2
+    scaffold_vendors
+    ;;
+  vendors)
+    echo "$ROOT" >&2
+    build_vendors
+    ;;
+  dates)
+    echo "$ROOT" >&2
+    build_dates
+    ;;
+  home)
+    echo "$ROOT" >&2
+    build_home
+    ;;
   all)
+    echo "$ROOT" >&2
     echo "[INFO] Starting full site build..." >&2
     parse_csv > "$BUILD_JSON"
     if [[ ! -s "$BUILD_JSON" ]]; then
@@ -556,9 +608,11 @@ case "${1:-}" in
     render_markdownish
     ;;
   parse)
+    echo "$ROOT" >&2
     parse_csv
     ;;
   *)
+    echo "$ROOT" >&2
     echo "Usage: ./build.sh [all|vendors|dates|home|scaffold]"
     ;;
 esac
