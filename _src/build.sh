@@ -432,15 +432,16 @@ try:
     INCLUDES = os.path.join(ROOT, "_includes")
     IMAGES = os.path.join(ROOT, "_images")
 
+    # Load build.json data
+    with open(sys.argv[1], encoding="utf-8") as jf:
+        data = json.load(jf)
+
     header_path = os.path.join(INCLUDES, "header.html")
     footer_path = os.path.join(INCLUDES, "footer.html")
 
     intro_path = os.path.join(INCLUDES, "home_intro.html")
     dates_path = os.path.join(INCLUDES, "home_dates.html")
     vendors_path = os.path.join(INCLUDES, "home_vendors.html")
-
-    hero_image = "/_images/hero.jpg"
-    logo_image = "/_images/logo-white.png"
 
     for p in [header_path, footer_path, intro_path, dates_path, vendors_path]:
         if not os.path.exists(p):
@@ -459,34 +460,34 @@ try:
     with open(outpath, "w", encoding="utf-8") as f:
         f.write(header_html)
 
-        # Hero section
-        f.write(f'''
-<section class="hero" style="background-image: url('{hero_image}');">
-  <div class="hero-overlay">
-    <img src="{logo_image}" alt="The Edge of Liberty" class="hero-logo">
-    <div class="hero-content">
-''')
+        # Hero section (from include)
+        hero_path = os.path.join(INCLUDES, "home_hero.html")
+        if not os.path.exists(hero_path):
+            raise RuntimeError(f"Missing required include: {hero_path}")
+        hero_html = open(hero_path, encoding="utf-8").read()
+        f.write(hero_html)
 
-        # You will style these later — content-first
-        f.write('''
-      <h1>Celebrate Life. Create Happiness.</h1>
-      <p>Every other Sunday from Mother’s Day through Halloween</p>
-    </div>
-  </div>
-</section>
-''')
-
-        # Content blocks
+        # Intro snippet
         f.write('<section class="home-section intro-section">')
         f.write(intro_html)
         f.write('</section>')
 
+        # Dates section (snippet + generated list)
         f.write('<section class="home-section dates-section">')
         f.write(dates_html)
+        f.write('<ul class="date-list">')
+        for slug, info in data["dates"].items():
+            f.write(f'<li><a href="/{slug}/">{info["display"]}</a></li>')
+        f.write('</ul>')
         f.write('</section>')
 
+        # Vendors section (snippet + generated list)
         f.write('<section class="home-section vendors-section">')
         f.write(vendors_html)
+        f.write('<ul class="vendor-list">')
+        for v in sorted(data["vendors"], key=lambda x: x["name"].lower()):
+            f.write(f'<li><a href="/{v["slug"]}/">{v["name"]}</a></li>')
+        f.write('</ul>')
         f.write('</section>')
 
         f.write(footer_html)
