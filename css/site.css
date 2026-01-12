@@ -173,16 +173,54 @@ footer {
   margin: 1.5rem 0;
 }
 
+.vendor-dates {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.vendor-dates h3 {
+  margin-top: 0;
+  font-size: 1.25rem;
+}
+
+.vendor-dates ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.vendor-dates li {
+  padding: 0.25rem 0;
+  font-weight: 500;
+}
+
+.vendor-dates a {
+  text-decoration: none;
+}
+
 .vendor-photo {
   width: 100%;
-  height: auto;
-  max-height: 320px;
+  height: 220px;
   object-fit: cover;
-  border-radius: 6px;
+  border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .vendor-photo:hover {
   transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.vendor-contact-empty {
+  font-style: italic;
+  color: var(--muted);
+  margin: 1rem 0;
+}
+
+.vendor-section {
+  margin: 2.5rem 0;
 }
