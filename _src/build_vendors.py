@@ -61,8 +61,6 @@ for v in data["vendors"]:
     os.makedirs(outdir, exist_ok=True)
 
     src_dir = os.path.join(VENDORS_SRC, slug)
-    images_out = os.path.join(outdir, "images")
-    os.makedirs(images_out, exist_ok=True)
 
     images = []
     exts = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
@@ -76,12 +74,6 @@ for v in data["vendors"]:
 
             _, ext = os.path.splitext(fn)
             if ext.lower() in exts:
-                src_path = os.path.join(src_dir, fn)
-                dst_path = os.path.join(images_out, fn)
-                try:
-                    shutil.copy2(src_path, dst_path)
-                except Exception:
-                    pass
                 images.append(fn)
 
     # Description
@@ -136,7 +128,7 @@ for v in data["vendors"]:
 
         # Dates section
         f.write('<div class="vendor-dates">\n')
-        f.write("<h3>Craft Fair Dates</h3>\n<ul>\n")
+        f.write("<h3>Find This Vendor At</h3>\n<ul>\n")
         for d in sorted(v["dates"], key=lambda x: x.get("display", "")):
             f.write(f'<li><a href="/{d["slug"]}/">{d["display"]}</a></li>\n')
         f.write("</ul>\n")
@@ -148,7 +140,7 @@ for v in data["vendors"]:
             f.write('<div class="vendor-photos">\n')
             f.write('<div class="vendor-masonry">\n')
             for img in images:
-                src = f'/{slug}/images/{img}'
+                src = f'/_vendors/{slug}/{img}'
                 f.write(f'<img class="vendor-photo" src="{src}" alt="{name}">\n')
             f.write("</div>\n")
             f.write("</div>\n")
