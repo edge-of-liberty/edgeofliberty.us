@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="/Users/nancy/edgeofliberty.us"
 DATA_DIR="$ROOT/_data"
 INCLUDES="$ROOT/_includes"
 VENDORS_SRC="$ROOT/_vendors"
