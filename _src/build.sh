@@ -24,6 +24,37 @@ require_file() {
 }
 
 ###############################################################################
+# Build sitemap.xml (pure bash)
+###############################################################################
+
+build_sitemap() {
+  echo "[INFO] Generating sitemap.xml..."
+
+  BASE_URL="https://www.edgeofliberty.us"
+  OUT="$ROOT/sitemap.xml"
+
+  {
+    echo '<?xml version="1.0" encoding="UTF-8"?>'
+    echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+    echo "  <url><loc>${BASE_URL}/</loc></url>"
+
+    find "$ROOT" -maxdepth 1 -type f -name "*.html" ! -name "index.html" | while read -r file; do
+      fname="$(basename "$file")"
+      echo "  <url><loc>${BASE_URL}/${fname}</loc></url>"
+    done
+
+    echo '</urlset>'
+  } > "$OUT"
+
+  if [[ ! -s "$OUT" ]]; then
+    echo "[FATAL] sitemap.xml was not generated correctly" >&2
+    exit 1
+  fi
+
+  echo "[OK] sitemap.xml generated at $OUT"
+}
+
+###############################################################################
 # CSV → JSON
 ###############################################################################
 
@@ -109,6 +140,7 @@ case "${1:-}" in
     build_vendors
     build_dates
     build_home
+    build_sitemap
 
     echo "[INFO] Staging all changes..."
     git add .
