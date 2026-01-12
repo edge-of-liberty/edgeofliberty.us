@@ -38,7 +38,7 @@ build_sitemap() {
     echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
     echo "  <url><loc>${BASE_URL}/</loc></url>"
 
-    find "$ROOT" -maxdepth 1 -type f -name "*.html" ! -name "index.html" | while read -r file; do
+    find "$ROOT" -maxdepth 2 -type f -name "*.html" ! -name "index.html" | while read -r file; do
       fname="$(basename "$file")"
       echo "  <url><loc>${BASE_URL}/${fname}</loc></url>"
     done
