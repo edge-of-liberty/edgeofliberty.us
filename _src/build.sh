@@ -40,12 +40,9 @@ build_sitemap() {
     # Root
     echo "  <url><loc>${BASE_URL}/</loc></url>"
 
-    # Root-level standalone pages (but not generated fragments/includes)
+    # Root-level standalone pages (include all .html files)
     find "$ROOT" -maxdepth 1 -type f -name "*.html" \
       ! -name "index.html" \
-      ! -name "header.html" \
-      ! -name "footer.html" \
-      ! -name "home_*.html" \
       -print | while read -r file; do
         fname="$(basename "$file")"
         echo "  <url><loc>${BASE_URL}/${fname}</loc></url>"
