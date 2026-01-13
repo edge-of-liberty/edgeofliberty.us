@@ -2,7 +2,8 @@
 import json
 import os
 import sys
-import shutil
+
+# Expected vendor layout: ROOT/<slug>/{description.txt, image files...} — no subdirs, no copying
 
 if len(sys.argv) != 3:
     print("Usage: build_vendors.py <root> <build_json>", file=sys.stderr)
@@ -12,7 +13,6 @@ ROOT = sys.argv[1]
 BUILD_JSON = sys.argv[2]
 
 INCLUDES = os.path.join(ROOT, "_includes")
-VENDORS_SRC = os.path.join(ROOT, "_vendors")
 
 def render_markdownish(text):
     lines = text.splitlines()
@@ -60,7 +60,8 @@ for v in data["vendors"]:
     outdir = os.path.join(ROOT, slug)
     os.makedirs(outdir, exist_ok=True)
 
-    src_dir = os.path.join(VENDORS_SRC, slug)
+    # Images and description live directly in ROOT/<slug>/ — no duplication, no copying
+    src_dir = outdir
 
     images = []
     exts = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
@@ -90,6 +91,14 @@ for v in data["vendors"]:
         f.write(header_html)
         f.write('<section class="vendor-page">\n')
         f.write(f"<h2>{name}</h2>\n")
+
+        # Dates section moved here
+        f.write('<div class="vendor-dates">\n')
+        f.write("<h3>Craft Fair Dates</h3>\n<ul>\n")
+        for d in sorted(v["dates"], key=lambda x: x.get("display", "")):
+            f.write(f'<li><a href="/{d["slug"]}/">{d["display"]}</a></li>\n')
+        f.write("</ul>\n")
+        f.write("</div>\n")
 
         f.write('<div class="vendor-content">\n')
 
@@ -124,23 +133,15 @@ for v in data["vendors"]:
                 f.write(link + "\n")
             f.write("</ul>\n")
         else:
-            f.write('<p class="vendor-inperson-only">This vendor sells in person at our craft fairs.</p>\n')
-
-        # Dates section
-        f.write('<div class="vendor-dates">\n')
-        f.write("<h3>Find This Vendor At</h3>\n<ul>\n")
-        for d in sorted(v["dates"], key=lambda x: x.get("display", "")):
-            f.write(f'<li><a href="/{d["slug"]}/">{d["display"]}</a></li>\n')
-        f.write("</ul>\n")
-        f.write("</div>\n")
+            f.write('<p class="vendor-inperson-only">This vendor currently sells in person at our craft fairs only.</p>\n')
 
         # Photos section
         if images:
             f.write("<h3>Gallery</h3>\n")
-            f.write('<div class="vendor-photos">\n')
+            f.write('<div class="vendor-photos constrained-gallery">\n')
             f.write('<div class="vendor-masonry">\n')
             for img in images:
-                src = f'/_vendors/{slug}/{img}'
+                src = img
                 f.write(f'<img class="vendor-photo" src="{src}" alt="{name}">\n')
             f.write("</div>\n")
             f.write("</div>\n")

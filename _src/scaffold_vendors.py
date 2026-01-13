@@ -10,8 +10,6 @@ if len(sys.argv) != 3:
 ROOT = sys.argv[1]
 BUILD_JSON = sys.argv[2]
 
-VENDORS_SRC = os.path.join(ROOT, "_vendors")
-
 with open(BUILD_JSON, encoding="utf-8") as f:
     data = json.load(f)
 
@@ -19,7 +17,7 @@ count = 0
 
 for v in data["vendors"]:
     slug = v["slug"]
-    vendor_dir = os.path.join(VENDORS_SRC, slug)
+    vendor_dir = os.path.join(ROOT, slug)
     os.makedirs(vendor_dir, exist_ok=True)
 
     desc_path = os.path.join(vendor_dir, "description.txt")

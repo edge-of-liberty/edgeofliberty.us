@@ -13,7 +13,7 @@ BUILD_JSON = sys.argv[2]
 
 INCLUDES = os.path.join(ROOT, "_includes")
 
-DEFAULT_EVENT_IMAGE = "/_images/event-default.jpg"
+DEFAULT_EVENT_IMAGE = "/images/event-default.jpg"
 EVENT_NAME = "The Edge of Liberty Craft Fair"
 EVENT_DESC = (
     "The Edge of Liberty Craft Fair is an opportunity for local entrepreneurs "
@@ -40,6 +40,17 @@ MONTHS = {
     "may": 5, "june": 6, "july": 7, "august": 8,
     "september": 9, "october": 10, "november": 11, "december": 12
 }
+
+IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+
+def list_vendor_images(root, slug):
+    vdir = os.path.join(root, slug)
+    if not os.path.isdir(vdir):
+        return []
+    return sorted([
+        f for f in os.listdir(vdir)
+        if os.path.splitext(f.lower())[1] in IMAGE_EXTS
+    ])
 
 def slug_to_ymd(slug):
     m = re.match(r"^([a-z]+)-(\d{2})-(\d{4})$", slug)
@@ -92,6 +103,7 @@ for date_slug, date_info in sorted_dates:
             "name": ORG_NAME,
             "address": ADDRESS,
         },
+        # Sitewide fallback image for date pages (not vendor-specific)
         "image": [DEFAULT_EVENT_IMAGE],
         "description": EVENT_DESC,
         "organizer": {
@@ -125,10 +137,17 @@ for date_slug, date_info in sorted_dates:
                         vshort = full.get("short_description", "").strip()
                         break
 
+                f.write(f'<li><a href="/{vslug}/">{vname}</a>')
                 if vshort:
-                    f.write(f'<li><a href="/{vslug}/">{vname}</a> — {vshort}</li>\n')
-                else:
-                    f.write(f'<li><a href="/{vslug}/">{vname}</a></li>\n')
+                    f.write(f' — {vshort}')
+                f.write('</li>\n')
+
+                images = list_vendor_images(ROOT, vslug)
+                if images:
+                    f.write('<div class="vendor-thumbs">\n')
+                    for img in images:
+                        f.write(f'<img src="/{vslug}/{img}" alt="{vname}">\n')
+                    f.write('</div>\n')
 
             f.write("</ul>\n")
         else:

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import csv, json, re, sys
+import unicodedata
 
 if len(sys.argv) != 3:
     print("Usage: parse_csv.py <csv_file> <year>", file=sys.stderr)
@@ -16,6 +17,30 @@ month_map = {
     "may": "may", "jun": "june", "jul": "july", "aug": "august",
     "sep": "september", "oct": "october", "nov": "november", "dec": "december"
 }
+
+def slugify(s):
+    if not s:
+        return ""
+
+    # Normalize unicode (strip accents, emoji, smart quotes, etc.)
+    s = unicodedata.normalize("NFKD", s)
+    s = s.encode("ascii", "ignore").decode("ascii")
+
+    s = s.lower()
+
+    # Remove ampersands explicitly
+    s = s.replace("&", "")
+
+    # Replace any non-alphanumeric sequence with a dash
+    s = re.sub(r"[^a-z0-9]+", "-", s)
+
+    # Collapse multiple dashes
+    s = re.sub(r"-{2,}", "-", s)
+
+    # Trim leading/trailing dashes
+    s = s.strip("-")
+
+    return s
 
 def parse_header(h):
     m = re.match(r"^([A-Za-z]{3})-(\d{1,2})$", h.strip())
@@ -45,10 +70,11 @@ with open(CSV_FILE, encoding="utf-8-sig", newline="") as f:
         if not name:
             continue
 
-        slug = (row.get("slug") or "").strip()
-        if not slug:
-            slug = re.sub(r"[^a-z0-9 ]", "", name.lower())
-            slug = re.sub(r"\s+", " ", slug).strip().replace(" ", "-")
+        raw_slug = (row.get("slug") or "").strip()
+        if raw_slug:
+            slug = slugify(raw_slug)
+        else:
+            slug = slugify(name)
 
         vendor = {
             "name": name,

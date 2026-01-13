@@ -4,8 +4,8 @@ set -euo pipefail
 ROOT="/Users/nancy/edgeofliberty.us"
 DATA_DIR="$ROOT/_data"
 INCLUDES="$ROOT/_includes"
-VENDORS_SRC="$ROOT/_vendors"
-IMAGES="$ROOT/_images"
+VENDORS_SRC="$ROOT/vendors"
+IMAGES="$ROOT/images"
 SRC="$ROOT/_src"
 
 YEAR=2026
