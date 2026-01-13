@@ -36,12 +36,30 @@ build_sitemap() {
   {
     echo '<?xml version="1.0" encoding="UTF-8"?>'
     echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+
+    # Root
     echo "  <url><loc>${BASE_URL}/</loc></url>"
 
-    find "$ROOT" -maxdepth 2 -type f -name "*.html" ! -name "index.html" | while read -r file; do
-      fname="$(basename "$file")"
-      echo "  <url><loc>${BASE_URL}/${fname}</loc></url>"
-    done
+    # Root-level standalone pages (but not generated fragments/includes)
+    find "$ROOT" -maxdepth 1 -type f -name "*.html" \
+      ! -name "index.html" \
+      ! -name "header.html" \
+      ! -name "footer.html" \
+      ! -name "home_*.html" \
+      -print | while read -r file; do
+        fname="$(basename "$file")"
+        echo "  <url><loc>${BASE_URL}/${fname}</loc></url>"
+      done
+
+    # Directory pages at ROOT/<slug>/index.html  (vendors + dates)
+    find "$ROOT" -mindepth 2 -maxdepth 2 -type f -name "index.html" \
+      ! -path "$ROOT/_*/*" \
+      ! -path "$ROOT/css/*" \
+      ! -path "$ROOT/images/*" \
+      -print | while read -r file; do
+        dir="$(basename "$(dirname "$file")")"
+        echo "  <url><loc>${BASE_URL}/${dir}/</loc></url>"
+      done
 
     echo '</urlset>'
   } > "$OUT"
