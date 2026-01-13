@@ -66,6 +66,7 @@ with open(BUILD_JSON, encoding="utf-8") as f:
 
 header_html = open(os.path.join(INCLUDES, "header.html"), encoding="utf-8").read()
 footer_html = open(os.path.join(INCLUDES, "footer.html"), encoding="utf-8").read()
+date_intro_html = open(os.path.join(INCLUDES, "date_intro.html"), encoding="utf-8").read()
 
 sorted_dates = sorted(
     data["dates"].items(),
@@ -117,7 +118,10 @@ for date_slug, date_info in sorted_dates:
         f.write(header_html)
         f.write('<section class="date-page">\n')
         f.write(f"<h2>{date_info.get('display','')}</h2>\n")
-        f.write(f'<img class="event-hero" src="{DEFAULT_EVENT_IMAGE}" alt="{EVENT_NAME}">\n')
+        f.write(date_intro_html)
+        f.write(f'<div class="event-hero">\n')
+        f.write(f'  <img src="{DEFAULT_EVENT_IMAGE}" alt="{EVENT_NAME}">\n')
+        f.write(f'</div>\n')
 
         f.write('<script type="application/ld+json">\n')
         f.write(json.dumps(json_ld, indent=2))
