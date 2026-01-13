@@ -117,11 +117,15 @@ for date_slug, date_info in sorted_dates:
     with open(os.path.join(outdir, "index.html"), "w", encoding="utf-8") as f:
         f.write(header_html)
         f.write('<section class="date-page">\n')
+        f.write('<div class="date-hero-row">\n')
+        f.write('<div class="date-hero-text">\n')
         f.write(f"<h2>{date_info.get('display','')}</h2>\n")
         f.write(date_intro_html)
-        f.write(f'<div class="event-hero">\n')
+        f.write('</div>\n')
+        f.write('<div class="date-hero-media">\n')
         f.write(f'  <img class="event-hero-image" src="{DEFAULT_EVENT_IMAGE}" alt="{EVENT_NAME}" loading="lazy">\n')
-        f.write(f'</div>\n')
+        f.write('</div>\n')
+        f.write('</div>\n')
 
         f.write('<script type="application/ld+json">\n')
         f.write(json.dumps(json_ld, indent=2))
