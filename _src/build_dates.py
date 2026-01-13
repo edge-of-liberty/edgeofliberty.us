@@ -117,6 +117,7 @@ for date_slug, date_info in sorted_dates:
         f.write(header_html)
         f.write('<section class="date-page">\n')
         f.write(f"<h2>{date_info.get('display','')}</h2>\n")
+        f.write(f'<img class="event-hero" src="{DEFAULT_EVENT_IMAGE}" alt="{EVENT_NAME}">\n')
 
         f.write('<script type="application/ld+json">\n')
         f.write(json.dumps(json_ld, indent=2))
@@ -141,13 +142,6 @@ for date_slug, date_info in sorted_dates:
                 if vshort:
                     f.write(f' — {vshort}')
                 f.write('</li>\n')
-
-                images = list_vendor_images(ROOT, vslug)
-                if images:
-                    f.write('<div class="vendor-thumbs">\n')
-                    for img in images:
-                        f.write(f'<img src="/{vslug}/{img}" alt="{vname}">\n')
-                    f.write('</div>\n')
 
             f.write("</ul>\n")
         else:
