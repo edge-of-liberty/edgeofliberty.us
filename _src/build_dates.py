@@ -120,7 +120,7 @@ for date_slug, date_info in sorted_dates:
         f.write(f"<h2>{date_info.get('display','')}</h2>\n")
         f.write(date_intro_html)
         f.write(f'<div class="event-hero">\n')
-        f.write(f'  <img src="{DEFAULT_EVENT_IMAGE}" alt="{EVENT_NAME}">\n')
+        f.write(f'  <img class="event-hero-image" src="{DEFAULT_EVENT_IMAGE}" alt="{EVENT_NAME}" loading="lazy">\n')
         f.write(f'</div>\n')
 
         f.write('<script type="application/ld+json">\n')
