@@ -92,14 +92,6 @@ for v in data["vendors"]:
         f.write('<section class="vendor-page">\n')
         f.write(f"<h2>{name}</h2>\n")
 
-        # Dates section moved here
-        f.write('<div class="vendor-dates">\n')
-        f.write("<h3>Craft Fair Dates</h3>\n<ul>\n")
-        for d in sorted(v["dates"], key=lambda x: x.get("display", "")):
-            f.write(f'<li><a href="/{d["slug"]}/">{d["display"]}</a></li>\n')
-        f.write("</ul>\n")
-        f.write("</div>\n")
-
         f.write('<div class="vendor-content">\n')
 
         if text:
@@ -134,6 +126,15 @@ for v in data["vendors"]:
             f.write("</ul>\n")
         else:
             f.write('<p class="vendor-inperson-only">This vendor currently sells in person at our craft fairs only.</p>\n')
+
+        # Dates (preserve CSV column order)
+        f.write('<div class="vendor-dates">\n')
+        f.write("<h3>Find us at these craft fair dates</h3>\n<ul>\n")
+        for d in v.get("dates", []):
+            # Do NOT sort; parse_csv.py already appends in CSV column order
+            f.write(f'<li><a href="/{d["slug"]}/">{d["display"]}</a></li>\n')
+        f.write("</ul>\n")
+        f.write("</div>\n")
 
         # Photos section
         if images:

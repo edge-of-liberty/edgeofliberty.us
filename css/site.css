@@ -123,7 +123,7 @@ footer {
   position: relative;
   width: 100%;
   min-height: 70vh;
-  background-image: url('/_images/hero.jpg');
+  background-image: url('/images/hero.jpg');
   background-size: cover;
   background-position: center;
   display: flex;
@@ -145,8 +145,10 @@ footer {
   position: absolute;
   top: 24px;
   left: 24px;
-  width: 120px;   /* ← size fix */
+  width: 120px;
   height: auto;
+  z-index: 2;
+  filter: drop-shadow(0 2px 12px rgba(0,0,0,0.15));
 }
 
 .hero-content {
