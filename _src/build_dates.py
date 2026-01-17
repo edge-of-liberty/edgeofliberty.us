@@ -23,7 +23,6 @@ BUILD_JSON = sys.argv[2]
 
 INCLUDES = os.path.join(ROOT, "_includes")
 
-DEFAULT_EVENT_IMAGE = "/images/event-default.jpg"
 EVENT_NAME = "The Edge of Liberty Craft Fair"
 EVENT_DESC = (
     "The Edge of Liberty Craft Fair is an opportunity for local entrepreneurs "
@@ -122,7 +121,7 @@ for slug, display in date_links:
         "startDate": f"{iso_date}T{START_TIME}{TZ_OFFSET}",
         "endDate": f"{iso_date}T{END_TIME}{TZ_OFFSET}",
         "url": f"/{slug}/",
-        "image": DEFAULT_EVENT_IMAGE,
+        "image": f"/{slug}/hero.jpg",
         "description": EVENT_DESC
     })
 
@@ -148,7 +147,7 @@ for event in faq_events:
             "name": ORG_NAME,
             "address": ADDRESS,
         },
-        "image": [DEFAULT_EVENT_IMAGE],
+        "image": [event["image"]],
         "description": EVENT_DESC,
         "url": ORG_URL.rstrip("/") + event["url"],
         "organizer": {
@@ -167,6 +166,13 @@ with open(faq_events_schema_path, "w", encoding="utf-8") as f:
     f.write('\n</script>\n')
 print(f"[OK] Wrote FAQ events schema HTML: {faq_events_schema_path}", file=sys.stderr)
 
+events_schema_path = os.path.join(INCLUDES, "events_schema.json")
+with open(events_schema_path, "w", encoding="utf-8") as f:
+    f.write('<script type="application/ld+json">\n')
+    f.write(json.dumps(schema_obj, indent=2))
+    f.write('\n</script>\n')
+print(f"[OK] Wrote events schema include: {events_schema_path}", file=sys.stderr)
+
 count = 0
 
 for date_slug, date_info in sorted_dates:
@@ -176,6 +182,7 @@ for date_slug, date_info in sorted_dates:
 
     year, month, day = ymd
     iso_date = f"{year:04d}-{month:02d}-{day:02d}"
+    hero_image = f"/{date_slug}/hero.jpg"
 
     outdir = os.path.join(ROOT, date_slug)
     os.makedirs(outdir, exist_ok=True)
@@ -198,8 +205,8 @@ for date_slug, date_info in sorted_dates:
             "name": ORG_NAME,
             "address": ADDRESS,
         },
-        # Sitewide fallback image for date pages (not vendor-specific)
-        "image": [DEFAULT_EVENT_IMAGE],
+        # Per-date hero image for date pages
+        "image": [hero_image],
         "description": EVENT_DESC,
         "organizer": {
             "@type": "Organization",
@@ -214,6 +221,7 @@ for date_slug, date_info in sorted_dates:
         f.write("---\n")
         f.write("layout: default\n")
         f.write(f"title: {yaml_quote(display)}\n")
+        f.write(f"image: {yaml_quote(hero_image)}\n")
         f.write("---\n")
         f.write("\n")
 
@@ -224,7 +232,7 @@ for date_slug, date_info in sorted_dates:
         f.write(date_intro_html)
         f.write('</div>\n')
         f.write('<div class="date-hero-media">\n')
-        f.write(f'  <img class="event-hero-image" src="{DEFAULT_EVENT_IMAGE}" alt="{EVENT_NAME}" loading="lazy">\n')
+        f.write(f'  <img class="event-hero-image" src="{hero_image}" alt="{EVENT_NAME}" loading="lazy">\n')
         f.write('</div>\n')
         f.write('</div>\n')
 
