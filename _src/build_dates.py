@@ -35,6 +35,15 @@ TZ_OFFSET = "-05:00"
 START_TIME = "10:00:00"
 END_TIME = "15:00:00"
 
+PERFORMER_NAME = "Open Mic Karaoke"
+
+DEFAULT_OFFER = {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD",
+    "availability": "https://schema.org/InStock"
+}
+
 ADDRESS = {
     "@type": "PostalAddress",
     "streetAddress": "606 N Calumet Ave",
@@ -148,6 +157,11 @@ for event in faq_events:
             "address": ADDRESS,
         },
         "image": [event["image"]],
+        "performer": {
+            "@type": "PerformingGroup",
+            "name": PERFORMER_NAME
+        },
+        "offers": DEFAULT_OFFER,
         "description": EVENT_DESC,
         "url": ORG_URL.rstrip("/") + event["url"],
         "organizer": {
@@ -207,6 +221,11 @@ for date_slug, date_info in sorted_dates:
         },
         # Per-date hero image for date pages
         "image": [hero_image],
+        "performer": {
+            "@type": "PerformingGroup",
+            "name": PERFORMER_NAME
+        },
+        "offers": DEFAULT_OFFER,
         "description": EVENT_DESC,
         "organizer": {
             "@type": "Organization",
