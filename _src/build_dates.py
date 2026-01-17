@@ -41,7 +41,9 @@ DEFAULT_OFFER = {
     "@type": "Offer",
     "price": "0",
     "priceCurrency": "USD",
-    "availability": "https://schema.org/InStock"
+    "availability": "https://schema.org/InStock",
+    "url": ORG_URL,
+    "validFrom": "2026-01-01T00:00:00-05:00"
 }
 
 ADDRESS = {
