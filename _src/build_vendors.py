@@ -90,6 +90,9 @@ for v in data["vendors"]:
             if ext.lower() in exts:
                 images.append(fn)
 
+    # Primary image for OG / social sharing (first alphabetically)
+    hero_image = images[0] if images else ""
+
     # Description
     desc_path = os.path.join(src_dir, "description.txt")
     text = ""
@@ -103,7 +106,19 @@ for v in data["vendors"]:
     with open(os.path.join(outdir, "index.html"), "w", encoding="utf-8") as f:
         f.write("---\n")
         f.write("layout: default\n")
-        f.write(f'title: "{name}"\n')
+        f.write(f'title: "{name} — at The Edge of Liberty Craft Fair"\n')
+        f.write(f'og_title: "{name} — at The Edge of Liberty Craft Fair"\n')
+
+        # OG / social metadata (used by layout)
+        if hero_image:
+            f.write(f'image: /{slug}/{hero_image}\n')
+            f.write(f'og_image: /{slug}/{hero_image}\n')
+
+        if text:
+            safe_desc = text.replace('"', "'").split("\n")[0][:160]
+            f.write(f'description: "{safe_desc}"\n')
+            f.write(f'og_description: "{safe_desc}"\n')
+
         f.write("---\n\n")
 
         f.write('<section class="vendor-page">\n')

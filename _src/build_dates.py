@@ -239,7 +239,7 @@ for date_slug, date_info in sorted_dates:
 
         f.write("---\n")
         f.write("layout: default\n")
-        f.write(f"title: {yaml_quote(display)}\n")
+        f.write(f"title: {yaml_quote(f'{EVENT_NAME} — {display}')}\n")
         f.write(f"image: {yaml_quote(hero_image)}\n")
         f.write("---\n")
         f.write("\n")
