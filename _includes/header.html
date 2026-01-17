@@ -6,10 +6,34 @@
 
     <nav class="site-nav">
       <a href="/" class="nav-link">Home</a>
-      <!-- Future links:
-      <a href="/dates/" class="nav-link">Dates</a>
-      <a href="/vendors/" class="nav-link">Vendors</a>
-      -->
+
+      <div class="nav-dropdown">
+        <button class="nav-link dropdown-toggle" aria-haspopup="true" aria-expanded="false">
+          Vendors ▾
+        </button>
+{% include vendors_dropdown.html %}
+      </div>
+
+      <div class="nav-dropdown">
+        <button class="nav-link dropdown-toggle" aria-haspopup="true" aria-expanded="false">
+          Dates ▾
+        </button>
+{% include dates_dropdown.html %}
+      </div>
+
+      <div class="nav-dropdown">
+        <button class="nav-link dropdown-toggle" aria-haspopup="true" aria-expanded="false">
+          Info ▾
+        </button>
+        <div class="dropdown-menu">
+          <a href="/craft-fairs/" class="dropdown-item">FAQ</a>
+          <a href="tel:12192428320" class="dropdown-item">Call Us</a>
+          <a href="mailto:craft-fairs@edge-of-liberty.com" class="dropdown-item">Email Us</a>
+          <a href="https://maps.app.goo.gl/H4rSNAwbuD7cAct99" class="dropdown-item" target="_blank" rel="noopener">Directions</a>
+          <a href="https://edge-of-liberty.com" class="dropdown-item" target="_blank" rel="noopener">More about The Edge of Liberty</a>
+          <a href="https://blog.edgeofliberty.us/" class="dropdown-item" target="_blank" rel="noopener">Our old website</a>
+        </div>
+      </div>
     </nav>
   </div>
 </header>

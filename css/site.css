@@ -168,26 +168,49 @@ footer {
   opacity: 0.95;
 }
 
-/* Date page hero */
+/* Date page hero — A1 layout (text left, image right) */
 
-.event-hero {
-  max-width: 1100px;
-  margin: 0 auto 2rem auto;
-  padding: 0 var(--space-lg);
+.date-hero-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: var(--space-lg);
+  align-items: start;
+  margin-bottom: var(--space-xl);
 }
 
-.event-hero img {
+.date-hero-text {
+  max-width: 620px;
+}
+
+.date-hero-text h2 {
+  margin-top: 0;
+}
+
+.date-hero-media {
   width: 100%;
-  height: 360px;
+}
+
+.event-hero-image {
+  width: 100%;
+  max-height: 320px;
+  aspect-ratio: 16 / 9;
   object-fit: cover;
   border-radius: 12px;
   display: block;
 }
 
-/* Smaller screens */
-@media (max-width: 640px) {
-  .event-hero img {
-    height: 240px;
+/* Stack on mobile */
+@media (max-width: 768px) {
+  .date-hero-row {
+    grid-template-columns: 1fr;
+  }
+
+  .date-hero-text {
+    max-width: 100%;
+  }
+
+  .event-hero-image {
+    max-height: 240px;
   }
 }
 
@@ -248,4 +271,167 @@ footer {
 
 .vendor-section {
   margin: 2.5rem 0;
+}
+
+
+/* Footer social links */
+
+.site-footer {
+  text-align: center;
+}
+
+.site-footer .social-links,
+.site-footer .social-icons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.site-footer .social-links a,
+.site-footer .social-icons a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  font-size: 22px;
+  line-height: 1;
+  text-decoration: none;
+  color: var(--accent);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.site-footer .social-links a:hover,
+.site-footer .social-icons a:hover {
+  transform: scale(1.12);
+  background: rgba(37, 99, 235, 0.10);
+}
+
+/* If you used small <img> icons instead of emoji/text */
+.site-footer .social-links img,
+.site-footer .social-icons img {
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+
+/* Dropdown navigation */
+
+.site-nav {
+  display: flex;
+  gap: var(--space-lg);
+  align-items: center;
+  position: relative;
+}
+
+.nav-group {
+  position: relative;
+}
+
+.nav-group > .nav-link {
+  cursor: pointer;
+}
+
+.nav-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  padding: 0.5rem 0;
+  min-width: 180px;
+  z-index: 1000;
+  max-height: 60vh;
+  overflow-y: auto;
+  transform: translateY(6px);
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.nav-dropdown a {
+  display: block;
+  padding: 0.5rem 1rem;
+  color: var(--text);
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.nav-dropdown a:hover {
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--accent);
+}
+
+.nav-dropdown .dropdown-label {
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  cursor: default;
+}
+
+.nav-dropdown .dropdown-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 0.25rem 0;
+}
+
+/* Click/focus behavior (no JS): open while focused */
+.nav-group:focus-within .nav-dropdown {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Make the trigger focusable/feel like a control */
+.nav-group > .nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.nav-group > .nav-link:after {
+  content: "▾";
+  font-size: 0.85em;
+  opacity: 0.75;
+}
+
+.nav-group > .nav-link:focus {
+  outline: 2px solid rgba(37, 99, 235, 0.35);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Mobile safety: stack dropdowns */
+@media (max-width: 768px) {
+  .site-nav {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .nav-dropdown {
+    position: static;
+    box-shadow: none;
+    border: none;
+    padding-left: 1rem;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .nav-group:focus-within .nav-dropdown {
+    display: block;
+    opacity: 1;
+    transform: none;
+  }
+  .nav-dropdown a {
+    padding: 0.6rem 0;
+  }
 }

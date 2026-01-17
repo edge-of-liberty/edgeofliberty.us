@@ -19,19 +19,15 @@ try:
     with open(BUILD_JSON, encoding="utf-8") as jf:
         data = json.load(jf)
 
-    header_path = os.path.join(INCLUDES, "header.html")
-    footer_path = os.path.join(INCLUDES, "footer.html")
     intro_path = os.path.join(INCLUDES, "home_intro.html")
     dates_path = os.path.join(INCLUDES, "home_dates.html")
     vendors_path = os.path.join(INCLUDES, "home_vendors.html")
     hero_path = os.path.join(INCLUDES, "home_hero.html")
 
-    for p in [header_path, footer_path, intro_path, dates_path, vendors_path, hero_path]:
+    for p in [intro_path, dates_path, vendors_path, hero_path]:
         if not os.path.exists(p):
             raise RuntimeError(f"Missing required include: {p}")
 
-    header_html = open(header_path, encoding="utf-8").read()
-    footer_html = open(footer_path, encoding="utf-8").read()
     intro_html = open(intro_path, encoding="utf-8").read()
     dates_html = open(dates_path, encoding="utf-8").read()
     vendors_html = open(vendors_path, encoding="utf-8").read()
@@ -41,7 +37,10 @@ try:
     print("[PYDEBUG] Writing home page to:", outpath, file=sys.stderr)
 
     with open(outpath, "w", encoding="utf-8") as f:
-        f.write(header_html)
+        f.write('---\n')
+        f.write('layout: default\n')
+        f.write('title: Home\n')
+        f.write('---\n\n')
 
         f.write(hero_html)
 
@@ -60,12 +59,10 @@ try:
         f.write('<section class="home-section vendors-section">')
         f.write(vendors_html)
         f.write('<ul class="vendor-list">')
-        for v in sorted(data["vendors"], key=lambda x: x["name"].lower()):
+        for v in data["vendors"]:
             f.write(f'<li><a href="/{v["slug"]}/">{v["name"]}</a></li>')
         f.write('</ul>')
         f.write('</section>')
-
-        f.write(footer_html)
 
     if not os.path.exists(outpath):
         raise RuntimeError("Home page write failed — file does not exist")

@@ -12,7 +12,6 @@ if len(sys.argv) != 3:
 ROOT = sys.argv[1]
 BUILD_JSON = sys.argv[2]
 
-INCLUDES = os.path.join(ROOT, "_includes")
 
 def render_markdownish(text):
     lines = text.splitlines()
@@ -48,8 +47,22 @@ def render_markdownish(text):
 with open(BUILD_JSON, encoding="utf-8") as f:
     data = json.load(f)
 
-header_html = open(os.path.join(INCLUDES, "header.html"), encoding="utf-8").read()
-footer_html = open(os.path.join(INCLUDES, "footer.html"), encoding="utf-8").read()
+# Generate vendors dropdown include (alphabetical, scrollable)
+includes_dir = os.path.join(ROOT, "_includes")
+os.makedirs(includes_dir, exist_ok=True)
+
+dropdown_path = os.path.join(includes_dir, "vendors_dropdown.html")
+
+sorted_vendors = sorted(data["vendors"], key=lambda v: v["name"].lower())
+
+with open(dropdown_path, "w", encoding="utf-8") as df:
+    df.write('<div class="dropdown-menu dropdown-scroll">\n')
+    df.write('<a href="https://batshitcrazyfarms.com/off-season-market/ols/products/the-edge-of-liberty-craft-fair-space">Become a Vendor</a>\n')
+    df.write('<div class="dropdown-divider"></div>\n')
+    for v in sorted_vendors:
+        df.write(f'<a href="/{v["slug"]}/">{v["name"]}</a>\n')
+    df.write('</div>\n')
+
 
 count = 0
 
@@ -88,7 +101,11 @@ for v in data["vendors"]:
         text = v.get("short_description", "").strip()
 
     with open(os.path.join(outdir, "index.html"), "w", encoding="utf-8") as f:
-        f.write(header_html)
+        f.write("---\n")
+        f.write("layout: default\n")
+        f.write(f'title: "{name}"\n')
+        f.write("---\n\n")
+
         f.write('<section class="vendor-page">\n')
         f.write(f"<h2>{name}</h2>\n")
 
@@ -150,7 +167,6 @@ for v in data["vendors"]:
         f.write("</div>\n")
 
         f.write("</section>\n")
-        f.write(footer_html)
 
     count += 1
 

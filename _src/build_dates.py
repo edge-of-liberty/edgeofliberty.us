@@ -1,8 +1,18 @@
 #!/usr/bin/env python3
 import json
 import os
+
 import re
 import sys
+
+
+def yaml_quote(s: str) -> str:
+    """Quote a value safely for YAML front matter."""
+    if s is None:
+        s = ""
+    # Escape backslashes and double-quotes for YAML double-quoted scalars
+    s = str(s).replace("\\", "\\\\").replace('"', '\\"')
+    return f'"{s}"'
 
 if len(sys.argv) != 3:
     print("Usage: build_dates.py <root> <build_json>", file=sys.stderr)
@@ -64,14 +74,34 @@ def slug_to_ymd(slug):
 with open(BUILD_JSON, encoding="utf-8") as f:
     data = json.load(f)
 
-header_html = open(os.path.join(INCLUDES, "header.html"), encoding="utf-8").read()
-footer_html = open(os.path.join(INCLUDES, "footer.html"), encoding="utf-8").read()
-date_intro_html = open(os.path.join(INCLUDES, "date_intro.html"), encoding="utf-8").read()
+try:
+    with open(os.path.join(INCLUDES, "date_intro.html"), encoding="utf-8") as _f:
+        date_intro_html = _f.read()
+except FileNotFoundError:
+    print(f"[WARN] Missing include: {os.path.join(INCLUDES, 'date_intro.html')} — continuing.", file=sys.stderr)
+    date_intro_html = ""
 
 sorted_dates = sorted(
     data["dates"].items(),
     key=lambda kv: slug_to_ymd(kv[0]) or (9999, 99, 99)
 )
+
+# Build a list of (slug, display) for valid date slugs, in sorted order
+date_links = []
+for slug, date_info in sorted_dates:
+    if slug_to_ymd(slug) is None:
+        continue
+    display = (date_info.get("display") or "").strip()
+    date_links.append((slug, display))
+
+# Write the _includes/dates_dropdown.html file
+dropdown_path = os.path.join(INCLUDES, "dates_dropdown.html")
+with open(dropdown_path, "w", encoding="utf-8") as f:
+    f.write('<ul class="nav-dropdown-list dates-dropdown">\n')
+    for slug, display in date_links:
+        f.write(f'<li><a href="/{slug}/">{display}</a></li>\n')
+    f.write('</ul>\n')
+print(f"[OK] Wrote dates dropdown: {dropdown_path}", file=sys.stderr)
 
 count = 0
 
@@ -115,11 +145,18 @@ for date_slug, date_info in sorted_dates:
     }
 
     with open(os.path.join(outdir, "index.html"), "w", encoding="utf-8") as f:
-        f.write(header_html)
+        display = (date_info.get("display") or "").strip()
+
+        f.write("---\n")
+        f.write("layout: default\n")
+        f.write(f"title: {yaml_quote(display)}\n")
+        f.write("---\n")
+        f.write("\n")
+
         f.write('<section class="date-page">\n')
         f.write('<div class="date-hero-row">\n')
         f.write('<div class="date-hero-text">\n')
-        f.write(f"<h2>{date_info.get('display','')}</h2>\n")
+        f.write(f"<h2>{display}</h2>\n")
         f.write(date_intro_html)
         f.write('</div>\n')
         f.write('<div class="date-hero-media">\n')
@@ -156,7 +193,6 @@ for date_slug, date_info in sorted_dates:
             f.write("<p><em>Vendor list coming soon.</em></p>\n")
 
         f.write("</section>\n")
-        f.write(footer_html)
 
     count += 1
 
