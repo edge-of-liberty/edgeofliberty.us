@@ -94,6 +94,7 @@ for slug, date_info in sorted_dates:
     display = (date_info.get("display") or "").strip()
     date_links.append((slug, display))
 
+
 # Write the _includes/dates_dropdown.html file
 dropdown_path = os.path.join(INCLUDES, "dates_dropdown.html")
 with open(dropdown_path, "w", encoding="utf-8") as f:
@@ -102,6 +103,69 @@ with open(dropdown_path, "w", encoding="utf-8") as f:
         f.write(f'<li><a href="/{slug}/">{display}</a></li>\n')
     f.write('</ul>\n')
 print(f"[OK] Wrote dates dropdown: {dropdown_path}", file=sys.stderr)
+
+# Write FAQ master events JSON
+faq_events = []
+
+for slug, display in date_links:
+    ymd = slug_to_ymd(slug)
+    if not ymd:
+        continue
+
+    year, month, day = ymd
+    iso_date = f"{year:04d}-{month:02d}-{day:02d}"
+
+    faq_events.append({
+        "slug": slug,
+        "display": display,
+        "iso_date": iso_date,
+        "startDate": f"{iso_date}T{START_TIME}{TZ_OFFSET}",
+        "endDate": f"{iso_date}T{END_TIME}{TZ_OFFSET}",
+        "url": f"/{slug}/",
+        "image": DEFAULT_EVENT_IMAGE,
+        "description": EVENT_DESC
+    })
+
+faq_json_path = os.path.join(INCLUDES, "faq_events.json")
+with open(faq_json_path, "w", encoding="utf-8") as f:
+    json.dump({"events": faq_events}, f, indent=2)
+
+print(f"[OK] Wrote FAQ events JSON: {faq_json_path}", file=sys.stderr)
+
+# Write SEO schema-only include for all events
+faq_events_schema_path = os.path.join(INCLUDES, "faq_events_schema.html")
+schema_graph = []
+for event in faq_events:
+    schema_graph.append({
+        "@type": "Event",
+        "name": EVENT_NAME,
+        "startDate": event["startDate"],
+        "endDate": event["endDate"],
+        "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+        "eventStatus": "https://schema.org/EventScheduled",
+        "location": {
+            "@type": "Place",
+            "name": ORG_NAME,
+            "address": ADDRESS,
+        },
+        "image": [DEFAULT_EVENT_IMAGE],
+        "description": EVENT_DESC,
+        "url": ORG_URL.rstrip("/") + event["url"],
+        "organizer": {
+            "@type": "Organization",
+            "name": ORG_NAME,
+            "url": ORG_URL,
+        }
+    })
+schema_obj = {
+    "@context": "https://schema.org",
+    "@graph": schema_graph
+}
+with open(faq_events_schema_path, "w", encoding="utf-8") as f:
+    f.write('<script type="application/ld+json">\n')
+    f.write(json.dumps(schema_obj, indent=2))
+    f.write('\n</script>\n')
+print(f"[OK] Wrote FAQ events schema HTML: {faq_events_schema_path}", file=sys.stderr)
 
 count = 0
 

@@ -1,0 +1,134 @@
+{
+  "events": [
+    {
+      "slug": "may-17-2026",
+      "display": "May 17, 2026",
+      "iso_date": "2026-05-17",
+      "startDate": "2026-05-17T10:00:00-05:00",
+      "endDate": "2026-05-17T15:00:00-05:00",
+      "url": "/may-17-2026/",
+      "image": "/images/event-default.jpg",
+      "description": "The Edge of Liberty Craft Fair is an opportunity for local entrepreneurs to sell handmade art, crafts, and food items to their neighbors and friends in Liberty Township, Indiana."
+    },
+    {
+      "slug": "may-31-2026",
+      "display": "May 31, 2026",
+      "iso_date": "2026-05-31",
+      "startDate": "2026-05-31T10:00:00-05:00",
+      "endDate": "2026-05-31T15:00:00-05:00",
+      "url": "/may-31-2026/",
+      "image": "/images/event-default.jpg",
+      "description": "The Edge of Liberty Craft Fair is an opportunity for local entrepreneurs to sell handmade art, crafts, and food items to their neighbors and friends in Liberty Township, Indiana."
+    },
+    {
+      "slug": "june-14-2026",
+      "display": "June 14, 2026",
+      "iso_date": "2026-06-14",
+      "startDate": "2026-06-14T10:00:00-05:00",
+      "endDate": "2026-06-14T15:00:00-05:00",
+      "url": "/june-14-2026/",
+      "image": "/images/event-default.jpg",
+      "description": "The Edge of Liberty Craft Fair is an opportunity for local entrepreneurs to sell handmade art, crafts, and food items to their neighbors and friends in Liberty Township, Indiana."
+    },
+    {
+      "slug": "june-28-2026",
+      "display": "June 28, 2026",
+      "iso_date": "2026-06-28",
+      "startDate": "2026-06-28T10:00:00-05:00",
+      "endDate": "2026-06-28T15:00:00-05:00",
+      "url": "/june-28-2026/",
+      "image": "/images/event-default.jpg",
+      "description": "The Edge of Liberty Craft Fair is an opportunity for local entrepreneurs to sell handmade art, crafts, and food items to their neighbors and friends in Liberty Township, Indiana."
+    },
+    {
+      "slug": "july-12-2026",
+      "display": "July 12, 2026",
+      "iso_date": "2026-07-12",
+      "startDate": "2026-07-12T10:00:00-05:00",
+      "endDate": "2026-07-12T15:00:00-05:00",
+      "url": "/july-12-2026/",
+      "image": "/images/event-default.jpg",
+      "description": "The Edge of Liberty Craft Fair is an opportunity for local entrepreneurs to sell handmade art, crafts, and food items to their neighbors and friends in Liberty Township, Indiana."
+    },
+    {
+      "slug": "july-26-2026",
+      "display": "July 26, 2026",
+      "iso_date": "2026-07-26",
+      "startDate": "2026-07-26T10:00:00-05:00",
+      "endDate": "2026-07-26T15:00:00-05:00",
+      "url": "/july-26-2026/",
+      "image": "/images/event-default.jpg",
+      "description": "The Edge of Liberty Craft Fair is an opportunity for local entrepreneurs to sell handmade art, crafts, and food items to their neighbors and friends in Liberty Township, Indiana."
+    },
+    {
+      "slug": "august-09-2026",
+      "display": "August 09, 2026",
+      "iso_date": "2026-08-09",
+      "startDate": "2026-08-09T10:00:00-05:00",
+      "endDate": "2026-08-09T15:00:00-05:00",
+      "url": "/august-09-2026/",
+      "image": "/images/event-default.jpg",
+      "description": "The Edge of Liberty Craft Fair is an opportunity for local entrepreneurs to sell handmade art, crafts, and food items to their neighbors and friends in Liberty Township, Indiana."
+    },
+    {
+      "slug": "august-23-2026",
+      "display": "August 23, 2026",
+      "iso_date": "2026-08-23",
+      "startDate": "2026-08-23T10:00:00-05:00",
+      "endDate": "2026-08-23T15:00:00-05:00",
+      "url": "/august-23-2026/",
+      "image": "/images/event-default.jpg",
+      "description": "The Edge of Liberty Craft Fair is an opportunity for local entrepreneurs to sell handmade art, crafts, and food items to their neighbors and friends in Liberty Township, Indiana."
+    },
+    {
+      "slug": "september-06-2026",
+      "display": "September 06, 2026",
+      "iso_date": "2026-09-06",
+      "startDate": "2026-09-06T10:00:00-05:00",
+      "endDate": "2026-09-06T15:00:00-05:00",
+      "url": "/september-06-2026/",
+      "image": "/images/event-default.jpg",
+      "description": "The Edge of Liberty Craft Fair is an opportunity for local entrepreneurs to sell handmade art, crafts, and food items to their neighbors and friends in Liberty Township, Indiana."
+    },
+    {
+      "slug": "september-20-2026",
+      "display": "September 20, 2026",
+      "iso_date": "2026-09-20",
+      "startDate": "2026-09-20T10:00:00-05:00",
+      "endDate": "2026-09-20T15:00:00-05:00",
+      "url": "/september-20-2026/",
+      "image": "/images/event-default.jpg",
+      "description": "The Edge of Liberty Craft Fair is an opportunity for local entrepreneurs to sell handmade art, crafts, and food items to their neighbors and friends in Liberty Township, Indiana."
+    },
+    {
+      "slug": "october-04-2026",
+      "display": "October 04, 2026",
+      "iso_date": "2026-10-04",
+      "startDate": "2026-10-04T10:00:00-05:00",
+      "endDate": "2026-10-04T15:00:00-05:00",
+      "url": "/october-04-2026/",
+      "image": "/images/event-default.jpg",
+      "description": "The Edge of Liberty Craft Fair is an opportunity for local entrepreneurs to sell handmade art, crafts, and food items to their neighbors and friends in Liberty Township, Indiana."
+    },
+    {
+      "slug": "october-18-2026",
+      "display": "October 18, 2026",
+      "iso_date": "2026-10-18",
+      "startDate": "2026-10-18T10:00:00-05:00",
+      "endDate": "2026-10-18T15:00:00-05:00",
+      "url": "/october-18-2026/",
+      "image": "/images/event-default.jpg",
+      "description": "The Edge of Liberty Craft Fair is an opportunity for local entrepreneurs to sell handmade art, crafts, and food items to their neighbors and friends in Liberty Township, Indiana."
+    },
+    {
+      "slug": "november-01-2026",
+      "display": "November 01, 2026",
+      "iso_date": "2026-11-01",
+      "startDate": "2026-11-01T10:00:00-05:00",
+      "endDate": "2026-11-01T15:00:00-05:00",
+      "url": "/november-01-2026/",
+      "image": "/images/event-default.jpg",
+      "description": "The Edge of Liberty Craft Fair is an opportunity for local entrepreneurs to sell handmade art, crafts, and food items to their neighbors and friends in Liberty Township, Indiana."
+    }
+  ]
+}
