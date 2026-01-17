@@ -1,5 +1,17 @@
-<h1>Page Not Found</h1>
-<p>This page may have existed on our old site.</p>
-<p>Try one of these:</p>
+---
+layout: default
+title: Page Not Found
+permalink: /404.html
+---
 
-{% include old_site_links.html %}
+<section class="not-found-page">
+  <h1>Page Not Found</h1>
+
+  <p>This page may have existed on our old site.</p>
+
+  <p>Try one of these:</p>
+
+  <div class="old-site-links">
+    {% include old_site_links.html %}
+  </div>
+</section>
