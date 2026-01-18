@@ -34,6 +34,9 @@ build_sitemap() {
   OUT="$ROOT/sitemap.xml"
 
   {
+    echo '---'
+    echo 'layout: null'
+    echo '---'
     echo '<?xml version="1.0" encoding="UTF-8"?>'
     echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
 
