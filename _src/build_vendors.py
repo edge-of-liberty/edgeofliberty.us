@@ -46,9 +46,14 @@ def render_markdownish(text):
 
 with open(BUILD_JSON, encoding="utf-8") as f:
     data = json.load(f)
+    print("[DEBUG] Total vendors:", len(data.get("vendors", [])), file=sys.stderr)
+    for v in data.get("vendors", []):
+        print("[DEBUG] RAW sponsor field for", v.get("name"), "=>", repr(v.get("sponsor")), type(v.get("sponsor")), file=sys.stderr)
 
 regular_vendors = [v for v in data["vendors"] if not v.get("sponsor", "").strip()]
 sponsors = [v for v in data["vendors"] if v.get("sponsor", "").strip()]
+print("[DEBUG] Regular vendors:", [v.get("name") for v in regular_vendors], file=sys.stderr)
+print("[DEBUG] Sponsors:", [v.get("name") for v in sponsors], file=sys.stderr)
 
 # Generate vendors dropdown include (alphabetical, scrollable)
 includes_dir = os.path.join(ROOT, "_includes")
