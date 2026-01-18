@@ -31,22 +31,25 @@ body {
 header {
   border-bottom: 1px solid var(--border);
   background: white;
-  padding: var(--space-md) var(--space-lg);
+  padding: 0.5rem var(--space-lg);
 }
 
 .site-header .header-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-lg);
+  gap: 1rem;
+  min-height: 64px;
 }
 
 /* Logo constraints and brand layout */
+
 .brand {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 0.75rem;
   flex-shrink: 0;
+  flex-direction: row;
 }
 
 .site-header .brand {
@@ -84,11 +87,33 @@ header .brand img {
   }
 }
 
-header h1 {
-  margin: 0;
-  font-size: 1.75rem;
+/* Header site title (brand text) */
+
+.brand-link {
+  font-size: 1.15rem;
   font-weight: 600;
-  letter-spacing: -0.02em;
+  color: var(--text);
+  text-decoration: none;
+  line-height: 1;
+  white-space: nowrap;
+  display: inline-block;
+}
+
+.brand-link:hover {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+/* If the site title is wrapped in an h1, neutralize its default size */
+header h1,
+.site-header h1 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  display: inline;
+  white-space: nowrap;
 }
 
 nav {
@@ -374,7 +399,7 @@ footer {
   display: flex;
   align-items: center;
   gap: 1.25rem;
-  margin-left: auto;
+  margin-left: 0;
 }
 
 .nav-dropdown {
@@ -573,4 +598,16 @@ footer {
   text-align: left;
   color: var(--muted);
   font-size: 1.05rem;
+}
+/* Header horizontal row layout: logo, title, nav inline and vertically centered */
+.site-header .brand,
+.site-header .brand-link,
+.site-header h1 {
+  display: inline-flex;
+  align-items: center;
+}
+
+.site-header nav {
+  margin-left: auto;
+  align-items: center;
 }
