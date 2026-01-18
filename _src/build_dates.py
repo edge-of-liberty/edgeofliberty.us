@@ -154,9 +154,7 @@ for event in faq_events:
         "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
         "eventStatus": "https://schema.org/EventScheduled",
         "location": {
-            "@type": "Place",
-            "name": ORG_NAME,
-            "address": ADDRESS,
+            "@id": "https://edge-of-liberty.com/#place"
         },
         "image": [event["image"]],
         "performer": {
@@ -217,9 +215,7 @@ for date_slug, date_info in sorted_dates:
         "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
         "eventStatus": "https://schema.org/EventScheduled",
         "location": {
-            "@type": "Place",
-            "name": ORG_NAME,
-            "address": ADDRESS,
+            "@id": "https://edge-of-liberty.com/#place"
         },
         # Per-date hero image for date pages
         "image": [hero_image],

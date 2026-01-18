@@ -69,7 +69,7 @@ header {
 
 .site-header .brand img,
 header .brand img {
-  max-height: 40px;
+  max-height: 64px;
   width: auto;
   height: auto;
   object-fit: contain;
@@ -80,7 +80,7 @@ header .brand img {
 @media (max-width: 640px) {
   .site-header .brand img,
   header .brand img {
-    max-height: 34px;
+    max-height: 48px;
   }
 }
 
@@ -389,7 +389,7 @@ footer {
   color: var(--muted);
   background: none;
   border: none;
-  padding: 0.4rem 0.25rem;
+  padding: 0.5rem 0.4rem; /* larger hover target */
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -406,8 +406,9 @@ footer {
 .nav-dropdown-list {
   display: none;
   position: absolute;
-  top: calc(100% + 8px);
+  top: 100%;
   left: 0;
+  max-width: min(90vw, 320px);
   background: white;
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -417,13 +418,22 @@ footer {
   max-height: 60vh;
   overflow-y: auto;
   z-index: 9999;
+  margin-top: 0.25rem; /* visually connected to button */
 }
 
+/* Keep menu open when hovering anywhere in the dropdown zone */
 .nav-dropdown:hover .dropdown-menu,
 .nav-dropdown:focus-within .dropdown-menu,
 .nav-dropdown:hover .nav-dropdown-list,
 .nav-dropdown:focus-within .nav-dropdown-list {
   display: block;
+}
+
+/* Prevent right-edge overflow on last menu */
+.nav-dropdown:last-child .dropdown-menu,
+.nav-dropdown:last-child .nav-dropdown-list {
+  right: 0;
+  left: auto;
 }
 
 /* Dropdown links */
@@ -486,7 +496,7 @@ footer {
   grid-template-columns: 1.5fr 1fr 1fr 44px;
   gap: 0.5rem;
   align-items: center;
-  padding: 0.5rem 0;
+  padding: 0.35rem 0;
   border-bottom: 1px solid var(--border);
 }
 
@@ -547,4 +557,20 @@ footer {
   .sponsors-table td:last-child {
     justify-self: start;
   }
+}
+
+/* Sponsors page H1 and intro spacing */
+.sponsors-page h1 {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  font-size: 2.25rem;
+  text-align: center;
+}
+
+.sponsors-intro {
+  max-width: 760px;
+  margin: 0 auto 2rem auto;
+  text-align: left;
+  color: var(--muted);
+  font-size: 1.05rem;
 }
