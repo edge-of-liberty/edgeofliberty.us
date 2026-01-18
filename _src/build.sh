@@ -91,16 +91,6 @@ parse_csv() {
   echo "[OK] build.json generated ($(wc -c < "$BUILD_JSON") bytes)"
 }
 
-###############################################################################
-# Scaffold vendor dirs
-###############################################################################
-
-scaffold_vendors() {
-  echo "[INFO] Scaffolding vendor include directories..."
-  require_file "$SRC/scaffold_vendors.py"
-  parse_csv
-  python3 "$SRC/scaffold_vendors.py" "$ROOT" "$BUILD_JSON"
-}
 
 ###############################################################################
 # Build vendor pages
@@ -140,9 +130,6 @@ build_home() {
 ###############################################################################
 
 case "${1:-}" in
-  scaffold)
-    scaffold_vendors
-    ;;
   vendors)
     build_vendors
     ;;
@@ -154,7 +141,6 @@ case "${1:-}" in
     ;;
   all)
     echo "[INFO] Starting full site build..."
-    scaffold_vendors
     build_vendors
     build_dates
     build_home
