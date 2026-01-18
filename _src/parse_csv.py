@@ -87,7 +87,7 @@ with open(CSV_FILE, encoding="utf-8-sig", newline="") as f:
             "public_email": row.get("Public email", "").strip(),
             "public_phone": row.get("Public phone", "").strip(),
             "short_description": row.get("Short Description", "").strip(),
-            "is_sponsor": is_truthy(row.get("SPONSOR")),
+            "sponsor": row.get("SPONSOR").strip(),
             "dates": []
         }
 
