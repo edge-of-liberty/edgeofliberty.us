@@ -199,6 +199,7 @@ with open(sponsors_path, "w", encoding="utf-8") as sf:
     sf.write("---\n\n")
 
     sf.write('<section class="sponsors-page">\n')
+    sf.write('{% include sponsor_intro.html %}\n')
     sf.write('<table class="sponsors-table">\n')
 
     # Hidden header row for accessibility / alignment

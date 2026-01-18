@@ -473,22 +473,27 @@ footer {
 }
 
 
-/* Sponsors table styling */
+/* Sponsors table styling — 4-column grid layout */
 
 .sponsors-table {
   width: 100%;
   border-collapse: collapse;
-  margin: 2rem 0;
+  margin: 1.5rem 0;
 }
 
 .sponsors-table tr {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 44px;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.5rem 0;
   border-bottom: 1px solid var(--border);
 }
 
 .sponsors-table td {
-  padding: 0.75rem 0.5rem;
-  vertical-align: top;
+  padding: 0;
   font-size: 0.95rem;
+  vertical-align: middle;
 }
 
 .sponsors-table td:first-child {
@@ -506,33 +511,40 @@ footer {
   white-space: nowrap;
 }
 
-.sponsors-table a {
-  color: var(--accent);
+/* Proof link → icon button */
+
+.sponsors-table td:last-child a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 999px;
+  font-size: 0; /* hide text, icon only */
   text-decoration: none;
+  background: rgba(37, 99, 235, 0.08);
 }
 
-.sponsors-table a:hover {
-  text-decoration: underline;
+.sponsors-table td:last-child a::before {
+  content: "🪧";
+  font-size: 1.1rem;
+  line-height: 1;
 }
+
+.sponsors-table td:last-child a:hover {
+  background: rgba(37, 99, 235, 0.15);
+}
+
+/* Mobile stacking */
 
 @media (max-width: 768px) {
-  .sponsors-table,
-  .sponsors-table tbody,
-  .sponsors-table tr,
-  .sponsors-table td {
-    display: block;
-    width: 100%;
-  }
-
   .sponsors-table tr {
-    padding: 0.75rem 0;
-  }
-
-  .sponsors-table td {
-    padding: 0.25rem 0;
+    grid-template-columns: 1fr auto;
+    gap: 0.25rem 0.5rem;
   }
 
   .sponsors-table td:last-child {
-    text-align: left;
+    justify-self: start;
   }
 }
