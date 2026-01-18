@@ -200,13 +200,26 @@ with open(sponsors_path, "w", encoding="utf-8") as sf:
 
     sf.write('<section class="sponsors-page">\n')
     sf.write('<table class="sponsors-table">\n')
+
+    # Hidden header row for accessibility / alignment
+    sf.write("<thead style=\"display:none;\">\n")
+    sf.write("<tr>\n")
+    sf.write("<th>Company</th>\n")
+    sf.write("<th>Link</th>\n")
+    sf.write("<th>Contact</th>\n")
+    sf.write("<th>Proof</th>\n")
+    sf.write("</tr>\n")
+    sf.write("</thead>\n")
+
+    sf.write("<tbody>\n")
+
     for v in sponsors:
-        name = v.get("name", "")
+        name = v.get("name", "").strip()
         website = v.get("website", "").strip()
         facebook = v.get("facebook", "").strip()
         contact_email = v.get("public_email", "").strip()
         contact_phone = v.get("public_phone", "").strip()
-        slug = v.get("slug", "")
+        slug = v.get("slug", "").strip()
 
         # Determine website or facebook cell
         site_link = website if website else (facebook if facebook else "")
@@ -215,26 +228,33 @@ with open(sponsors_path, "w", encoding="utf-8") as sf:
         contact = contact_email if contact_email else (contact_phone if contact_phone else "")
 
         sf.write("<tr>\n")
-        sf.write(f"<td>{name}</td>\n")
 
+        # Company
+        sf.write(f"<td class=\"sponsor-name\">{name}</td>\n")
+
+        # Website / Facebook
         if site_link:
-            sf.write(f'<td><a href="{site_link}">{site_link}</a></td>\n')
+            sf.write(f'<td class="sponsor-link"><a href="{site_link}" target="_blank" rel="noopener">{site_link}</a></td>\n')
         else:
-            sf.write("<td></td>\n")
+            sf.write('<td class="sponsor-link"></td>\n')
 
+        # Contact
         if contact:
             if contact_email:
-                sf.write(f'<td><a href="mailto:{contact}">{contact}</a></td>\n')
+                sf.write(f'<td class="sponsor-contact"><a href="mailto:{contact}">{contact}</a></td>\n')
             elif contact_phone:
-                sf.write(f'<td><a href="tel:{contact}">{contact}</a></td>\n')
+                sf.write(f'<td class="sponsor-contact"><a href="tel:{contact}">{contact}</a></td>\n')
             else:
-                sf.write(f"<td>{contact}</td>\n")
+                sf.write(f'<td class="sponsor-contact">{contact}</td>\n')
         else:
-            sf.write("<td></td>\n")
+            sf.write('<td class="sponsor-contact"></td>\n')
 
+        # Proof link
         proof_link = f"/proof/{slug}.pdf"
-        sf.write(f'<td><a href="{proof_link}">Sign proof</a></td>\n')
+        sf.write(f'<td class="sponsor-proof"><a href="{proof_link}">Sign proof</a></td>\n')
 
         sf.write("</tr>\n")
+
+    sf.write("</tbody>\n")
     sf.write("</table>\n")
     sf.write("</section>\n")
