@@ -234,16 +234,16 @@ with open(sponsors_path, "w", encoding="utf-8") as sf:
 
         # Website / Facebook
         if site_link:
-            sf.write(f'<td class="sponsor-link"><a href="{site_link}" target="_blank" rel="noopener">{site_link}</a></td>\n')
+            sf.write(f'<td class="sponsor-link"><a href="{site_link}" target="_blank" rel="noopener">Learn More</a></td>\n')
         else:
             sf.write('<td class="sponsor-link"></td>\n')
 
         # Contact
         if contact:
             if contact_email:
-                sf.write(f'<td class="sponsor-contact"><a href="mailto:{contact}">{contact}</a></td>\n')
+                sf.write(f'<td class="sponsor-contact"><a href="mailto:{contact}">Contact Us</a></td>\n')
             elif contact_phone:
-                sf.write(f'<td class="sponsor-contact"><a href="tel:{contact}">{contact}</a></td>\n')
+                sf.write(f'<td class="sponsor-contact"><a href="tel:{contact}">Contact Us</a></td>\n')
             else:
                 sf.write(f'<td class="sponsor-contact">{contact}</td>\n')
         else:
