@@ -47,13 +47,16 @@ def render_markdownish(text):
 with open(BUILD_JSON, encoding="utf-8") as f:
     data = json.load(f)
 
+regular_vendors = [v for v in data["vendors"] if not v.get("sponsor", "").strip()]
+sponsors = [v for v in data["vendors"] if v.get("sponsor", "").strip()]
+
 # Generate vendors dropdown include (alphabetical, scrollable)
 includes_dir = os.path.join(ROOT, "_includes")
 os.makedirs(includes_dir, exist_ok=True)
 
 dropdown_path = os.path.join(includes_dir, "vendors_dropdown.html")
 
-sorted_vendors = sorted(data["vendors"], key=lambda v: v["name"].lower())
+sorted_vendors = sorted(regular_vendors, key=lambda v: v["name"].lower())
 
 with open(dropdown_path, "w", encoding="utf-8") as df:
     df.write('<div class="dropdown-menu dropdown-scroll">\n')
@@ -66,7 +69,7 @@ with open(dropdown_path, "w", encoding="utf-8") as df:
 
 count = 0
 
-for v in data["vendors"]:
+for v in regular_vendors:
     slug = v["slug"]
     name = v["name"]
 
@@ -186,3 +189,52 @@ for v in data["vendors"]:
     count += 1
 
 print(f"Generated {count} vendor pages", file=sys.stderr)
+
+# Generate sponsors.html page
+sponsors_path = os.path.join(ROOT, "sponsors.html")
+with open(sponsors_path, "w", encoding="utf-8") as sf:
+    sf.write("---\n")
+    sf.write("layout: default\n")
+    sf.write('title: "Sponsors"\n')
+    sf.write("---\n\n")
+
+    sf.write('<section class="sponsors-page">\n')
+    sf.write('<table class="sponsors-table">\n')
+    for v in sponsors:
+        name = v.get("name", "")
+        website = v.get("website", "").strip()
+        facebook = v.get("facebook", "").strip()
+        contact_email = v.get("public_email", "").strip()
+        contact_phone = v.get("public_phone", "").strip()
+        slug = v.get("slug", "")
+
+        # Determine website or facebook cell
+        site_link = website if website else (facebook if facebook else "")
+
+        # Determine public contact cell
+        contact = contact_email if contact_email else (contact_phone if contact_phone else "")
+
+        sf.write("<tr>\n")
+        sf.write(f"<td>{name}</td>\n")
+
+        if site_link:
+            sf.write(f'<td><a href="{site_link}">{site_link}</a></td>\n')
+        else:
+            sf.write("<td></td>\n")
+
+        if contact:
+            if contact_email:
+                sf.write(f'<td><a href="mailto:{contact}">{contact}</a></td>\n')
+            elif contact_phone:
+                sf.write(f'<td><a href="tel:{contact}">{contact}</a></td>\n')
+            else:
+                sf.write(f"<td>{contact}</td>\n")
+        else:
+            sf.write("<td></td>\n")
+
+        proof_link = f"/proof/{slug}.pdf"
+        sf.write(f'<td><a href="{proof_link}">Sign proof</a></td>\n')
+
+        sf.write("</tr>\n")
+    sf.write("</table>\n")
+    sf.write("</section>\n")
