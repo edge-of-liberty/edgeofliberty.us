@@ -314,6 +314,7 @@ for date_slug, date_info in sorted_dates:
             for v in vendors:
                 vslug = v.get("slug", "")
                 vname = v.get("name", "")
+                vstatus = (v.get("status") or "").strip().lower()
                 vshort = ""
 
                 for full in data.get("vendors", []):
@@ -322,8 +323,13 @@ for date_slug, date_info in sorted_dates:
                         break
 
                 f.write(f'<li><a href="/{vslug}/">{vname}</a>')
+
                 if vshort:
                     f.write(f' — {vshort}')
+
+                if vstatus == "absent":
+                    f.write(" <em>(unable to attend)</em>")
+
                 f.write('</li>\n')
 
             f.write("</ul>\n")
