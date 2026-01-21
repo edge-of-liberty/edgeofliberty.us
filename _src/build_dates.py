@@ -135,7 +135,7 @@ with open(home_dates_path, "w", encoding="utf-8") as f:
         if nd_url:
             f.write(
                 f'<a class="home-date-nd" href="{nd_url}" target="_blank" rel="noopener" aria-label="View on Nextdoor">'
-                f'<span class="nd-icon">N</span>'
+                f'<img src="https://nextdoor.com/favicon.ico" alt="Nextdoor" class="nd-icon" loading="lazy" />'
                 f'</a>'
             )
         f.write('</li>\n')
