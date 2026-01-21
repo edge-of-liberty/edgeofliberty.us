@@ -44,14 +44,15 @@ def render_markdownish(text):
 
     return "\n".join(out)
 
+
 with open(BUILD_JSON, encoding="utf-8") as f:
     data = json.load(f)
     print("[DEBUG] Total vendors:", len(data.get("vendors", [])), file=sys.stderr)
     for v in data.get("vendors", []):
         print("[DEBUG] RAW sponsor field for", v.get("name"), "=>", repr(v.get("sponsor")), type(v.get("sponsor")), file=sys.stderr)
 
-regular_vendors = [v for v in data["vendors"] if not v.get("sponsor", "").strip()]
-sponsors = [v for v in data["vendors"] if v.get("sponsor", "").strip()]
+regular_vendors = [v for v in data["vendors"] if not (v.get("sponsor") or "").strip()]
+sponsors = [v for v in data["vendors"] if (v.get("sponsor") or "").strip()]
 print("[DEBUG] Regular vendors:", [v.get("name") for v in regular_vendors], file=sys.stderr)
 print("[DEBUG] Sponsors:", [v.get("name") for v in sponsors], file=sys.stderr)
 
@@ -160,7 +161,7 @@ for v in regular_vendors:
         ]
         links = []
         for field, prefix in contact_fields:
-            val = v.get(field, "").strip()
+            val = (v.get(field) or "").strip()
             if val:
                 if field == "public_email":
                     links.append(f'<li><a href="mailto:{val}">Email</a></li>')
@@ -182,7 +183,8 @@ for v in regular_vendors:
         f.write('<div class="vendor-dates">\n')
         f.write("<h3>Find us at these craft fair dates</h3>\n<ul>\n")
         for d in v.get("dates", []):
-            # Do NOT sort; parse_csv.py already appends in CSV column order
+            # Do NOT sort; parse_csv.py already appends in CSV column order.
+            # Show the date link regardless of the per-date status value.
             f.write(f'<li><a href="/{d["slug"]}/">{d["display"]}</a></li>\n')
         f.write("</ul>\n")
         f.write("</div>\n")
@@ -219,7 +221,7 @@ with open(sponsors_path, "w", encoding="utf-8") as sf:
     sf.write('<table class="sponsors-table">\n')
 
     # Hidden header row for accessibility / alignment
-    sf.write("<thead style=\"display:none;\">\n")
+    sf.write('<thead style="display:none;">\n')
     sf.write("<tr>\n")
     sf.write("<th>Company</th>\n")
     sf.write("<th>Link</th>\n")
@@ -231,12 +233,12 @@ with open(sponsors_path, "w", encoding="utf-8") as sf:
     sf.write("<tbody>\n")
 
     for v in sponsors:
-        name = v.get("name", "").strip()
-        website = v.get("website", "").strip()
-        facebook = v.get("facebook", "").strip()
-        contact_email = v.get("public_email", "").strip()
-        contact_phone = v.get("public_phone", "").strip()
-        slug = v.get("slug", "").strip()
+        name = (v.get("name") or "").strip()
+        website = (v.get("website") or "").strip()
+        facebook = (v.get("facebook") or "").strip()
+        contact_email = (v.get("public_email") or "").strip()
+        contact_phone = (v.get("public_phone") or "").strip()
+        slug = (v.get("slug") or "").strip()
 
         # Determine website or facebook cell
         site_link = website if website else (facebook if facebook else "")
@@ -247,7 +249,7 @@ with open(sponsors_path, "w", encoding="utf-8") as sf:
         sf.write("<tr>\n")
 
         # Company
-        sf.write(f"<td class=\"sponsor-name\">{name}</td>\n")
+        sf.write(f'<td class="sponsor-name">{name}</td>\n')
 
         # Website / Facebook
         if site_link:
