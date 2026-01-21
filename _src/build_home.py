@@ -54,10 +54,6 @@ try:
 
         f.write('<section class="home-section vendors-section">')
         f.write(vendors_html)
-        f.write('<ul class="vendor-list">')
-        for v in data["vendors"]:
-            f.write(f'<li><a href="/{v["slug"]}/">{v["name"]}</a></li>')
-        f.write('</ul>')
         f.write('</section>')
 
     if not os.path.exists(outpath):
