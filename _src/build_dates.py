@@ -127,9 +127,7 @@ with open(home_dates_path, "w", encoding="utf-8") as f:
         if fb_url:
             f.write(
                 f'<a class="home-date-fb" href="{fb_url}" target="_blank" rel="noopener" aria-label="View on Facebook">'
-                f'<svg class="fb-icon" viewBox="0 0 24 24" aria-hidden="true">'
-                f'<path d="M22 12a10 10 0 1 0-11.5 9.9v-7h-2.2V12h2.2V9.8c0-2.2 1.3-3.4 3.3-3.4.9 0 1.9.1 1.9.1v2.1h-1.1c-1.1 0-1.4.7-1.4 1.4V12h2.4l-.4 2.9h-2v7A10 10 0 0 0 22 12z"/>'
-                f'</svg>'
+                f'<img src="https://facebook.com/favicon.ico" alt="Facebook" class="fb-icon" loading="lazy" />'
                 f'</a>'
             )
         if nd_url:
