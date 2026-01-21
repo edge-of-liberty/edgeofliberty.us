@@ -41,6 +41,7 @@ EVENT_DESC = (
 )
 ORG_NAME = "The Edge of Liberty"
 ORG_URL = "https://edgeofliberty.us/"
+GOOGLE_MAPS_PLACE_URL = "https://www.google.com/maps/place/The+Edge+of+Liberty/@41.521809,-87.036052,673m/data=!3m1!1e3!4m12!1m5!3m4!2zNDHCsDMxJzE4LjUiTiA4N8KwMDInMDkuOCJX!8m2!3d41.521809!4d-87.036052!3m5!1s0x8811992fc22aca43:0x4d56a127dde0ee9c!8m2!3d41.5215535!4d-87.0360516!16s%2Fg%2F11j78ky1z0"
 TZ_OFFSET = "-05:00"
 START_TIME = "10:00:00"
 END_TIME = "15:00:00"
@@ -173,7 +174,8 @@ for slug, display in date_links:
         "endDate": f"{iso_date}T{END_TIME}{TZ_OFFSET}",
         "url": f"/{slug}/",
         "image": f"/{slug}/hero.jpg",
-        "description": EVENT_DESC
+        "description": EVENT_DESC,
+        "hasMap": GOOGLE_MAPS_PLACE_URL
     }
 
     if fb_url:
@@ -211,6 +213,7 @@ for event in faq_events:
         "offers": DEFAULT_OFFER,
         "description": EVENT_DESC,
         "url": ORG_URL.rstrip("/") + event["url"],
+        "hasMap": GOOGLE_MAPS_PLACE_URL,
         "organizer": {
             "@type": "Organization",
             "name": ORG_NAME,
@@ -283,6 +286,7 @@ for date_slug, date_info in sorted_dates:
         },
         "offers": DEFAULT_OFFER,
         "description": EVENT_DESC,
+        "hasMap": GOOGLE_MAPS_PLACE_URL,
         "organizer": {
             "@type": "Organization",
             "name": ORG_NAME,
@@ -322,8 +326,9 @@ for date_slug, date_info in sorted_dates:
         f.write(json.dumps(json_ld, indent=2))
         f.write("\n</script>\n")
 
+        f.write(f'<p><strong>Location:</strong> <a href="{GOOGLE_MAPS_PLACE_URL}" target="_blank" rel="noopener">606 N Calumet Ave, Valparaiso, IN 46383</a></p>\n')
+
         f.write("<p><strong>Hours:</strong> 10:00 AM – 3:00 PM (Central)</p>\n")
-        f.write("<p><strong>Location:</strong> 606 N Calumet Ave, Valparaiso, IN 46383</p>\n")
 
         if fb_url:
             f.write(f'<p><strong>Facebook event:</strong> <a href="{fb_url}" target="_blank" rel="noopener">View on Facebook</a></p>\n')

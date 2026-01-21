@@ -634,7 +634,7 @@ footer {
   flex: 0 1 auto;
 }
 
-/* Home page date list — Facebook icon sizing fix */
+/* Home page date list — social icon sizing + alignment */
 
 .home-date-row {
   display: flex;
@@ -642,7 +642,9 @@ footer {
   gap: 0.5rem;
 }
 
-.home-date-fb {
+/* Common icon wrapper */
+.home-date-row a.home-date-fb,
+.home-date-row a.home-date-nd {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -650,37 +652,29 @@ footer {
   height: 28px;
   padding: 0;
   margin-left: 0.25rem;
-  border-radius: 999px;
-  background: transparent;
+  border-radius: 6px;
+  background: #ffffff; /* force white so dark mode users don't get ugly results */
   flex-shrink: 0;
 }
 
-.home-date-fb:hover {
+/* Hover affordance */
+.home-date-row a.home-date-fb:hover,
+.home-date-row a.home-date-nd:hover {
   background: rgba(37, 99, 235, 0.06);
 }
 
-.fb-icon {
+/* SVG icons */
+.home-date-row svg {
   width: 22px;
   height: 22px;
   display: block;
   fill: currentColor;
 }
 
-/* If using emoji */
-.date-list li a.fb-link::before {
-  font-size: 13px;
-  line-height: 1;
-}
-
-/* If using <img> or <svg> */
-.date-list li a.fb-link img,
-.date-list li a.fb-link svg {
-  width: 13px;
-  height: 13px;
+/* Image-based icons (favicons, etc.) */
+.home-date-row img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
   display: block;
-}
-
-/* Hover affordance, subtle */
-.date-list li a.fb-link:hover {
-  background: rgba(37, 99, 235, 0.06);
 }
