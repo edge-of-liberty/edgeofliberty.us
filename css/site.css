@@ -281,9 +281,23 @@ footer {
 
 .vendor-masonry {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(3, 1fr); /* ~1/3 width each on desktop */
   gap: 16px;
   margin: 1.5rem 0;
+}
+
+/* Tablet: 2 columns */
+@media (max-width: 900px) {
+  .vendor-masonry {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Mobile: 1 column */
+@media (max-width: 540px) {
+  .vendor-masonry {
+    grid-template-columns: 1fr;
+  }
 }
 
 .vendor-dates {
@@ -316,11 +330,18 @@ footer {
 
 .vendor-photo {
   width: 100%;
-  height: 220px;
-  object-fit: cover;
+  height: auto;              /* let height be natural */
+  max-height: none;          /* remove vertical constraint */
+  object-fit: contain;       /* show full image without cropping */
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.15);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: block;
+}
+
+.vendor-masonry img {
+  max-width: 100%;
+  height: auto;
 }
 
 .vendor-photo:hover {
