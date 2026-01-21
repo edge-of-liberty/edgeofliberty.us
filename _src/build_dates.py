@@ -120,17 +120,25 @@ home_dates_path = os.path.join(INCLUDES, "home_dates.html")
 with open(home_dates_path, "w", encoding="utf-8") as f:
     f.write('<ul class="home-date-list">\n')
     for slug, display in date_links:
-        fb_url = facebook_events[slug]["url"]  # assume always exists
-        f.write(
-            f'<li class="home-date-row">'
-            f'<a class="home-date-link" href="/{slug}/">{display}</a>'
-            f'<a class="home-date-fb" href="{fb_url}" target="_blank" rel="noopener" aria-label="View on Facebook">'
-            f'<svg class="fb-icon" viewBox="0 0 24 24" aria-hidden="true">'
-            f'<path d="M22 12a10 10 0 1 0-11.5 9.9v-7h-2.2V12h2.2V9.8c0-2.2 1.3-3.4 3.3-3.4.9 0 1.9.1 1.9.1v2.1h-1.1c-1.1 0-1.4.7-1.4 1.4V12h2.4l-.4 2.9h-2v7A10 10 0 0 0 22 12z"/>'
-            f'</svg>'
-            f'</a>'
-            f'</li>\n'
-        )
+        fb_url = facebook_events[slug].get("url")
+        nd_url = facebook_events[slug].get("nextdoor")
+        f.write(f'<li class="home-date-row">')
+        f.write(f'<a class="home-date-link" href="/{slug}/">{display}</a>')
+        if fb_url:
+            f.write(
+                f'<a class="home-date-fb" href="{fb_url}" target="_blank" rel="noopener" aria-label="View on Facebook">'
+                f'<svg class="fb-icon" viewBox="0 0 24 24" aria-hidden="true">'
+                f'<path d="M22 12a10 10 0 1 0-11.5 9.9v-7h-2.2V12h2.2V9.8c0-2.2 1.3-3.4 3.3-3.4.9 0 1.9.1 1.9.1v2.1h-1.1c-1.1 0-1.4.7-1.4 1.4V12h2.4l-.4 2.9h-2v7A10 10 0 0 0 22 12z"/>'
+                f'</svg>'
+                f'</a>'
+            )
+        if nd_url:
+            f.write(
+                f'<a class="home-date-nd" href="{nd_url}" target="_blank" rel="noopener" aria-label="View on Nextdoor">'
+                f'<span class="nd-icon">N</span>'
+                f'</a>'
+            )
+        f.write('</li>\n')
     f.write('</ul>\n')
 
 print(f"[OK] Wrote home dates include: {home_dates_path}", file=sys.stderr)
@@ -157,6 +165,7 @@ for slug, display in date_links:
     iso_date = f"{year:04d}-{month:02d}-{day:02d}"
 
     fb_url = facebook_events.get(slug, {}).get("url")
+    nd_url = facebook_events.get(slug, {}).get("nextdoor")
 
     event_obj = {
         "slug": slug,
@@ -171,6 +180,8 @@ for slug, display in date_links:
 
     if fb_url:
         event_obj["facebook_url"] = fb_url
+    if nd_url:
+        event_obj["nextdoor_url"] = nd_url
 
     faq_events.append(event_obj)
 
@@ -208,8 +219,13 @@ for event in faq_events:
             "url": ORG_URL,
         }
     }
+    same_as = []
     if "facebook_url" in event:
-        entry["sameAs"] = [event["facebook_url"]]
+        same_as.append(event["facebook_url"])
+    if "nextdoor_url" in event:
+        same_as.append(event["nextdoor_url"])
+    if same_as:
+        entry["sameAs"] = same_as
     schema_graph.append(entry)
 schema_obj = {
     "@context": "https://schema.org",
@@ -248,6 +264,7 @@ for date_slug, date_info in sorted_dates:
     )
 
     fb_url = facebook_events.get(date_slug, {}).get("url")
+    nd_url = facebook_events.get(date_slug, {}).get("nextdoor")
 
     json_ld = {
         "@context": "https://schema.org",
@@ -274,8 +291,13 @@ for date_slug, date_info in sorted_dates:
             "url": ORG_URL,
         }
     }
+    same_as = []
     if fb_url:
-        json_ld["sameAs"] = [fb_url]
+        same_as.append(fb_url)
+    if nd_url:
+        same_as.append(nd_url)
+    if same_as:
+        json_ld["sameAs"] = same_as
 
     with open(os.path.join(outdir, "index.html"), "w", encoding="utf-8") as f:
         display = (date_info.get("display") or "").strip()
@@ -305,9 +327,10 @@ for date_slug, date_info in sorted_dates:
         f.write("<p><strong>Hours:</strong> 10:00 AM – 3:00 PM (Central)</p>\n")
         f.write("<p><strong>Location:</strong> 606 N Calumet Ave, Valparaiso, IN 46383</p>\n")
 
-        fb_url = facebook_events.get(date_slug, {}).get("url")
         if fb_url:
             f.write(f'<p><strong>Facebook event:</strong> <a href="{fb_url}" target="_blank" rel="noopener">View on Facebook</a></p>\n')
+        if nd_url:
+            f.write(f'<p><strong>Nextdoor event:</strong> <a href="{nd_url}" target="_blank" rel="noopener">View on Nextdoor</a></p>\n')
 
         if vendors:
             f.write("<h3>Vendors</h3>\n<ul>\n")
