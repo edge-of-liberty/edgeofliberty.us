@@ -92,9 +92,18 @@ with open(CSV_FILE, encoding="utf-8-sig", newline="") as f:
         }
 
         for d in date_cols:
-            if is_truthy(row.get(d["header"])):
-                vendor["dates"].append({"slug": d["slug"], "display": d["display"]})
-                dates[d["slug"]]["vendors"].append({"name": name, "slug": slug})
+            cell = (row.get(d["header"]) or "").strip()
+            if cell:
+                vendor["dates"].append({
+                    "slug": d["slug"],
+                    "display": d["display"],
+                    "status": cell
+                })
+                dates[d["slug"]]["vendors"].append({
+                    "name": name,
+                    "slug": slug,
+                    "status": cell
+                })
 
         vendors.append(vendor)
 
