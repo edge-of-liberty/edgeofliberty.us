@@ -55,6 +55,17 @@ sponsors = [v for v in data["vendors"] if v.get("sponsor", "").strip()]
 print("[DEBUG] Regular vendors:", [v.get("name") for v in regular_vendors], file=sys.stderr)
 print("[DEBUG] Sponsors:", [v.get("name") for v in sponsors], file=sys.stderr)
 
+# Scaffold step: ensure directories and description.txt for regular vendors
+for v in regular_vendors:
+    slug = v["slug"]
+    outdir = os.path.join(ROOT, slug)
+    os.makedirs(outdir, exist_ok=True)
+    desc_path = os.path.join(outdir, "description.txt")
+    if not os.path.exists(desc_path):
+        with open(desc_path, "w", encoding="utf-8") as f:
+            pass
+    print(f"[DEBUG] Scaffolded vendor dir: {slug}", file=sys.stderr)
+
 # Generate vendors dropdown include (alphabetical, scrollable)
 includes_dir = os.path.join(ROOT, "_includes")
 os.makedirs(includes_dir, exist_ok=True)
@@ -79,7 +90,7 @@ for v in regular_vendors:
     name = v["name"]
 
     outdir = os.path.join(ROOT, slug)
-    os.makedirs(outdir, exist_ok=True)
+    # No directory creation here; scaffold step already ensured it
 
     # Images and description live directly in ROOT/<slug>/ — no duplication, no copying
     src_dir = outdir

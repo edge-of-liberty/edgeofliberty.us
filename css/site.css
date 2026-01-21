@@ -39,7 +39,7 @@ header {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  min-height: 64px;
+  min-height: 104px;
 }
 
 /* Logo constraints and brand layout */
@@ -60,30 +60,22 @@ header {
   align-items: center;
 }
 
-.brand img {
-  max-height: 48px;
-  width: auto;
-  height: auto;
-  object-fit: contain;
-  display: block;
-}
 
 /* Header logo constraints */
 
-.site-header .brand img,
-header .brand img {
-  max-height: 64px;
+.site-header .brand-logo,
+header .brand-logo {
+  height: 96px; /* make it visually dominant */
   width: auto;
-  height: auto;
   object-fit: contain;
   display: block;
 }
 
 /* Slightly smaller on mobile */
 @media (max-width: 640px) {
-  .site-header .brand img,
-  header .brand img {
-    max-height: 48px;
+  .site-header .brand-logo,
+  header .brand-logo {
+    height: 72px;
   }
 }
 
@@ -610,4 +602,64 @@ footer {
 .site-header nav {
   margin-left: auto;
   align-items: center;
+}
+.date-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.date-list li a.date-link {
+  flex: 0 1 auto;
+}
+
+/* Home page date list — Facebook icon sizing fix */
+
+.home-date-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.home-date-fb {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  margin-left: 0.25rem;
+  border-radius: 999px;
+  background: transparent;
+  flex-shrink: 0;
+}
+
+.home-date-fb:hover {
+  background: rgba(37, 99, 235, 0.06);
+}
+
+.fb-icon {
+  width: 22px;
+  height: 22px;
+  display: block;
+  fill: currentColor;
+}
+
+/* If using emoji */
+.date-list li a.fb-link::before {
+  font-size: 13px;
+  line-height: 1;
+}
+
+/* If using <img> or <svg> */
+.date-list li a.fb-link img,
+.date-list li a.fb-link svg {
+  width: 13px;
+  height: 13px;
+  display: block;
+}
+
+/* Hover affordance, subtle */
+.date-list li a.fb-link:hover {
+  background: rgba(37, 99, 235, 0.06);
 }

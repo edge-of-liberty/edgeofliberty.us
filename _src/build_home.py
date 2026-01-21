@@ -50,10 +50,6 @@ try:
 
         f.write('<section class="home-section dates-section">')
         f.write(dates_html)
-        f.write('<ul class="date-list">')
-        for slug, info in data["dates"].items():
-            f.write(f'<li><a href="/{slug}/">{info["display"]}</a></li>')
-        f.write('</ul>')
         f.write('</section>')
 
         f.write('<section class="home-section vendors-section">')

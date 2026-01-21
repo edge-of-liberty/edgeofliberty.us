@@ -21,6 +21,16 @@ if len(sys.argv) != 3:
 ROOT = sys.argv[1]
 BUILD_JSON = sys.argv[2]
 
+FACEBOOK_EVENTS_PATH = os.path.join(ROOT, "_data", "facebook_events.json")
+try:
+    with open(FACEBOOK_EVENTS_PATH, encoding="utf-8") as f:
+        facebook_events = json.load(f)
+except FileNotFoundError:
+    print(f"[WARN] Missing Facebook events file: {FACEBOOK_EVENTS_PATH}", file=sys.stderr)
+    facebook_events = {}
+
+print(f"[OK] Loaded Facebook event links: {len(facebook_events)}", file=sys.stderr)
+
 INCLUDES = os.path.join(ROOT, "_includes")
 
 EVENT_NAME = "The Edge of Liberty Craft Fair"
@@ -96,6 +106,7 @@ sorted_dates = sorted(
     key=lambda kv: slug_to_ymd(kv[0]) or (9999, 99, 99)
 )
 
+
 # Build a list of (slug, display) for valid date slugs, in sorted order
 date_links = []
 for slug, date_info in sorted_dates:
@@ -103,6 +114,26 @@ for slug, date_info in sorted_dates:
         continue
     display = (date_info.get("display") or "").strip()
     date_links.append((slug, display))
+
+# Write the _includes/home_dates.html file (homepage date list with Facebook links)
+home_dates_path = os.path.join(INCLUDES, "home_dates.html")
+with open(home_dates_path, "w", encoding="utf-8") as f:
+    f.write('<ul class="home-date-list">\n')
+    for slug, display in date_links:
+        fb_url = facebook_events[slug]["url"]  # assume always exists
+        f.write(
+            f'<li class="home-date-row">'
+            f'<a class="home-date-link" href="/{slug}/">{display}</a>'
+            f'<a class="home-date-fb" href="{fb_url}" target="_blank" rel="noopener" aria-label="View on Facebook">'
+            f'<svg class="fb-icon" viewBox="0 0 24 24" aria-hidden="true">'
+            f'<path d="M22 12a10 10 0 1 0-11.5 9.9v-7h-2.2V12h2.2V9.8c0-2.2 1.3-3.4 3.3-3.4.9 0 1.9.1 1.9.1v2.1h-1.1c-1.1 0-1.4.7-1.4 1.4V12h2.4l-.4 2.9h-2v7A10 10 0 0 0 22 12z"/>'
+            f'</svg>'
+            f'</a>'
+            f'</li>\n'
+        )
+    f.write('</ul>\n')
+
+print(f"[OK] Wrote home dates include: {home_dates_path}", file=sys.stderr)
 
 
 # Write the _includes/dates_dropdown.html file
@@ -125,7 +156,9 @@ for slug, display in date_links:
     year, month, day = ymd
     iso_date = f"{year:04d}-{month:02d}-{day:02d}"
 
-    faq_events.append({
+    fb_url = facebook_events.get(slug, {}).get("url")
+
+    event_obj = {
         "slug": slug,
         "display": display,
         "iso_date": iso_date,
@@ -134,7 +167,12 @@ for slug, display in date_links:
         "url": f"/{slug}/",
         "image": f"/{slug}/hero.jpg",
         "description": EVENT_DESC
-    })
+    }
+
+    if fb_url:
+        event_obj["facebook_url"] = fb_url
+
+    faq_events.append(event_obj)
 
 faq_json_path = os.path.join(INCLUDES, "faq_events.json")
 with open(faq_json_path, "w", encoding="utf-8") as f:
@@ -146,7 +184,7 @@ print(f"[OK] Wrote FAQ events JSON: {faq_json_path}", file=sys.stderr)
 faq_events_schema_path = os.path.join(INCLUDES, "faq_events_schema.html")
 schema_graph = []
 for event in faq_events:
-    schema_graph.append({
+    entry = {
         "@type": "Event",
         "name": EVENT_NAME,
         "startDate": event["startDate"],
@@ -169,7 +207,10 @@ for event in faq_events:
             "name": ORG_NAME,
             "url": ORG_URL,
         }
-    })
+    }
+    if "facebook_url" in event:
+        entry["sameAs"] = [event["facebook_url"]]
+    schema_graph.append(entry)
 schema_obj = {
     "@context": "https://schema.org",
     "@graph": schema_graph
@@ -206,6 +247,8 @@ for date_slug, date_info in sorted_dates:
         key=lambda v: (v.get("name") or "").lower()
     )
 
+    fb_url = facebook_events.get(date_slug, {}).get("url")
+
     json_ld = {
         "@context": "https://schema.org",
         "@type": "Event",
@@ -231,6 +274,8 @@ for date_slug, date_info in sorted_dates:
             "url": ORG_URL,
         }
     }
+    if fb_url:
+        json_ld["sameAs"] = [fb_url]
 
     with open(os.path.join(outdir, "index.html"), "w", encoding="utf-8") as f:
         display = (date_info.get("display") or "").strip()
@@ -259,6 +304,10 @@ for date_slug, date_info in sorted_dates:
 
         f.write("<p><strong>Hours:</strong> 10:00 AM – 3:00 PM (Central)</p>\n")
         f.write("<p><strong>Location:</strong> 606 N Calumet Ave, Valparaiso, IN 46383</p>\n")
+
+        fb_url = facebook_events.get(date_slug, {}).get("url")
+        if fb_url:
+            f.write(f'<p><strong>Facebook event:</strong> <a href="{fb_url}" target="_blank" rel="noopener">View on Facebook</a></p>\n')
 
         if vendors:
             f.write("<h3>Vendors</h3>\n<ul>\n")
