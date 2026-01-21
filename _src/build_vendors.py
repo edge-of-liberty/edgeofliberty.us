@@ -83,15 +83,16 @@ with open(dropdown_path, "w", encoding="utf-8") as df:
         df.write(f'<a href="/{v["slug"]}/">{v["name"]}</a>\n')
     df.write('</div>\n')
 
-# Generate home_vendors.html include (unordered list of all regular vendors)
+# Generate home_vendors.html include (intro + list)
 home_vendors_path = os.path.join(includes_dir, "home_vendors.html")
 
 with open(home_vendors_path, "w", encoding="utf-8") as hf:
+    hf.write("<h2>Look Who’s Attending</h2>\n")
+    hf.write("<p>Here’s who you’ll find at our upcoming craft fairs:</p>\n")
     hf.write('<ul class="vendor-list">\n')
     for v in sorted_vendors:
         hf.write(f'<li><a href="/{v["slug"]}/">{v["name"]}</a></li>\n')
     hf.write('</ul>\n')
-
 
 count = 0
 
