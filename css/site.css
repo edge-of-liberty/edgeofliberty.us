@@ -678,3 +678,54 @@ footer {
   object-fit: contain;
   display: block;
 }
+/* ============================
+   MOBILE NAV — SAFE OVERRIDE
+   ============================ */
+@media (max-width: 768px) {
+
+  html, body {
+    overflow-x: hidden;
+  }
+
+  .site-header,
+  .header-inner,
+  nav {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  /* Stack nav vertically */
+  nav {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* Neutralize desktop dropdown positioning */
+  .nav-dropdown,
+  .dropdown-menu {
+    position: static !important;
+    width: 100%;
+    max-width: 100%;
+    transform: none !important;
+  }
+
+  .dropdown-menu {
+    display: none;
+    margin-top: 0.25rem;
+    padding-left: 1rem;
+    box-shadow: none;
+    border: none;
+  }
+
+  /* Tap-to-open behavior */
+  .nav-dropdown:focus-within .dropdown-menu {
+    display: block;
+  }
+
+  .dropdown-toggle {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+  }
+}
