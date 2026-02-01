@@ -41,6 +41,7 @@ try:
         f.write('layout: default\n')
         f.write('title: Home\n')
         f.write('---\n\n')
+        f.write('{% include events_schema.json %}\n\n')
 
         f.write(hero_html)
 
