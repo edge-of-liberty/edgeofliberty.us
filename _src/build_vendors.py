@@ -166,6 +166,7 @@ for v in regular_vendors:
             ("facebook", ""),
             ("instagram", ""),
             ("youtube", ""),
+            ("tiktok", ""),
             ("public_email", "mailto:"),
             ("public_phone", "tel:"),
         ]

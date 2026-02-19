@@ -84,6 +84,7 @@ with open(CSV_FILE, encoding="utf-8-sig", newline="") as f:
             "facebook": row.get("Facebook", "").strip(),
             "instagram": row.get("Instagram", "").strip(),
             "youtube": row.get("Youtube", "").strip(),
+            "tiktok": row.get("TikTok", "").strip(),
             "public_email": row.get("Public email", "").strip(),
             "public_phone": row.get("Public phone", "").strip(),
             "short_description": row.get("Short Description", "").strip(),
