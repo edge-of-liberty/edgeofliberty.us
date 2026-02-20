@@ -678,54 +678,35 @@ footer {
   object-fit: contain;
   display: block;
 }
-/* ============================
-   MOBILE NAV — SAFE OVERRIDE
-   ============================ */
-@media (max-width: 768px) {
 
-  html, body {
-    overflow-x: hidden;
+@media (max-width: 640px) {
+  .site-header .header-inner {
+    min-height: auto;
   }
+}
 
-  .site-header,
-  .header-inner,
-  nav {
-    max-width: 100%;
-    overflow-x: hidden;
-  }
+/* =========================
+   Mobile Menu Overlay Fix
+   ========================= */
 
-  /* Stack nav vertically */
-  nav {
-    flex-direction: column;
-    align-items: stretch;
-  }
+/* Base mobile menu (hidden by default) */
+.mobile-menu {
+  position: fixed;
+  inset: 0;
+  background: #2e2e38;
+  color: #ffffff;
+  display: none;
+  z-index: 9999;
+  padding: 2rem 1.5rem;
+  overflow-y: auto;
+}
 
-  /* Neutralize desktop dropdown positioning */
-  .nav-dropdown,
-  .dropdown-menu {
-    position: static !important;
-    width: 100%;
-    max-width: 100%;
-    transform: none !important;
-  }
+/* Show menu when JS toggles body.menu-open */
+body.menu-open .mobile-menu {
+  display: block;
+}
 
-  .dropdown-menu {
-    display: none;
-    margin-top: 0.25rem;
-    padding-left: 1rem;
-    box-shadow: none;
-    border: none;
-  }
-
-  /* Tap-to-open behavior */
-  .nav-dropdown:focus-within .dropdown-menu {
-    display: block;
-  }
-
-  .dropdown-toggle {
-    display: flex;
-    width: 100%;
-    justify-content: space-between;
-    padding: 0.75rem 0;
-  }
+/* Prevent background scroll when menu open */
+body.menu-open {
+  overflow: hidden;
 }
