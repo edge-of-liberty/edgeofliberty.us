@@ -89,10 +89,17 @@ home_vendors_path = os.path.join(includes_dir, "home_vendors.html")
 with open(home_vendors_path, "w", encoding="utf-8") as hf:
     hf.write("<h2>Look Who’s Attending</h2>\n")
     hf.write("<p>Here’s who you’ll find at our upcoming craft fairs:</p>\n")
-    hf.write('<ul class="vendor-list">\n')
+    hf.write('<div class="home-vendor-list">\n')
     for v in sorted_vendors:
-        hf.write(f'<li><a href="/{v["slug"]}/">{v["name"]}</a></li>\n')
-    hf.write('</ul>\n')
+        name = v["name"]
+        slug = v["slug"]
+        short_desc = (v.get("short_description") or "").strip()
+
+        if short_desc:
+            hf.write(f'<p><a href="/{slug}/">{name}</a> — {short_desc}</p>\n')
+        else:
+            hf.write(f'<p><a href="/{slug}/">{name}</a></p>\n')
+    hf.write('</div>\n')
 
 count = 0
 
