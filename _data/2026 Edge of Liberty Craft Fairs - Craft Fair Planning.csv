@@ -1,9 +1,9 @@
 ,,,,,,,,,,,,,,,100%,100%,100%,100%,100%,100%,100%,100%,100%,100%,100%,100%,100%,,Attendance,,,,,,,,Vendor's Page,,,,
-,,,,,,,,,,,,,,20,3,6,23,23,22,24,23,23,24,23,23,23,22,3,<Available Inventory,,,,,,,,,,,,
-,,,,,,,,,,,,,,3,17,14,12,11,13,11,11,12,10,11,11,11,12,10,<Advertisable Vendors,,,,,,,,,,,,
-,,,,,,,,,,,,-55,,0,5,5,5,4,5,5,4,5,4,4,4,4,4,4,<Spots that don't count,,,,,,,,,,,,
-,,,,,,,,,,,,,,3,12,9,7,7,8,6,7,7,6,7,7,7,8,6,<Vendor Spots Reserved,,,,,,,,,,,,
-,,,,,,,,,,,,,,3,12,9,7,7,8,6,7,7,6,7,7,7,8,,<Spots Needed (minus Absent),,,,,,,,,,,,
+,,,,,,,,,,,,,,20,1,4,23,21,20,18,24,22,23,23,23,22,21,1,<Available Inventory,,,,,,,,,,,,
+,,,,,,,,,,,,,,3,19,16,12,13,14,12,12,13,11,11,11,12,13,10,<Advertisable Vendors,,,,,,,,,,,,
+,,,,,,,,,,,,-54,,0,5,5,5,4,5,5,4,5,4,4,4,4,4,4,<Spots that don't count,,,,,,,,,,,,
+,,,,,,,,,,,,,,3,14,11,7,9,9,7,8,8,7,7,7,8,9,6,<Vendor Spots Reserved,,,,,,,,,,,,
+,,,,,,,,,,,,,,3,14,11,7,9,9,7,8,8,7,7,7,8,9,,<Spots Needed (minus Absent),,,,,,,,,,,,
 ,,,,,,,,,,,,,,X,X,X,X,X,X,X,X,X,X,X,X,X,X,,,,,,,,,,,,,,
 ,,,,,,,,,,,,,,SPONSOR,260517,260531,260614,260628,260712,260726,260809,260823,260906,260920,261004,261018,261101,26SEASON,,,,,,,,,,,,,
 Company,Status,Order,FB Group Member,sitemap,Order fulfilled,21-23,2024,2025,2026,Total Fairs,order email,order phone,order name,SPONSOR,May-17,May-31,Jun-14,Jun-28,Jul-12,Jul-26,Aug-9,Aug-23,Sep-6,Sep-20,Oct-4,Oct-18,Nov-1,Season Pass - All 13 dates,Short Description,Website,Store,Facebook,Instagram,Youtube,TikTok,Public email,Public phone,FB Group Name,slug,URL,form email
@@ -33,7 +33,7 @@ Seashells by Laurie,500,10,,X,Yes,0,0,0,1,1,lauriecavinder2023@gmail.com,2196157
 Salt Creek Ridge Apiary,200,#N/A,313,,,8,11,6,0,25,scridgeapiaries@protonmail.com,,,,,,,,,,,,,,,,,,,,,,,,,,,"Salt Creek Ridge Apiary, LLC",salt-creek-ridge-apiary,https://www.edgeofliberty.us/salt-creek-ridge-apiary/,no change
 The Lunch Box,200,#N/A,188,,,11,9,1,0,21,Claupardo77@gmail.com,,,,,,,,,,,,,,,,,,,,,,,,,,,Clau Pardo,the-lunch-box,https://www.edgeofliberty.us/the-lunch-box/,no change
 Kari's Beads,0,#N/A,,,,11,7,0,0,18,karichittenden@yahoo.com,,,,,,,,,,,,,,,,,,,,,,,,,,,Kari Bauer Chittenden,karis-beads,https://www.edgeofliberty.us/karis-beads/,karichittenden@yahoo.com
-Mommy Mustache Shop,200,#N/A,87,,,0,3,11,0,14,MommyMustache@gmail.com,,,,,,,,,,,,,,,,,,,,,,,,,,,Samantha Harrigan,mommy-mustache-shop,https://www.edgeofliberty.us/mommy-mustache-shop/,MommyMustache@gmail.com
+Mommy Mustache Shop,600,47,87,,No,0,3,11,8,22,MommyMustache@gmail.com,,Samantha Harrigan,,Paid,Paid,,Paid,,Paid,,Paid,Paid,,,Paid,Paid,,Cookies & pastries & cakes...and stickers!,,,https://www.facebook.com/profile.php?id=100084633290888,,,,mommymustache@gmail.com,,Samantha Harrigan,mommy-mustache-shop,https://www.edgeofliberty.us/mommy-mustache-shop/,MommyMustache@gmail.com
 JohnsunShenanigans,200,#N/A,359,,,6,7,0,0,13,megbrookemoore95@gmail.com,,,,,,,,,,,,,,,,,,,,,,,,,,,Megan Johnson,johnsunshenanigans,https://www.edgeofliberty.us/johnsunshenanigans/,megbrookemoore95@gmail.com
 Stop By Bouquets,0,#N/A,,,,0,3,10,0,13,wilmawillard@gmail.com,,,,,,,,,,,,,,,,,,,,,,,,,,,Wilma Willard,stop-by-bouquets,https://www.edgeofliberty.us/stop-by-bouquets/,wilmawillard@gmail.com
 Crystal's 3D Cuties,200,#N/A,106,,,0,4,6,0,10,mrsbest98@comcast.net,,,,,,,,,,,,,,,,,,,,,,,,,,,Crisie Comegys,crystals-3d-cuties,https://www.edgeofliberty.us/crystals-3d-cuties/,mrsbest98@comcast.net
@@ -57,7 +57,7 @@ Emiraa,0,#N/A,,,,1,2,0,0,3,pannumeesha@gmail.com,,,,,,,,,,,,,,,,,,,,,,,,,,,,emir
 Madame Jezebel Jewelry and Rarities,0,#N/A,,,,0,0,3,0,3,madamejezebeljewelry@gmail.com,,,,,,,,,,,,,,,,,,,,,,,,,,,,madame-jezebel-jewelry-and-rarities,https://www.edgeofliberty.us/madame-jezebel-jewelry-and-rarities/,email only
 Sunflower Sisters,0,#N/A,,,,2,0,1,0,3,heather.bogielski@gmail.com,,,,,,,,,,,,,,,,,,,,,,,,,,,,sunflower-sisters,https://www.edgeofliberty.us/sunflower-sisters/,No change
 VHS Key Club,0,#N/A,,,,0,3,0,0,3,dunelandltg.kci@gmail.com,,,,,,,,,,,,,,,,,,,,,,,,,,,,vhs-key-club,https://www.edgeofliberty.us/vhs-key-club/,no change
-2 Crazy B's Creations,0,#N/A,,,,1,1,0,0,2,2crazybscreations@gmail.com,,,,,,,,,,,,,,,,,,,,,,,,,,,,2-crazy-bs-creations,https://www.edgeofliberty.us/2-crazy-bs-creations/,no change
+2 Crazy B's Creations,400,42,,,No,1,1,0,5,7,2crazybscreations@gmail.com,2193693770,Shannon Luketich,,Paid,Paid,,Paid,Paid,,Paid,,,,,,,,Acrylic pour & decoupage treasures,,,,,,,2crazybscreations@gmail.com,,,2-crazy-bs-creations,https://www.edgeofliberty.us/2-crazy-bs-creations/,no change
 Bighorn Burnings,0,#N/A,,,,0,2,0,0,2,nataliewoodburning@gmail.com,,,,,,,,,,,,,,,,,,,,,,,,,,,,bighorn-burnings,https://www.edgeofliberty.us/bighorn-burnings/,nataliewoodburning@gmail.com
 Creations By REH,0,#N/A,,,,0,2,0,0,2,raquelhall95@gmail.com,,,,,,,,,,,,,,,,,,,,,,,,,,,,creations-by-reh,https://www.edgeofliberty.us/creations-by-reh/,raquelhall95@gmail.com
 Down The Rabbit Hole Sourdough,0,#N/A,,,,0,0,2,0,2,bobbiklingman@gmail.com,,,,,,,,,,,,,,,,,,,,,,,,,,,,down-the-rabbit-hole-sourdough,https://www.edgeofliberty.us/down-the-rabbit-hole-sourdough/,email only
@@ -93,5 +93,5 @@ Whimsy Craft Shack,0,#N/A,,,,0,0,1,0,1,whimsycraftshack@Gmail.com,,,,,,,,,,,,,,,
 Whisker Works Craft Co,0,#N/A,,,,0,1,0,0,1,Emilycaddo@gmail.com,,,,,,,,,,,,,,,,,,,,,,,,,,,,whisker-works-craft-co,https://www.edgeofliberty.us/whisker-works-craft-co/,emilycaddo@gmail.com
 Wired Up,0,#N/A,,,,0,1,0,0,1,micklstiles@gmail.com,,,,,,,,,,,,,,,,,,,,,,,,,,,,wired-up,https://www.edgeofliberty.us/wired-up/,email only
 Bread Baby,0,#N/A,,,,0,0,0,0,0,carlajj8@gmail.com,,,,,,,,,,,,,,,,,,,,,,,,,,,,bread-baby,https://www.edgeofliberty.us/bread-baby/,email only
-Twisted Barn Art,400,42,,,No,0,0,0,1,1,twistedbarnart@gmail.com,5742762558,Algimantas Bacevicius,,Paid,,,,,,,,,,,,,,Unique metal art & more,,,https://www.facebook.com/twistedbarnart/,,,,twistedbarnart@gmail.com,574-276-2558,,twisted-barn-art,https://www.edgeofliberty.us/twisted-barn-art/,email only
+Twisted Barn Art,400,55,,,Yes,0,0,0,1,1,twistedbarnart@gmail.com,5742762558,Algimantas Bacevicius,,Paid,,,,,,,,,,,,,,Unique metal art & more,,,https://www.facebook.com/twistedbarnart/,,,,twistedbarnart@gmail.com,574-276-2558,,twisted-barn-art,https://www.edgeofliberty.us/twisted-barn-art/,email only
 zCOMPANY NAME,0,#N/A,,,,0,0,0,0,0,ORDEREMAIL,,,,,,,,,,,,,,,,,,,,,,,,,,,,zcompany-name,https://www.edgeofliberty.us/zcompany-name/,email only
