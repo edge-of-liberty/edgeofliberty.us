@@ -204,16 +204,29 @@ if os.path.exists(landing_desc_path):
 else:
     print("[WARN] Landing page description.txt is missing in /chh", file=sys.stderr)
 
+hero_path = os.path.join(ROOT, "hero.jpg")
+hero_exists = os.path.exists(hero_path)
+
 with open(landing_path, "w", encoding="utf-8") as f:
     f.write("---\n")
     f.write("layout: default\n")
     f.write('title: "Create Happiness House"\n')
     f.write('og_title: "Create Happiness House"\n')
     f.write('description: "A quiet, shared home on a working farm designed for people who want space, calm, and a reset."\n')
+
+    if hero_exists:
+        f.write('image: /chh/hero.jpg\n')
+        f.write('og_image: /chh/hero.jpg\n')
+
     f.write("---\n\n")
 
     f.write('<section class="chh-landing">\n')
     f.write('<h1>Create Happiness House</h1>\n')
+
+    if hero_exists:
+        f.write('<div class="chh-hero">\n')
+        f.write('<img src="/chh/hero.jpg" alt="Create Happiness House">\n')
+        f.write('</div>\n')
 
     if landing_text:
         f.write(render_markdownish(landing_text))
