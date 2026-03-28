@@ -127,10 +127,12 @@ for slug in get_pages():
             f.write(render_markdownish(text))
 
         if images:
-            f.write("<h3>Photos</h3>\n")
-            f.write('<div class="chh-photos">\n')
+            f.write("<h3>Gallery</h3>\n")
+            f.write('<div class="vendor-photos constrained-gallery">\n')
+            f.write('<div class="vendor-masonry">\n')
             for img in images:
-                f.write(f'<img src="/chh/{slug}/{img}" alt="{display_name}" style="max-width:100%; height:auto;">\n')
+                f.write(f'<img class="vendor-photo" src="{img}" alt="{display_name}">\n')
+            f.write("</div>\n")
             f.write("</div>\n")
 
         f.write("</section>\n")
