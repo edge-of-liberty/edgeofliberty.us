@@ -62,6 +62,46 @@ def render_markdownish(text):
     return "\n".join(out)
 
 
+def parse_room_description(text):
+    lines = text.splitlines()
+    body_lines = []
+    price = ""
+    cta_text = ""
+    cta_link = ""
+    i = 0
+
+    while i < len(lines):
+        line = lines[i].strip()
+
+        if line == "Price":
+            i += 1
+            while i < len(lines) and not lines[i].strip():
+                i += 1
+            if i < len(lines):
+                price = lines[i].strip()
+            i += 1
+            continue
+
+        if line == "Call to Action":
+            i += 1
+            while i < len(lines) and not lines[i].strip():
+                i += 1
+            if i < len(lines):
+                cta_line = lines[i].strip()
+                if ":" in cta_line:
+                    cta_text, cta_link = cta_line.split(":", 1)
+                    cta_text = cta_text.strip()
+                    cta_link = cta_link.strip()
+            i += 1
+            continue
+
+        body_lines.append(lines[i])
+        i += 1
+
+    body_text = "\n".join(body_lines).strip()
+    return body_text, price, cta_text, cta_link
+
+
 def get_pages():
     pages = []
     for name in sorted(os.listdir(ROOT)):
@@ -90,6 +130,8 @@ for slug in get_pages():
     with open(desc_path, encoding="utf-8") as f:
         text = f.read().strip()
 
+    body_text, price, cta_text, cta_link = parse_room_description(text)
+
     images = []
     for fn in sorted(os.listdir(page_dir)):
         if fn.startswith(".") or fn == "description.txt":
@@ -113,8 +155,8 @@ for slug in get_pages():
             f.write(f'image: /chh/{slug}/{hero_image}\n')
             f.write(f'og_image: /chh/{slug}/{hero_image}\n')
 
-        if text:
-            safe_desc = text.replace('"', "'").split("\n")[0][:160]
+        if body_text:
+            safe_desc = body_text.replace('"', "'").split("\n")[0][:160]
             f.write(f'description: "{safe_desc}"\n')
             f.write(f'og_description: "{safe_desc}"\n')
 
@@ -123,8 +165,17 @@ for slug in get_pages():
         f.write('<section class="chh-page">\n')
         f.write(f"<h2>{display_name}</h2>\n")
 
-        if text:
-            f.write(render_markdownish(text))
+        if body_text:
+            f.write(render_markdownish(body_text))
+
+        if price:
+            f.write('<h3>Pricing</h3>\n')
+            f.write(f'<p><strong>{price}</strong></p>\n')
+
+        if cta_text and cta_link:
+            f.write('<p>\n')
+            f.write(f'<a href="{cta_link}">{cta_text}</a>\n')
+            f.write('</p>\n')
 
         if images:
             f.write("<h3>Gallery</h3>\n")
@@ -144,6 +195,14 @@ print(f"Generated {count} CHH pages", file=sys.stderr)
 
 # Generate CHH landing page
 landing_path = os.path.join(ROOT, "index.html")
+landing_desc_path = os.path.join(ROOT, "description.txt")
+
+landing_text = ""
+if os.path.exists(landing_desc_path):
+    with open(landing_desc_path, encoding="utf-8") as f:
+        landing_text = f.read().strip()
+else:
+    print("[WARN] Landing page description.txt is missing in /chh", file=sys.stderr)
 
 with open(landing_path, "w", encoding="utf-8") as f:
     f.write("---\n")
@@ -156,9 +215,8 @@ with open(landing_path, "w", encoding="utf-8") as f:
     f.write('<section class="chh-landing">\n')
     f.write('<h1>Create Happiness House</h1>\n')
 
-    f.write('<p>This is not a party house. It is a shared home on a working farm for people who want quiet, space, and a reset.</p>\n')
-
-    f.write('<p>You will be sharing common areas. You will hear other humans existing. What you will not get is chaos, noise, or revolving-door short-term stays.</p>\n')
+    if landing_text:
+        f.write(render_markdownish(landing_text))
 
     f.write('<h2>Rooms</h2>\n')
     f.write('<ul>\n')
@@ -179,13 +237,6 @@ with open(landing_path, "w", encoding="utf-8") as f:
         f.write(f'<li><a href="/chh/{slug}/">{name}</a></li>\n')
 
     f.write('</ul>\n')
-
-    f.write('<h2>Who This Is For</h2>\n')
-    f.write('<p>People who want a calm place to land. People who can live respectfully in a shared environment. People who value quiet more than convenience.</p>\n')
-
-    f.write('<h2>Who This Is Not For</h2>\n')
-    f.write('<p>If you are looking for a party house, constant guests, or hotel-style anonymity, this is not a fit.</p>\n')
-
     f.write('</section>\n')
 
 print("Generated CHH landing page", file=sys.stderr)
