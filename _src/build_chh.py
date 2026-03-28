@@ -130,7 +130,7 @@ for slug in get_pages():
             f.write("<h3>Photos</h3>\n")
             f.write('<div class="chh-photos">\n')
             for img in images:
-                f.write(f'<img src="/chh/{slug}/{img}" alt="{display_name}">\n')
+                f.write(f'<img src="/chh/{slug}/{img}" alt="{display_name}" style="max-width:100%; height:auto;">\n')
             f.write("</div>\n")
 
         f.write("</section>\n")
