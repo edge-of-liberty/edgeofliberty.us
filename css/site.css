@@ -710,3 +710,25 @@ body.menu-open .mobile-menu {
 body.menu-open {
   overflow: hidden;
 }
+
+/* Create Happiness House */
+.chh-hero {
+  margin: 1.5rem 0 2rem 0;
+}
+
+.chh-hero img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 12px;
+}
+
+.chh-page .vendor-photos,
+.chh-landing .vendor-photos {
+  margin-top: 1rem;
+}
+
+.chh-page .vendor-masonry,
+.chh-landing .vendor-masonry {
+  margin: 1rem 0 2rem 0;
+}
