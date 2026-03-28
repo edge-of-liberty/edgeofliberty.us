@@ -132,7 +132,7 @@ build_home() {
 build_chh() {
   echo "[INFO] Generating Create Happiness House pages..."
   require_file "$SRC/build_chh.py"
-  python3 "$SRC/build_chh.py" "$ROOT"
+  python3 "$SRC/build_chh.py" "$ROOT/chh"
 }
 
 ###############################################################################
