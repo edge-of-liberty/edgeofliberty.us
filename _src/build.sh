@@ -157,7 +157,7 @@ case "${1:-}" in
     build_vendors
     build_dates
     build_home
-    #build_chh
+    build_chh
     build_sitemap
 
     echo "[INFO] Staging all changes..."
