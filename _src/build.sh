@@ -126,6 +126,16 @@ build_home() {
 }
 
 ###############################################################################
+# Build Create Happiness House pages
+###############################################################################
+
+build_chh() {
+  echo "[INFO] Generating Create Happiness House pages..."
+  require_file "$SRC/build_chh.py"
+  python3 "$SRC/build_chh.py" "$ROOT"
+}
+
+###############################################################################
 # Dispatcher
 ###############################################################################
 
@@ -139,11 +149,15 @@ case "${1:-}" in
   home)
     build_home
     ;;
+  chh)
+    build_chh
+    ;;
   all)
     echo "[INFO] Starting full site build..."
     build_vendors
     build_dates
     build_home
+    #build_chh
     build_sitemap
 
     echo "[INFO] Staging all changes..."
@@ -167,6 +181,6 @@ case "${1:-}" in
     echo "[INFO] Build complete."
     ;;
   *)
-    echo "Usage: ./build.sh [all|vendors|dates|home|scaffold]"
+    echo "Usage: ./build.sh [all|vendors|dates|home|chh|scaffold]"
     ;;
 esac
