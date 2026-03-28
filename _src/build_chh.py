@@ -11,15 +11,19 @@ if len(sys.argv) != 2:
 
 ROOT = sys.argv[1]
 
+if os.path.basename(os.path.normpath(ROOT)) != "chh":
+    print(f"ERROR: build_chh.py must be run against the chh directory, got: {ROOT}", file=sys.stderr)
+    sys.exit(1)
+
 EXCLUDE_DIRS = {"_tmp", "_includes"}
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
 
 
 TITLE_MAP = {
-    "blue": "BLUE Room",
-    "green": "GREEN Room",
-    "purple": "PURPLE Room",
-    "teal": "TEAL Suite",
+    "blue": "Blue Room",
+    "green": "Green Room",
+    "purple": "Purple Room",
+    "teal": "Teal Suite",
     "common-upper": "Common Areas — Upper Level",
     "common-lower": "Common Areas — Lower Level",
     "common-other": "Common Areas — Other Spaces",
@@ -66,6 +70,8 @@ def get_pages():
             continue
         if name.startswith(".") or name in EXCLUDE_DIRS:
             continue
+        if not os.path.exists(os.path.join(path, "description.txt")):
+            continue
         pages.append(name)
     return pages
 
@@ -77,8 +83,8 @@ for slug in get_pages():
 
     desc_path = os.path.join(page_dir, "description.txt")
     if not os.path.exists(desc_path):
-        with open(desc_path, "w", encoding="utf-8"):
-            pass
+        print(f"[WARN] Skipping {slug}: missing description.txt", file=sys.stderr)
+        continue
 
     text = ""
     with open(desc_path, encoding="utf-8") as f:
@@ -131,4 +137,53 @@ for slug in get_pages():
 
     count += 1
 
+
 print(f"Generated {count} CHH pages", file=sys.stderr)
+
+# Generate CHH landing page
+landing_path = os.path.join(ROOT, "index.html")
+
+with open(landing_path, "w", encoding="utf-8") as f:
+    f.write("---\n")
+    f.write("layout: default\n")
+    f.write('title: "Create Happiness House"\n')
+    f.write('og_title: "Create Happiness House"\n')
+    f.write('description: "A quiet, shared home on a working farm designed for people who want space, calm, and a reset."\n')
+    f.write("---\n\n")
+
+    f.write('<section class="chh-landing">\n')
+    f.write('<h1>Create Happiness House</h1>\n')
+
+    f.write('<p>This is not a party house. It is a shared home on a working farm for people who want quiet, space, and a reset.</p>\n')
+
+    f.write('<p>You will be sharing common areas. You will hear other humans existing. What you will not get is chaos, noise, or revolving-door short-term stays.</p>\n')
+
+    f.write('<h2>Rooms</h2>\n')
+    f.write('<ul>\n')
+
+    room_order = ["blue", "green", "purple", "teal"]
+    for slug in room_order:
+        name = TITLE_MAP.get(slug, slug.title())
+        f.write(f'<li><a href="/chh/{slug}/">{name}</a></li>\n')
+
+    f.write('</ul>\n')
+
+    f.write('<h2>Common Spaces</h2>\n')
+    f.write('<ul>\n')
+
+    common_order = ["common-upper", "common-lower", "common-other"]
+    for slug in common_order:
+        name = TITLE_MAP.get(slug, slug.replace("-", " ").title())
+        f.write(f'<li><a href="/chh/{slug}/">{name}</a></li>\n')
+
+    f.write('</ul>\n')
+
+    f.write('<h2>Who This Is For</h2>\n')
+    f.write('<p>People who want a calm place to land. People who can live respectfully in a shared environment. People who value quiet more than convenience.</p>\n')
+
+    f.write('<h2>Who This Is Not For</h2>\n')
+    f.write('<p>If you are looking for a party house, constant guests, or hotel-style anonymity, this is not a fit.</p>\n')
+
+    f.write('</section>\n')
+
+print("Generated CHH landing page", file=sys.stderr)
