@@ -406,6 +406,14 @@ footer {
 }
 
 
+/* Base desktop site nav */
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-left: 0;
+}
+
 /* Dropdown navigation */
 
 .nav-dropdown {
