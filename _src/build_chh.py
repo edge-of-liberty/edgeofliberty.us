@@ -199,10 +199,10 @@ for slug in get_pages():
             f.write('<h3>Pricing</h3>\n')
             f.write(f'<p><strong>{price}</strong></p>\n')
 
-        if cta_text and cta_link:
-            f.write('<p>\n')
-            f.write(f'<a href="{cta_link}">{cta_text}</a>\n')
-            f.write('</p>\n')
+        # Fixed CTA for all pages
+        f.write('<p>\n')
+        f.write('<a href="https://batshitcrazyfarms.com/home/ola/services/create-happiness-house-tour">Request a Tour</a>\n')
+        f.write('</p>\n')
 
         if images:
             f.write("<h3>Gallery</h3>\n")
