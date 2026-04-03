@@ -744,3 +744,61 @@ body.menu-open {
 .chh-landing .vendor-masonry {
   margin: 1rem 0 2rem 0;
 }
+. 
+/* CHH subnav */
+.chh-subnav {
+  margin: 0 0 1.5rem 0;
+  padding: 0.75rem 1rem;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.chh-subnav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  align-items: center;
+}
+
+.chh-subnav li {
+  margin: 0;
+}
+
+.chh-subnav a {
+  display: inline-block;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.chh-subnav a:hover {
+  text-decoration: none;
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--accent);
+}
+
+.chh-subnav a.current {
+  background: rgba(37, 99, 235, 0.12);
+  color: var(--accent);
+}
+
+@media (max-width: 640px) {
+  .chh-subnav {
+    padding: 0.75rem;
+  }
+
+  .chh-subnav ul {
+    gap: 0.5rem;
+  }
+
+  .chh-subnav a {
+    padding: 0.3rem 0.6rem;
+  }
+}
