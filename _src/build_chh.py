@@ -102,6 +102,32 @@ def parse_room_description(text):
     return body_text, price, cta_text, cta_link
 
 
+def render_chh_nav(current_slug=""):
+    items = [
+        ("", "Overview"),
+        ("blue", "Blue"),
+        ("green", "Green"),
+        ("purple", "Purple"),
+        ("teal", "Teal"),
+        ("common-upper", "Upper"),
+        ("common-lower", "Lower"),
+        ("common-other", "Other Spaces"),
+    ]
+
+    out = []
+    out.append('<nav class="chh-subnav" aria-label="Create Happiness House pages">')
+    out.append('<ul>')
+
+    for slug, label in items:
+        href = "/chh/" if slug == "" else f"/chh/{slug}/"
+        cls = ' class="current"' if slug == current_slug else ""
+        out.append(f'<li><a{cls} href="{href}">{label}</a></li>')
+
+    out.append('</ul>')
+    out.append('</nav>')
+    return "\n".join(out)
+
+
 def get_pages():
     pages = []
     for name in sorted(os.listdir(ROOT)):
@@ -163,6 +189,7 @@ for slug in get_pages():
         f.write("---\n\n")
 
         f.write('<section class="chh-page">\n')
+        f.write(render_chh_nav(slug) + "\n")
         f.write(f"<h2>{display_name}</h2>\n")
 
         if body_text:
@@ -221,6 +248,7 @@ with open(landing_path, "w", encoding="utf-8") as f:
     f.write("---\n\n")
 
     f.write('<section class="chh-landing">\n')
+    f.write(render_chh_nav("") + "\n")
     f.write('<h1>Create Happiness House</h1>\n')
 
     if hero_exists:
