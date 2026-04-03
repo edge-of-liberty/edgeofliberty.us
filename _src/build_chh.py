@@ -105,12 +105,12 @@ def parse_room_description(text):
 def render_chh_nav(current_slug=""):
     items = [
         ("", "Overview"),
-        ("blue", "Blue"),
-        ("green", "Green"),
-        ("purple", "Purple"),
-        ("teal", "Teal"),
-        ("common-upper", "Upper"),
-        ("common-lower", "Lower"),
+        ("blue", "Blue Room"),
+        ("green", "Green Room"),
+        ("purple", "Purple Room"),
+        ("teal", "Teal Room"),
+        ("common-upper", "Upper Level"),
+        ("common-lower", "Lower Level"),
         ("common-other", "Other Spaces"),
     ]
 
