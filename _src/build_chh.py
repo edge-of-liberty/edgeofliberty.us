@@ -195,9 +195,6 @@ for slug in get_pages():
         if body_text:
             f.write(render_markdownish(body_text))
 
-        if price:
-            f.write('<h3>Pricing</h3>\n')
-            f.write(f'<p><strong>{price}</strong></p>\n')
 
         # Fixed CTA for all pages
         f.write('<p>\n')
