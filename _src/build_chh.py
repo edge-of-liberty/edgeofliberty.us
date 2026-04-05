@@ -23,10 +23,11 @@ TITLE_MAP = {
     "blue": "Blue Room",
     "green": "Green Room",
     "purple": "Purple Room",
-    "teal": "Teal Suite",
+    "teal": "Teal Room",
     "common-upper": "Common Areas — Upper Level",
     "common-lower": "Common Areas — Lower Level",
     "common-other": "Common Areas — Other Spaces",
+    "travel-nurse-friendly": "Travel Nurse Friendly",
 }
 
 
@@ -112,6 +113,7 @@ def render_chh_nav(current_slug=""):
         ("common-upper", "Upper Level"),
         ("common-lower", "Lower Level"),
         ("common-other", "Other Spaces"),
+        ("travel-nurse-friendly", "Travel Nurse Friendly"),
     ]
 
     out = []
@@ -274,6 +276,11 @@ with open(landing_path, "w", encoding="utf-8") as f:
         name = TITLE_MAP.get(slug, slug.replace("-", " ").title())
         f.write(f'<li><a href="/chh/{slug}/">{name}</a></li>\n')
 
+    f.write('</ul>\n')
+
+    f.write('<h2>Helpful Details</h2>\n')
+    f.write('<ul>\n')
+    f.write(f'<li><a href="/chh/travel-nurse-friendly/">{TITLE_MAP["travel-nurse-friendly"]}</a></li>\n')
     f.write('</ul>\n')
     f.write('</section>\n')
 
