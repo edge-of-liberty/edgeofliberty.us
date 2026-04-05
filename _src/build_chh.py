@@ -38,24 +38,52 @@ def render_markdownish(text):
 
     for line in lines:
         line = line.rstrip()
+        stripped = line.strip()
 
-        if not line.strip():
+        if not stripped:
             if in_list:
                 out.append("</ul>")
                 in_list = False
-            out.append("<p></p>")
             continue
 
-        if line.startswith("- ") or line.startswith("* "):
+        if stripped.startswith("### "):
+            if in_list:
+                out.append("</ul>")
+                in_list = False
+            out.append(f"<h3>{stripped[4:].strip()}</h3>")
+            continue
+
+        if stripped.startswith("## "):
+            if in_list:
+                out.append("</ul>")
+                in_list = False
+            out.append(f"<h2>{stripped[3:].strip()}</h2>")
+            continue
+
+        if stripped.startswith("# "):
+            if in_list:
+                out.append("</ul>")
+                in_list = False
+            out.append(f"<h1>{stripped[2:].strip()}</h1>")
+            continue
+
+        if stripped.startswith("✔ "):
+            if in_list:
+                out.append("</ul>")
+                in_list = False
+            out.append(f'<p class="chh-check-item"><strong>{stripped[2:].strip()}</strong></p>')
+            continue
+
+        if stripped.startswith("- ") or stripped.startswith("* "):
             if not in_list:
                 out.append("<ul>")
                 in_list = True
-            out.append(f"<li>{line[2:].strip()}</li>")
+            out.append(f"<li>{stripped[2:].strip()}</li>")
         else:
             if in_list:
                 out.append("</ul>")
                 in_list = False
-            out.append(f"<p>{line}</p>")
+            out.append(f"<p>{stripped}</p>")
 
     if in_list:
         out.append("</ul>")
