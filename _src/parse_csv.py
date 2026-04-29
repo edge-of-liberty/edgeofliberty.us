@@ -12,6 +12,9 @@ YEAR = int(sys.argv[2])
 def is_truthy(v):
     return (v or "").strip().upper() in ("X", "Y", "YES", "TRUE", "1")
 
+def is_hidden_vendor_name(name):
+    return (name or "").strip().lower().startswith("zz")
+
 month_map = {
     "jan": "january", "feb": "february", "mar": "march", "apr": "april",
     "may": "may", "jun": "june", "jul": "july", "aug": "august",
@@ -68,6 +71,8 @@ with open(CSV_FILE, encoding="utf-8-sig", newline="") as f:
 
         name = (row.get("Company") or "").strip()
         if not name:
+            continue
+        if is_hidden_vendor_name(name):
             continue
 
         raw_slug = (row.get("slug") or "").strip()
