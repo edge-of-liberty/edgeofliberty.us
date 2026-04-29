@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import html
 import json
 import os
 import sys
@@ -11,6 +12,21 @@ if len(sys.argv) != 3:
 
 ROOT = sys.argv[1]
 BUILD_JSON = sys.argv[2]
+
+
+def yaml_quote(s: str) -> str:
+    if s is None:
+        s = ""
+    s = str(s).replace("\\", "\\\\").replace('"', '\\"')
+    return f'"{s}"'
+
+
+def html_text(s):
+    return html.escape(s or "")
+
+
+def html_attr(s):
+    return html.escape(s or "", quote=True)
 
 
 def render_markdownish(text):
@@ -32,12 +48,12 @@ def render_markdownish(text):
             if not in_list:
                 out.append("<ul>")
                 in_list = True
-            out.append(f"<li>{line[2:].strip()}</li>")
+            out.append(f"<li>{html_text(line[2:].strip())}</li>")
         else:
             if in_list:
                 out.append("</ul>")
                 in_list = False
-            out.append(f"<p>{line}</p>")
+            out.append(f"<p>{html_text(line)}</p>")
 
     if in_list:
         out.append("</ul>")
@@ -80,7 +96,7 @@ with open(dropdown_path, "w", encoding="utf-8") as df:
     df.write('<a href="https://batshitcrazyfarms.com/off-season-market/ols/products/the-edge-of-liberty-craft-fair-space">Become a Vendor</a>\n')
     df.write('<div class="dropdown-divider"></div>\n')
     for v in sorted_vendors:
-        df.write(f'<a href="/{v["slug"]}/">{v["name"]}</a>\n')
+        df.write(f'<a href="/{html_attr(v["slug"])}/">{html_text(v["name"])}</a>\n')
     df.write('</div>\n')
 
 # Generate home_vendors.html include (intro + list)
@@ -96,9 +112,9 @@ with open(home_vendors_path, "w", encoding="utf-8") as hf:
         short_desc = (v.get("short_description") or "").strip()
 
         if short_desc:
-            hf.write(f'<p><a href="/{slug}/">{name}</a> — {short_desc}</p>\n')
+            hf.write(f'<p><a href="/{html_attr(slug)}/">{html_text(name)}</a> — {html_text(short_desc)}</p>\n')
         else:
-            hf.write(f'<p><a href="/{slug}/">{name}</a></p>\n')
+            hf.write(f'<p><a href="/{html_attr(slug)}/">{html_text(name)}</a></p>\n')
     hf.write('</div>\n')
 
 count = 0
@@ -143,23 +159,23 @@ for v in regular_vendors:
     with open(os.path.join(outdir, "index.html"), "w", encoding="utf-8") as f:
         f.write("---\n")
         f.write("layout: default\n")
-        f.write(f'title: "{name} — at The Edge of Liberty Craft Fair"\n')
-        f.write(f'og_title: "{name} — at The Edge of Liberty Craft Fair"\n')
+        f.write(f"title: {yaml_quote(f'{name} — at The Edge of Liberty Craft Fair')}\n")
+        f.write(f"og_title: {yaml_quote(f'{name} — at The Edge of Liberty Craft Fair')}\n")
 
         # OG / social metadata (used by layout)
         if hero_image:
-            f.write(f'image: /{slug}/{hero_image}\n')
-            f.write(f'og_image: /{slug}/{hero_image}\n')
+            f.write(f"image: {yaml_quote(f'/{slug}/{hero_image}')}\n")
+            f.write(f"og_image: {yaml_quote(f'/{slug}/{hero_image}')}\n")
 
         if text:
-            safe_desc = text.replace('"', "'").split("\n")[0][:160]
-            f.write(f'description: "{safe_desc}"\n')
-            f.write(f'og_description: "{safe_desc}"\n')
+            safe_desc = text.split("\n")[0][:160]
+            f.write(f"description: {yaml_quote(safe_desc)}\n")
+            f.write(f"og_description: {yaml_quote(safe_desc)}\n")
 
         f.write("---\n\n")
 
         f.write('<section class="vendor-page">\n')
-        f.write(f"<h2>{name}</h2>\n")
+        f.write(f"<h2>{html_text(name)}</h2>\n")
 
         f.write('<div class="vendor-content">\n')
 
@@ -182,11 +198,11 @@ for v in regular_vendors:
             val = (v.get(field) or "").strip()
             if val:
                 if field == "public_email":
-                    links.append(f'<li><a href="mailto:{val}">Email</a></li>')
+                    links.append(f'<li><a href="mailto:{html_attr(val)}">Email</a></li>')
                 elif field == "public_phone":
-                    links.append(f'<li><a href="tel:{val}">Phone</a></li>')
+                    links.append(f'<li><a href="tel:{html_attr(val)}">Phone</a></li>')
                 else:
-                    links.append(f'<li><a href="{val}">{field.capitalize()}</a></li>')
+                    links.append(f'<li><a href="{html_attr(val)}">{html_text(field.capitalize())}</a></li>')
 
         if links:
             f.write("<h3>Contact & Links</h3>\n")
@@ -203,7 +219,7 @@ for v in regular_vendors:
         for d in v.get("dates", []):
             # Do NOT sort; parse_csv.py already appends in CSV column order.
             # Show the date link regardless of the per-date status value.
-            f.write(f'<li><a href="/{d["slug"]}/">{d["display"]}</a></li>\n')
+            f.write(f'<li><a href="/{html_attr(d["slug"])}/">{html_text(d["display"])}</a></li>\n')
         f.write("</ul>\n")
         f.write("</div>\n")
 
@@ -214,7 +230,7 @@ for v in regular_vendors:
             f.write('<div class="vendor-masonry">\n')
             for img in images:
                 src = img
-                f.write(f'<img class="vendor-photo" src="{src}" alt="{name}">\n')
+                f.write(f'<img class="vendor-photo" src="{html_attr(src)}" alt="{html_attr(name)}">\n')
             f.write("</div>\n")
             f.write("</div>\n")
 

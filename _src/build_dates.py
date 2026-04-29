@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import html
 import json
 import os
 
@@ -13,6 +14,14 @@ def yaml_quote(s: str) -> str:
     # Escape backslashes and double-quotes for YAML double-quoted scalars
     s = str(s).replace("\\", "\\\\").replace('"', '\\"')
     return f'"{s}"'
+
+
+def html_text(s):
+    return html.escape(s or "")
+
+
+def html_attr(s):
+    return html.escape(s or "", quote=True)
 
 if len(sys.argv) != 3:
     print("Usage: build_dates.py <root> <build_json>", file=sys.stderr)
@@ -308,17 +317,19 @@ for date_slug, date_info in sorted_dates:
         f.write("layout: default\n")
         f.write(f"title: {yaml_quote(f'{EVENT_NAME} — {display}')}\n")
         f.write(f"image: {yaml_quote(hero_image)}\n")
+        f.write(f"description: {yaml_quote(EVENT_DESC)}\n")
+        f.write(f"og_description: {yaml_quote(EVENT_DESC)}\n")
         f.write("---\n")
         f.write("\n")
 
         f.write('<section class="date-page">\n')
         f.write('<div class="date-hero-row">\n')
         f.write('<div class="date-hero-text">\n')
-        f.write(f"<h2>{display}</h2>\n")
+        f.write(f"<h2>{html_text(display)}</h2>\n")
         f.write(date_intro_html)
         f.write('</div>\n')
         f.write('<div class="date-hero-media">\n')
-        f.write(f'  <img class="event-hero-image" src="{hero_image}" alt="{EVENT_NAME}" loading="lazy">\n')
+        f.write(f'  <img class="event-hero-image" src="{html_attr(hero_image)}" alt="{html_attr(EVENT_NAME)}" loading="lazy">\n')
         f.write('</div>\n')
         f.write('</div>\n')
 
@@ -348,10 +359,10 @@ for date_slug, date_info in sorted_dates:
                         vshort = full.get("short_description", "").strip()
                         break
 
-                f.write(f'<li><a href="/{vslug}/">{vname}</a>')
+                f.write(f'<li><a href="/{html_attr(vslug)}/">{html_text(vname)}</a>')
 
                 if vshort:
-                    f.write(f' — {vshort}')
+                    f.write(f' — {html_text(vshort)}')
 
                 if vstatus == "absent":
                     f.write(" <em>(unable to attend)</em>")

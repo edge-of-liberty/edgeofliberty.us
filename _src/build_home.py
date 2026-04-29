@@ -11,6 +11,11 @@ if len(sys.argv) != 3:
 try:
     ROOT = os.path.abspath(sys.argv[1])
     BUILD_JSON = sys.argv[2]
+    home_description = (
+        "The Edge of Liberty Craft Fair is a family-friendly outdoor market in "
+        "Valparaiso, Indiana featuring local artisans, fresh food, live music, "
+        "and community events every other Sunday."
+    )
 
     print("[PYDEBUG] ROOT =", ROOT, file=sys.stderr)
 
@@ -40,6 +45,9 @@ try:
         f.write('---\n')
         f.write('layout: default\n')
         f.write('title: Home\n')
+        f.write(f'description: "{home_description}"\n')
+        f.write(f'og_description: "{home_description}"\n')
+        f.write('image: "/images/hero.jpg"\n')
         f.write('---\n\n')
         f.write('{% include events_schema.json %}\n\n')
 

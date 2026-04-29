@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import html
 import os
 import sys
 
@@ -31,6 +32,21 @@ TITLE_MAP = {
 }
 
 
+def yaml_quote(s: str) -> str:
+    if s is None:
+        s = ""
+    s = str(s).replace("\\", "\\\\").replace('"', '\\"')
+    return f'"{s}"'
+
+
+def html_text(s):
+    return html.escape(s or "")
+
+
+def html_attr(s):
+    return html.escape(s or "", quote=True)
+
+
 def render_markdownish(text):
     lines = text.splitlines()
     out = []
@@ -50,40 +66,40 @@ def render_markdownish(text):
             if in_list:
                 out.append("</ul>")
                 in_list = False
-            out.append(f"<h3>{stripped[4:].strip()}</h3>")
+            out.append(f"<h3>{html_text(stripped[4:].strip())}</h3>")
             continue
 
         if stripped.startswith("## "):
             if in_list:
                 out.append("</ul>")
                 in_list = False
-            out.append(f"<h2>{stripped[3:].strip()}</h2>")
+            out.append(f"<h2>{html_text(stripped[3:].strip())}</h2>")
             continue
 
         if stripped.startswith("# "):
             if in_list:
                 out.append("</ul>")
                 in_list = False
-            out.append(f"<h1>{stripped[2:].strip()}</h1>")
+            out.append(f"<h1>{html_text(stripped[2:].strip())}</h1>")
             continue
 
         if stripped.startswith("✔ "):
             if in_list:
                 out.append("</ul>")
                 in_list = False
-            out.append(f'<p class="chh-check-item"><strong>{stripped[2:].strip()}</strong></p>')
+            out.append(f'<p class="chh-check-item"><strong>{html_text(stripped[2:].strip())}</strong></p>')
             continue
 
         if stripped.startswith("- ") or stripped.startswith("* "):
             if not in_list:
                 out.append("<ul>")
                 in_list = True
-            out.append(f"<li>{stripped[2:].strip()}</li>")
+            out.append(f"<li>{html_text(stripped[2:].strip())}</li>")
         else:
             if in_list:
                 out.append("</ul>")
                 in_list = False
-            out.append(f"<p>{stripped}</p>")
+            out.append(f"<p>{html_text(stripped)}</p>")
 
     if in_list:
         out.append("</ul>")
@@ -151,7 +167,7 @@ def render_chh_nav(current_slug=""):
     for slug, label in items:
         href = "/chh/" if slug == "" else f"/chh/{slug}/"
         cls = ' class="current"' if slug == current_slug else ""
-        out.append(f'<li><a{cls} href="{href}">{label}</a></li>')
+        out.append(f'<li><a{cls} href="{html_attr(href)}">{html_text(label)}</a></li>')
 
     out.append('</ul>')
     out.append('</nav>')
@@ -204,23 +220,23 @@ for slug in get_pages():
     with open(out_path, "w", encoding="utf-8") as f:
         f.write("---\n")
         f.write("layout: default\n")
-        f.write(f'title: "{display_name} — Create Happiness House"\n')
-        f.write(f'og_title: "{display_name} — Create Happiness House"\n')
+        f.write(f"title: {yaml_quote(f'{display_name} — Create Happiness House')}\n")
+        f.write(f"og_title: {yaml_quote(f'{display_name} — Create Happiness House')}\n")
 
         if hero_image:
-            f.write(f'image: /chh/{slug}/{hero_image}\n')
-            f.write(f'og_image: /chh/{slug}/{hero_image}\n')
+            f.write(f"image: {yaml_quote(f'/chh/{slug}/{hero_image}')}\n")
+            f.write(f"og_image: {yaml_quote(f'/chh/{slug}/{hero_image}')}\n")
 
         if body_text:
-            safe_desc = body_text.replace('"', "'").split("\n")[0][:160]
-            f.write(f'description: "{safe_desc}"\n')
-            f.write(f'og_description: "{safe_desc}"\n')
+            safe_desc = body_text.split("\n")[0][:160]
+            f.write(f"description: {yaml_quote(safe_desc)}\n")
+            f.write(f"og_description: {yaml_quote(safe_desc)}\n")
 
         f.write("---\n\n")
 
         f.write('<section class="chh-page">\n')
         f.write(render_chh_nav(slug) + "\n")
-        f.write(f"<h2>{display_name}</h2>\n")
+        f.write(f"<h2>{html_text(display_name)}</h2>\n")
 
         if body_text:
             f.write(render_markdownish(body_text))
@@ -236,7 +252,7 @@ for slug in get_pages():
             f.write('<div class="vendor-photos constrained-gallery">\n')
             f.write('<div class="vendor-masonry">\n')
             for img in images:
-                f.write(f'<img class="vendor-photo" src="{img}" alt="{display_name}">\n')
+                f.write(f'<img class="vendor-photo" src="{html_attr(img)}" alt="{html_attr(display_name)}">\n')
             f.write("</div>\n")
             f.write("</div>\n")
 
