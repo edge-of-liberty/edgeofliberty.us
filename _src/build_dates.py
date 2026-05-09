@@ -49,7 +49,7 @@ EVENT_DESC = (
     "in Liberty Township, Indiana."
 )
 ORG_NAME = "The Edge of Liberty"
-ORG_URL = "https://edgeofliberty.us/"
+ORG_URL = "https://www.edgeofliberty.us/"
 GOOGLE_MAPS_PLACE_URL = "https://www.google.com/maps/place/The+Edge+of+Liberty/@41.521809,-87.036052,673m/data=!3m1!1e3!4m12!1m5!3m4!2zNDHCsDMxJzE4LjUiTiA4N8KwMDInMDkuOCJX!8m2!3d41.521809!4d-87.036052!3m5!1s0x8811992fc22aca43:0x4d56a127dde0ee9c!8m2!3d41.5215535!4d-87.0360516!16s%2Fg%2F11j78ky1z0"
 TZ_OFFSET = "-05:00"
 START_TIME = "10:00:00"
@@ -212,7 +212,7 @@ for event in faq_events:
         "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
         "eventStatus": "https://schema.org/EventScheduled",
         "location": {
-            "@id": "https://edge-of-liberty.com/#place"
+            "@id": "https://www.edgeofliberty.us/#place"
         },
         "image": [event["image"]],
         "performer": {
@@ -285,7 +285,7 @@ for date_slug, date_info in sorted_dates:
         "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
         "eventStatus": "https://schema.org/EventScheduled",
         "location": {
-            "@id": "https://edge-of-liberty.com/#place"
+            "@id": "https://www.edgeofliberty.us/#place"
         },
         # Per-date hero image for date pages
         "image": [hero_image],

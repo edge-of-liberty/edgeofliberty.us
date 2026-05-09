@@ -14,7 +14,7 @@ try:
     home_description = (
         "The Edge of Liberty Craft Fair is a family-friendly outdoor market in "
         "Valparaiso, Indiana featuring local artisans, fresh food, live music, "
-        "and community events every other Sunday."
+        "and community events on select 2026 Sunday dates."
     )
 
     print("[PYDEBUG] ROOT =", ROOT, file=sys.stderr)
