@@ -37,7 +37,9 @@
 </head>
 <body>
 
-  {% include header.html %}
+  {% unless page.url == "/chh/" or page.url contains "/chh/" %}
+    {% include header.html %}
+  {% endunless %}
 
   <main class="site-main">
     <div class="container">
