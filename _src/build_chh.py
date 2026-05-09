@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import html
+import json
 import os
+import re
 import sys
 
 # Build CHH pages from directory structure:
@@ -18,6 +20,18 @@ if os.path.basename(os.path.normpath(ROOT)) != "chh":
 
 EXCLUDE_DIRS = {"_tmp", "_includes"}
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+SITE_URL = "https://www.edgeofliberty.us"
+TOUR_URL = "https://batshitcrazyfarms.com/home/ola/services/create-happiness-house-tour"
+CHH_NAME = "Create Happiness House"
+
+ADDRESS = {
+    "@type": "PostalAddress",
+    "streetAddress": "154 Johnson",
+    "addressLocality": "Valparaiso",
+    "addressRegion": "IN",
+    "postalCode": "46383",
+    "addressCountry": "US",
+}
 
 
 TITLE_MAP = {
@@ -30,6 +44,35 @@ TITLE_MAP = {
     "common-other": "Common Areas — Other Spaces",
     "travel-nurse-friendly": "Travel Nurse Friendly",
 }
+
+ROOM_ORDER = ["blue", "green", "purple", "teal"]
+COMMON_ORDER = ["common-upper", "common-lower", "common-other"]
+
+ROOM_BEST_FOR = {
+    "blue": "Lower-level quiet and best weekly value",
+    "green": "Lower-level quiet with more space",
+    "purple": "Upper-level natural light and lofted ceiling",
+    "teal": "Largest room with daybed and private sitting space",
+}
+
+ROOM_FACTS = {
+    "blue": ["Lower level", "Queen bed", "Desk/vanity", "TV", "Mini fridge"],
+    "green": ["Lower level", "Queen bed", "Large closet", "TV", "Mini fridge"],
+    "purple": ["Upper level", "Queen bed", "Lofted ceiling", "Hardwood floor", "Mini fridge"],
+    "teal": ["Upper level", "Queen bed", "Daybed", "Private sitting area", "Mini fridge"],
+}
+
+AMENITIES = [
+    "Furnished private bedrooms",
+    "Fast WiFi",
+    "On-site laundry",
+    "Shared stocked kitchen",
+    "On-site parking",
+    "Desk in each room",
+    "TV in each room",
+    "Mini fridge in each room",
+    "Weekly shared-space cleaning",
+]
 
 
 def yaml_quote(s: str) -> str:
@@ -47,6 +90,47 @@ def html_attr(s):
     return html.escape(s or "", quote=True)
 
 
+def strip_markdown_heading(line):
+    return re.sub(r"^#{1,6}\s+", "", line or "").strip()
+
+
+def text_summary(text, fallback="", limit=160):
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line or line == "---":
+            continue
+        if line.startswith("#"):
+            continue
+        line = strip_markdown_heading(line)
+        if line in TITLE_MAP.values() or line == CHH_NAME:
+            continue
+        line = re.sub(r"^[✔•*-]\s*", "", line).strip()
+        if line:
+            if len(line) <= limit:
+                return line
+            clipped = line[:limit].rsplit(" ", 1)[0].rstrip(".,;:")
+            return clipped or line[:limit]
+    if len(fallback) <= limit:
+        return fallback
+    return fallback[:limit].rsplit(" ", 1)[0].rstrip(".,;:")
+
+
+def parse_price_amounts(price):
+    amounts = re.findall(r"\$(\d+(?:,\d{3})*(?:\.\d+)?)\s*/\s*(week|month)", price or "", re.I)
+    parsed = {}
+    for amount, unit in amounts:
+        parsed[unit.lower()] = amount.replace(",", "")
+    return parsed
+
+
+def render_json_ld(obj):
+    return (
+        '<script type="application/ld+json">\n'
+        + json.dumps(obj, indent=2)
+        + "\n</script>\n"
+    )
+
+
 def render_markdownish(text):
     lines = text.splitlines()
     out = []
@@ -57,6 +141,12 @@ def render_markdownish(text):
         stripped = line.strip()
 
         if not stripped:
+            if in_list:
+                out.append("</ul>")
+                in_list = False
+            continue
+
+        if stripped == "---":
             if in_list:
                 out.append("</ul>")
                 in_list = False
@@ -118,7 +208,11 @@ def parse_room_description(text):
     while i < len(lines):
         line = lines[i].strip()
 
-        if line == "Price":
+        if line == "Price" or line.startswith("Price:"):
+            if line.startswith("Price:"):
+                price = line.split(":", 1)[1].strip()
+                i += 1
+                continue
             i += 1
             while i < len(lines) and not lines[i].strip():
                 i += 1
@@ -172,6 +266,119 @@ def render_chh_nav(current_slug=""):
     out.append('</ul>')
     out.append('</nav>')
     return "\n".join(out)
+
+
+def render_cta_block():
+    return (
+        '<div class="chh-cta-block">\n'
+        '<p><strong>Need a furnished room soon?</strong> Send a tour request and ask what is available now.</p>\n'
+        f'<a class="chh-button" href="{html_attr(TOUR_URL)}">Request a Tour</a>\n'
+        '</div>\n'
+    )
+
+
+def render_room_facts(slug, price=""):
+    facts = ROOM_FACTS.get(slug, [])
+    out = ['<div class="chh-facts">']
+    if price:
+        out.append(f'<div><span>Price</span><strong>{html_text(price)}</strong></div>')
+    for fact in facts:
+        out.append(f'<div><span>Included</span><strong>{html_text(fact)}</strong></div>')
+    out.append("</div>")
+    return "\n".join(out) + "\n"
+
+
+def room_offer_schema(slug, display_name, price, hero_image=""):
+    amounts = parse_price_amounts(price)
+    price_specs = []
+    if "week" in amounts:
+        price_specs.append({
+            "@type": "UnitPriceSpecification",
+            "price": amounts["week"],
+            "priceCurrency": "USD",
+            "unitText": "week",
+        })
+    if "month" in amounts:
+        price_specs.append({
+            "@type": "UnitPriceSpecification",
+            "price": amounts["month"],
+            "priceCurrency": "USD",
+            "unitText": "month",
+        })
+
+    room_url = f"{SITE_URL}/chh/{slug}/"
+    item = {
+        "@type": "Room",
+        "name": f"{display_name} at {CHH_NAME}",
+        "url": room_url,
+        "containedInPlace": {"@id": f"{SITE_URL}/chh/#lodging"},
+        "amenityFeature": [
+            {"@type": "LocationFeatureSpecification", "name": fact, "value": True}
+            for fact in ROOM_FACTS.get(slug, [])
+        ],
+    }
+    if hero_image:
+        item["image"] = f"{SITE_URL}/chh/{slug}/{hero_image}"
+
+    offer = {
+        "@context": "https://schema.org",
+        "@type": "Offer",
+        "name": f"{display_name} furnished room rental",
+        "url": room_url,
+        "availability": "https://schema.org/InStock",
+        "businessFunction": "https://schema.org/LeaseOut",
+        "itemOffered": item,
+    }
+    if price_specs:
+        offer["priceSpecification"] = price_specs
+    return offer
+
+
+def lodging_schema(room_prices=None):
+    room_prices = room_prices or {}
+    offers = []
+    for slug in ROOM_ORDER:
+        display_name = TITLE_MAP[slug]
+        price = room_prices.get(slug, "")
+        if price:
+            offers.append(room_offer_schema(slug, display_name, price))
+
+    schema = {
+        "@context": "https://schema.org",
+        "@type": "LodgingBusiness",
+        "@id": f"{SITE_URL}/chh/#lodging",
+        "name": CHH_NAME,
+        "url": f"{SITE_URL}/chh/",
+        "image": f"{SITE_URL}/chh/hero.jpg",
+        "description": "Furnished private rooms in a quiet shared home on a five-acre farm near Valparaiso, Indiana.",
+        "address": ADDRESS,
+        "areaServed": [
+            {"@type": "City", "name": "Valparaiso"},
+            {"@type": "AdministrativeArea", "name": "Porter County, Indiana"},
+        ],
+        "amenityFeature": [
+            {"@type": "LocationFeatureSpecification", "name": amenity, "value": True}
+            for amenity in AMENITIES
+        ],
+        "makesOffer": offers,
+    }
+    return schema
+
+
+def load_room_prices():
+    prices = {}
+    for slug in ROOM_ORDER:
+        desc_path = os.path.join(ROOT, slug, "description.txt")
+        if not os.path.exists(desc_path):
+            continue
+        with open(desc_path, encoding="utf-8") as f:
+            _, price, _, _ = parse_room_description(f.read().strip())
+        if price:
+            prices[slug] = price
+    return prices
+
+
+ROOM_PRICES = load_room_prices()
 
 
 def get_pages():
@@ -228,7 +435,10 @@ for slug in get_pages():
             f.write(f"og_image: {yaml_quote(f'/chh/{slug}/{hero_image}')}\n")
 
         if body_text:
-            safe_desc = body_text.split("\n")[0][:160]
+            safe_desc = text_summary(
+                body_text,
+                f"Furnished private room for rent in a quiet shared home near Valparaiso, Indiana.",
+            )
             f.write(f"description: {yaml_quote(safe_desc)}\n")
             f.write(f"og_description: {yaml_quote(safe_desc)}\n")
 
@@ -236,16 +446,24 @@ for slug in get_pages():
 
         f.write('<section class="chh-page">\n')
         f.write(render_chh_nav(slug) + "\n")
-        f.write(f"<h2>{html_text(display_name)}</h2>\n")
+        if slug in ROOM_ORDER:
+            f.write(render_json_ld(room_offer_schema(slug, display_name, price, hero_image)))
+        else:
+            f.write(render_json_ld(lodging_schema(ROOM_PRICES)))
+        f.write(f"<h1>{html_text(display_name)}</h1>\n")
+
+        if slug in ROOM_ORDER:
+            f.write('<p class="chh-page-kicker">Furnished private room for rent in Valparaiso, Indiana</p>\n')
+            f.write(render_room_facts(slug, price))
+            f.write(render_cta_block())
+        else:
+            f.write(render_cta_block())
 
         if body_text:
             f.write(render_markdownish(body_text))
 
-
-        # Fixed CTA for all pages
-        f.write('<p>\n')
-        f.write('<a href="https://batshitcrazyfarms.com/home/ola/services/create-happiness-house-tour">Request a Tour</a>\n')
-        f.write('</p>\n')
+        f.write("\n")
+        f.write(render_cta_block())
 
         if images:
             f.write("<h3>Gallery</h3>\n")
@@ -280,9 +498,9 @@ hero_exists = os.path.exists(hero_path)
 with open(landing_path, "w", encoding="utf-8") as f:
     f.write("---\n")
     f.write("layout: default\n")
-    f.write('title: "Create Happiness House"\n')
-    f.write('og_title: "Create Happiness House"\n')
-    f.write('description: "A quiet, shared home on a working farm designed for people who want space, calm, and a reset."\n')
+    f.write('title: "Furnished Rooms for Rent in Valparaiso, IN — Create Happiness House"\n')
+    f.write('og_title: "Furnished Rooms for Rent in Valparaiso, IN — Create Happiness House"\n')
+    f.write('description: "Furnished private rooms for rent in a quiet shared home on a five-acre farm near Valparaiso, Indiana. Weekly and monthly options available."\n')
 
     if hero_exists:
         f.write('image: /chh/hero.jpg\n')
@@ -292,7 +510,19 @@ with open(landing_path, "w", encoding="utf-8") as f:
 
     f.write('<section class="chh-landing">\n')
     f.write(render_chh_nav("") + "\n")
+    f.write(render_json_ld(lodging_schema(ROOM_PRICES)))
+    f.write('<div class="chh-rental-hero">\n')
+    f.write('<div>\n')
+    f.write('<p class="chh-page-kicker">Furnished rooms for rent in Valparaiso, Indiana</p>\n')
     f.write('<h1>Create Happiness House</h1>\n')
+    f.write('<p class="chh-lede">Private furnished rooms in a quiet shared home on a five-acre farm. Built for travel nurses, contract workers, remote workers, and anyone who needs a calm place to land soon.</p>\n')
+    f.write('</div>\n')
+    f.write('<div class="chh-hero-panel">\n')
+    f.write('<strong>Available by the week or month</strong>\n')
+    f.write('<span>Private room, shared home, parking, laundry, WiFi, kitchen, and outdoor space.</span>\n')
+    f.write(f'<a class="chh-button" href="{html_attr(TOUR_URL)}">Request a Tour</a>\n')
+    f.write('</div>\n')
+    f.write('</div>\n')
 
     if hero_exists:
         f.write('<div class="chh-hero">\n')
@@ -303,20 +533,21 @@ with open(landing_path, "w", encoding="utf-8") as f:
         f.write(render_markdownish(landing_text))
 
     f.write('<h2>Rooms</h2>\n')
-    f.write('<ul>\n')
-
-    room_order = ["blue", "green", "purple", "teal"]
-    for slug in room_order:
+    f.write('<div class="chh-room-grid">\n')
+    for slug in ROOM_ORDER:
         name = TITLE_MAP.get(slug, slug.title())
-        f.write(f'<li><a href="/chh/{slug}/">{name}</a></li>\n')
-
-    f.write('</ul>\n')
+        price = ROOM_PRICES.get(slug, "Ask for current pricing")
+        f.write('<article class="chh-room-card">\n')
+        f.write(f'<h3><a href="/chh/{slug}/">{html_text(name)}</a></h3>\n')
+        f.write(f'<p class="chh-room-price">{html_text(price)}</p>\n')
+        f.write(f'<p>{html_text(ROOM_BEST_FOR.get(slug, ""))}</p>\n')
+        f.write('</article>\n')
+    f.write('</div>\n')
 
     f.write('<h2>Common Spaces</h2>\n')
     f.write('<ul>\n')
 
-    common_order = ["common-upper", "common-lower", "common-other"]
-    for slug in common_order:
+    for slug in COMMON_ORDER:
         name = TITLE_MAP.get(slug, slug.replace("-", " ").title())
         f.write(f'<li><a href="/chh/{slug}/">{name}</a></li>\n')
 
@@ -326,6 +557,7 @@ with open(landing_path, "w", encoding="utf-8") as f:
     f.write('<ul>\n')
     f.write(f'<li><a href="/chh/travel-nurse-friendly/">{TITLE_MAP["travel-nurse-friendly"]}</a></li>\n')
     f.write('</ul>\n')
+    f.write(render_cta_block())
     f.write('</section>\n')
 
 print("Generated CHH landing page", file=sys.stderr)

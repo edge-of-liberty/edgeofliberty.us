@@ -744,7 +744,122 @@ body.menu-open {
 .chh-landing .vendor-masonry {
   margin: 1rem 0 2rem 0;
 }
-. 
+
+.chh-rental-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 360px);
+  gap: 1.5rem;
+  align-items: start;
+  margin: 0 0 1.5rem 0;
+}
+
+.chh-page-kicker {
+  margin: 0 0 0.5rem 0;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.chh-lede {
+  font-size: 1.15rem;
+  color: var(--text);
+  max-width: 720px;
+}
+
+.chh-hero-panel,
+.chh-cta-block,
+.chh-room-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.chh-hero-panel {
+  padding: 1rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.chh-hero-panel span {
+  color: var(--muted);
+}
+
+.chh-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  min-height: 44px;
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.chh-button:hover {
+  color: #ffffff;
+  text-decoration: none;
+  filter: brightness(0.95);
+}
+
+.chh-cta-block {
+  margin: 1rem 0 1.5rem 0;
+  padding: 1rem;
+}
+
+.chh-cta-block p {
+  margin-top: 0;
+}
+
+.chh-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.chh-facts div {
+  padding: 0.75rem;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.chh-facts span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.2;
+}
+
+.chh-facts strong {
+  display: block;
+  margin-top: 0.25rem;
+  line-height: 1.25;
+}
+
+.chh-room-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0 2rem 0;
+}
+
+.chh-room-card {
+  padding: 1rem;
+}
+
+.chh-room-card h3 {
+  margin-top: 0;
+}
+
+.chh-room-price {
+  font-weight: 700;
+  color: var(--accent);
+}
+
 /* CHH subnav */
 .chh-subnav {
   margin: 0 0 1.5rem 0;
@@ -790,6 +905,10 @@ body.menu-open {
 }
 
 @media (max-width: 640px) {
+  .chh-rental-hero {
+    grid-template-columns: 1fr;
+  }
+
   .chh-subnav {
     padding: 0.75rem;
   }
