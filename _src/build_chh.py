@@ -4,6 +4,7 @@ import json
 import os
 import re
 import sys
+from datetime import date, datetime, timedelta
 
 # Build CHH pages from directory structure:
 # ROOT/<slug>/{description.txt, images...}
@@ -74,6 +75,8 @@ AMENITIES = [
     "Weekly shared-space cleaning",
 ]
 
+KITCHEN_STOCK_PATH = os.path.join(ROOT, "common-upper", "kitchenStock.txt")
+
 
 def yaml_quote(s: str) -> str:
     if s is None:
@@ -129,6 +132,88 @@ def render_json_ld(obj):
         + json.dumps(obj, indent=2)
         + "\n</script>\n"
     )
+
+
+def format_display_date(value):
+    try:
+        parsed = datetime.strptime(value, "%Y-%m-%d").date()
+    except ValueError:
+        return value
+    return f"{parsed.strftime('%B')} {parsed.day}, {parsed.year}"
+
+
+def read_availability(path):
+    try:
+        with open(path, encoding="utf-8") as f:
+            lines = f.read().splitlines()
+    except OSError:
+        lines = []
+
+    usable_lines = [line.strip() for line in lines if line.strip() and not line.strip().startswith("#")]
+    raw = usable_lines[0] if usable_lines else ""
+    if not raw:
+        return {
+            "label": "Available Now",
+            "note": "Tour requests are open.",
+            "schema_availability": "https://schema.org/InStock",
+        }
+
+    first_line = raw.strip()
+    try:
+        rented_until = date.fromisoformat(first_line)
+    except ValueError:
+        return {
+            "label": f"Available Starting {first_line}",
+            "note": "Tour requests are open for upcoming availability.",
+            "schema_availability": "https://schema.org/PreOrder",
+        }
+
+    days_until_sunday = (6 - rented_until.weekday()) % 7
+    if days_until_sunday == 0:
+        days_until_sunday = 7
+    available_date = rented_until + timedelta(days=days_until_sunday)
+
+    if available_date <= date.today():
+        return {
+            "label": "Available Now",
+            "note": "Tour requests are open.",
+            "schema_availability": "https://schema.org/InStock",
+        }
+
+    return {
+        "label": f"Available Starting {format_display_date(available_date.isoformat())}",
+        "note": "Tour requests are open for upcoming availability.",
+        "schema_availability": "https://schema.org/PreOrder",
+    }
+
+
+def read_kitchen_stock():
+    try:
+        with open(KITCHEN_STOCK_PATH, encoding="utf-8") as f:
+            lines = f.read().splitlines()
+    except FileNotFoundError:
+        return []
+
+    items = []
+    for line in lines:
+        item = line.strip()
+        if not item or item.startswith("#"):
+            continue
+        item = re.sub(r"^[•*-]\s*", "", item).strip()
+        if "\t" in item:
+            cells = [cell.strip() for cell in item.split("\t") if cell.strip()]
+            item = " — ".join(cells)
+        if item:
+            items.append(item)
+    return items
+
+
+KITCHEN_STOCK = read_kitchen_stock()
+DEFAULT_AVAILABILITY = read_availability("")
+ROOM_AVAILABILITY = {
+    slug: read_availability(os.path.join(ROOT, slug, "rentedUntil.txt"))
+    for slug in ROOM_ORDER
+}
 
 
 def render_markdownish(text):
@@ -277,6 +362,31 @@ def render_cta_block():
     )
 
 
+def render_availability_badge(availability):
+    return (
+        '<div class="chh-availability-badge" aria-label="Rental availability">\n'
+        f'<strong>{html_text(availability["label"])}</strong>\n'
+        f'<span>{html_text(availability["note"])}</span>\n'
+        '</div>\n'
+    )
+
+
+def render_kitchen_stock():
+    if not KITCHEN_STOCK:
+        return ""
+
+    out = []
+    out.append('<section class="chh-kitchen-stock">')
+    out.append("<h2>Kitchen Stocked With</h2>")
+    out.append("<p>The shared kitchen is set up for real cooking, not just reheating takeout.</p>")
+    out.append("<ul>")
+    for item in KITCHEN_STOCK:
+        out.append(f"<li>{html_text(item)}</li>")
+    out.append("</ul>")
+    out.append("</section>")
+    return "\n".join(out) + "\n"
+
+
 def render_room_facts(slug, price=""):
     facts = ROOM_FACTS.get(slug, [])
     out = ['<div class="chh-facts">']
@@ -331,6 +441,7 @@ def room_offer_schema(slug, display_name, price, hero_image=""):
     }
     if price_specs:
         offer["priceSpecification"] = price_specs
+    offer["availability"] = ROOM_AVAILABILITY.get(slug, DEFAULT_AVAILABILITY)["schema_availability"]
     return offer
 
 
@@ -454,6 +565,7 @@ for slug in get_pages():
 
         if slug in ROOM_ORDER:
             f.write('<p class="chh-page-kicker">Furnished private room for rent in Valparaiso, Indiana</p>\n')
+            f.write(render_availability_badge(ROOM_AVAILABILITY.get(slug, DEFAULT_AVAILABILITY)))
             f.write(render_room_facts(slug, price))
             f.write(render_cta_block())
         else:
@@ -461,6 +573,10 @@ for slug in get_pages():
 
         if body_text:
             f.write(render_markdownish(body_text))
+
+        if slug in {"common-upper", "travel-nurse-friendly"}:
+            f.write("\n")
+            f.write(render_kitchen_stock())
 
         f.write("\n")
         f.write(render_cta_block())
@@ -531,6 +647,8 @@ with open(landing_path, "w", encoding="utf-8") as f:
 
     if landing_text:
         f.write(render_markdownish(landing_text))
+
+    f.write(render_kitchen_stock())
 
     f.write('<h2>Rooms</h2>\n')
     f.write('<div class="chh-room-grid">\n')

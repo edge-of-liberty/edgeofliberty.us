@@ -1,0 +1,6 @@
+# One item per line. You can also paste spreadsheet rows; tab-separated cells
+# will be shown together on one line.
+Cookware and bakeware
+Utensils and kitchen tools
+Meal prep containers
+Coffee, tea, and beverage setup

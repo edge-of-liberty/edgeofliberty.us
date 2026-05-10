@@ -1,0 +1,5 @@
+# Leave blank for "Available Now".
+# Put a future date in YYYY-MM-DD format for "Available Starting Month D, YYYY".
+# Example:
+# 2026-06-01
+2026-06-30
