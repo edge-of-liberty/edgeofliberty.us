@@ -72,7 +72,7 @@ AMENITIES = [
     "Fast WiFi",
     "On-site laundry",
     "Shared stocked kitchen",
-    "On-site parking",
+    "Easy on-site parking pad",
     "Desk in each room",
     "TV in each room",
     "Mini fridge in each room",
@@ -396,7 +396,8 @@ def render_medical_map():
         '<section class="chh-map-section">\n'
         '<div class="chh-map-copy">\n'
         '<h2>Close to Valparaiso Medical Facilities</h2>\n'
-        '<p>Create Happiness House is based at 154 Johnson in Valparaiso. The embedded map pins the property so you can see where home base is, and the links open nearby medical facilities in Google Maps.</p>\n'
+        '<p>Create Happiness House is based at 154 Johnson in Valparaiso, with several medical facilities less than 10 minutes away. The embedded map pins the property so you can see where home base is, and the links open nearby medical facilities in Google Maps.</p>\n'
+        '<p>The house also has an easy on-site parking pad, so coming home after a long shift does not mean hunting for street parking.</p>\n'
         '<div class="chh-map-links">\n'
         f'<a href="https://www.google.com/maps/search/?api=1&query={PROPERTY_MAP_QUERY}" target="_blank" rel="noopener">Open Property Map</a>\n'
         f'<a href="https://www.google.com/maps/search/?api=1&query={MEDICAL_MAP_QUERY}" target="_blank" rel="noopener">Nearby Medical Facilities</a>\n'
@@ -661,7 +662,7 @@ with open(landing_path, "w", encoding="utf-8") as f:
     f.write('</div>\n')
     f.write('<div class="chh-hero-panel">\n')
     f.write('<strong>Available by the week or month</strong>\n')
-    f.write('<span>Private room, shared home, parking, laundry, WiFi, kitchen, and outdoor space.</span>\n')
+    f.write('<span>Private room, shared home, easy on-site parking pad, laundry, WiFi, kitchen, and outdoor space.</span>\n')
     f.write(f'<a class="chh-button" href="{html_attr(TOUR_URL)}">Request a Tour</a>\n')
     f.write('</div>\n')
     f.write('</div>\n')
