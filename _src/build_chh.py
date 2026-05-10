@@ -34,6 +34,10 @@ ADDRESS = {
     "addressCountry": "US",
 }
 
+PROPERTY_ADDRESS = "154 Johnson, Valparaiso, IN 46383"
+PROPERTY_MAP_QUERY = "154+Johnson,+Valparaiso,+IN+46383"
+MEDICAL_MAP_QUERY = "medical+facilities+near+154+Johnson,+Valparaiso,+IN+46383"
+
 
 TITLE_MAP = {
     "blue": "Blue Room",
@@ -387,6 +391,24 @@ def render_kitchen_stock():
     return "\n".join(out) + "\n"
 
 
+def render_medical_map():
+    return (
+        '<section class="chh-map-section">\n'
+        '<div class="chh-map-copy">\n'
+        '<h2>Close to Valparaiso Medical Facilities</h2>\n'
+        '<p>Create Happiness House is based at 154 Johnson in Valparaiso. The embedded map pins the property so you can see where home base is, and the links open nearby medical facilities in Google Maps.</p>\n'
+        '<div class="chh-map-links">\n'
+        f'<a href="https://www.google.com/maps/search/?api=1&query={PROPERTY_MAP_QUERY}" target="_blank" rel="noopener">Open Property Map</a>\n'
+        f'<a href="https://www.google.com/maps/search/?api=1&query={MEDICAL_MAP_QUERY}" target="_blank" rel="noopener">Nearby Medical Facilities</a>\n'
+        '</div>\n'
+        '</div>\n'
+        '<div class="chh-map-frame">\n'
+        f'<iframe title="Map centered on Create Happiness House" src="https://www.google.com/maps?q={PROPERTY_MAP_QUERY}&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>\n'
+        '</div>\n'
+        '</section>\n'
+    )
+
+
 def render_room_facts(slug, price=""):
     facts = ROOM_FACTS.get(slug, [])
     out = ['<div class="chh-facts">']
@@ -577,6 +599,10 @@ for slug in get_pages():
         if slug in {"common-upper", "travel-nurse-friendly"}:
             f.write("\n")
             f.write(render_kitchen_stock())
+
+        if slug == "travel-nurse-friendly":
+            f.write("\n")
+            f.write(render_medical_map())
 
         f.write("\n")
         f.write(render_cta_block())
