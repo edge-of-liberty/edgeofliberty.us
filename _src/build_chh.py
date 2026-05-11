@@ -48,6 +48,7 @@ TITLE_MAP = {
     "common-lower": "Common Areas — Lower Level",
     "common-other": "Common Areas — Other Spaces",
     "travel-nurse-friendly": "Travel Nurse Friendly",
+    "rental-terms": "Rental Terms & House Rules",
 }
 
 ROOM_ORDER = ["blue", "green", "purple", "teal"]
@@ -341,6 +342,7 @@ def render_chh_nav(current_slug=""):
         ("common-lower", "Lower Level"),
         ("common-other", "Other Spaces"),
         ("travel-nurse-friendly", "Travel Nurse Friendly"),
+        ("rental-terms", "Rental Terms"),
     ]
 
     out = []
@@ -582,7 +584,7 @@ for slug in get_pages():
         f.write(render_chh_nav(slug) + "\n")
         if slug in ROOM_ORDER:
             f.write(render_json_ld(room_offer_schema(slug, display_name, price, hero_image)))
-        else:
+        elif slug != "rental-terms":
             f.write(render_json_ld(lodging_schema(ROOM_PRICES)))
         f.write(f"<h1>{html_text(display_name)}</h1>\n")
 
@@ -591,7 +593,7 @@ for slug in get_pages():
             f.write(render_availability_badge(ROOM_AVAILABILITY.get(slug, DEFAULT_AVAILABILITY)))
             f.write(render_room_facts(slug, price))
             f.write(render_cta_block())
-        else:
+        elif slug != "rental-terms":
             f.write(render_cta_block())
 
         if body_text:
@@ -605,8 +607,9 @@ for slug in get_pages():
             f.write("\n")
             f.write(render_medical_map())
 
-        f.write("\n")
-        f.write(render_cta_block())
+        if slug != "rental-terms":
+            f.write("\n")
+            f.write(render_cta_block())
 
         if images:
             f.write("<h3>Gallery</h3>\n")
@@ -701,6 +704,7 @@ with open(landing_path, "w", encoding="utf-8") as f:
     f.write('<h2>Helpful Details</h2>\n')
     f.write('<ul>\n')
     f.write(f'<li><a href="/chh/travel-nurse-friendly/">{TITLE_MAP["travel-nurse-friendly"]}</a></li>\n')
+    f.write(f'<li><a href="/chh/rental-terms/">{TITLE_MAP["rental-terms"]}</a></li>\n')
     f.write('</ul>\n')
     f.write(render_cta_block())
     f.write('</section>\n')
