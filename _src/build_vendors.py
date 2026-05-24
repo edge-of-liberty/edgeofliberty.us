@@ -93,7 +93,7 @@ sorted_vendors = sorted(regular_vendors, key=lambda v: v["name"].lower())
 
 with open(dropdown_path, "w", encoding="utf-8") as df:
     df.write('<div class="dropdown-menu dropdown-scroll">\n')
-    df.write('<a href="https://batshitcrazyfarms.com/off-season-market/ols/products/the-edge-of-liberty-craft-fair-space">Become a Vendor</a>\n')
+    df.write('<a href="https://batshitcrazyfarms.com/off-season-market/ols/products/the-edge-of-liberty-craft-fair-space" target="_top" rel="noopener">Become a Vendor</a>\n')
     df.write('<div class="dropdown-divider"></div>\n')
     for v in sorted_vendors:
         df.write(f'<a href="/{html_attr(v["slug"])}/">{html_text(v["name"])}</a>\n')
