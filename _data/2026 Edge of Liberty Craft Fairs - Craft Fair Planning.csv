@@ -1,9 +1,9 @@
-,,,,,,,,,,,,,,0,2,2,10,13,15,17,17,17,18,18,18,17,16,10,<On Hand,,,,,,,,Vendor's Page,,,,
-,,,,,,,,,,,,,,0,2,2,10,13,15,17,16,16,17,17,17,16,15,10,<Available Inventory,,,,,,,,,,,,
-,,,,,,,,,,,,,,3,19,23,25,21,20,18,18,19,16,16,16,17,18,14,<Advertisable Vendors,,,,,,,,,,,,
-,,,,,,,,,,,,8,,0,5,5,5,4,5,5,4,5,4,4,4,4,4,3,<Spots that don't count,,,,,,,,,,,,
-,,,,,,,,,,,,,,3,15,19,21,18,16,14,15,15,13,13,13,14,15,11,<Vendor Spots Reserved,,,,,,,,,,,,
-,,,27,39,39,18,43,51,43,97,,,,3,13,18,20,17,15,13,14,14,13,13,13,14,15,10,<Spots Needed (minus Absent & Unpaid),,,,,,,,,,,,
+,,,,,,,,,,,,,,0,2,1,9,13,14,17,17,17,18,18,18,17,16,9,<On Hand,,,,,,,,Vendor's Page,,,,
+,,,,,,,,,,,,,,0,2,1,9,13,14,17,16,16,17,17,17,16,15,9,<Available Inventory,,,,,,,,,,,,
+,,,,,,,,,,,,,,3,19,24,26,21,21,18,18,19,16,16,16,17,18,14,<Advertisable Vendors,,,,,,,,,,,,
+,,,,,,,,,,,,11,,0,5,5,5,4,5,5,4,5,4,4,4,4,4,3,<Spots that don't count,,,,,,,,,,,,
+,,,,,,,,,,,,,,3,15,20,22,18,17,14,15,15,13,13,13,14,15,11,<Vendor Spots Reserved,,,,,,,,,,,,
+,,,27,39,41,18,43,51,44,98,,,,3,13,19,21,17,16,13,14,14,13,13,13,14,15,10,<Spots Needed (minus Absent & Unpaid),,,,,,,,,,,,
 ,,,,,,,,,,,,,,X,X,X,X,X,X,X,X,X,X,X,X,X,X,,,,,,,,,,,,,,
 ,,,,,,,,,,,,,,SPONSOR,260517,260531,260614,260628,260712,260726,260809,260823,260906,260920,261004,261018,261101,26SEASON,,,,,,,,,,,,,
 Company,Status,Order,FB Group Member,sitemap,Order fulfilled,21-23,2024,2025,2026,Total Fairs,order email,order phone,order name,SPONSOR,May-17,May-31,Jun-14,Jun-28,Jul-12,Jul-26,Aug-9,Aug-23,Sep-6,Sep-20,Oct-4,Oct-18,Nov-1,Season Pass,Short Description,Website,Store,Facebook,Instagram,Youtube,TikTok,Public email,Public phone,FB Group Name,slug,URL,form email
@@ -101,7 +101,8 @@ Waila Design & Co,0,#N/A,,,,0,4,0,0,4,wailadesignco@gmail.com,,,,,,,,,,,,,,,,,,,
 Whimsy Craft Shack,0,#N/A,,,,0,0,1,0,1,whimsycraftshack@Gmail.com,,,,,,,,,,,,,,,,,,,,,,,,,,,Angela Kozinski,whimsy-craft-shack,https://www.edgeofliberty.us/whimsy-craft-shack/,email only
 Whisker Works Craft Co,0,#N/A,,,,0,1,0,0,1,Emilycaddo@gmail.com,,,,,,,,,,,,,,,,,,,,,,,,,,,,whisker-works-craft-co,https://www.edgeofliberty.us/whisker-works-craft-co/,emilycaddo@gmail.com
 Wired Up,0,#N/A,,,,0,1,0,0,1,micklstiles@gmail.com,,,,,,,,,,,,,,,,,,,,,,,,,,,,wired-up,https://www.edgeofliberty.us/wired-up/,email only
+Wolf Den Print,400,102,,,Yes,0,0,0,1,1,lindsey.wolf37@gmail.com,2197898586,Lindsey Solomon,,,Paid,,,,,,,,,,,,,Custom engraving & 3D printing,,,https://www.facebook.com/Wolfdenprint,,,,,219-789-8586,,wolf-den-print,https://www.edgeofliberty.us/wolf-den-print/,email only
 "YakStack, LLC",500,7,,X,Yes,0,0,0,1,1,frank.pejril@gmail.com,,Frank Pejril,FREE,,,,,,,,,,,,,,,,https://yakstack.net/,,,,,,,,,yakstack-llc,https://www.edgeofliberty.us/proof/yakstack-llc.pdf,email only
 zz~May need to Refund,400,71,,,No,0,0,0,7,7,amanda.sellas@championwindow.com,2316795136,Amanda Sellas,,,,,,,,Paid,Paid,Paid,Paid,Paid,Paid,Paid,,,,,,,,,,,,zz~may-need-to-refund,https://www.edgeofliberty.us/zz~may-need-to-refund/,email only
+Merriah EG,400,103,,,Yes,0,0,0,3,3,m.e.grandchampcreations@gmail.com,Not collected,Merriah Grandchamp,,,Paid,Paid,,Paid,,,,,,,,,,Mixed media artist,,,https://www.facebook.com/profile.php?id=61590246608387,https://www.instagram.com/m.e.grandchamp,,,,,,merriah-eg,https://www.edgeofliberty.us/merriah-eg/,email only
 zzCOMPANY NAME,0,#N/A,,,,0,0,0,0,0,ORDEREMAIL,,,,,,,,,,,,,,,,,,,,,,,,,,,,zzcompany-name,https://www.edgeofliberty.us/zzcompany-name/,email only
-Wolf Den Print,400,102,,,No,0,0,0,1,1,lindsey.wolf37@gmail.com,2197898586,Lindsey Solomon,,,Paid,,,,,,,,,,,,,Custom engraving & 3D printing,,,https://www.facebook.com/Wolfdenprint,,,,,219-789-8586,,wolf-den-print,https://www.edgeofliberty.us/wolf-den-print/,email only
