@@ -233,6 +233,80 @@ footer {
   opacity: 0.95;
 }
 
+.weekend-hero {
+  background-image: url('/images/south-shore-inland-loop-hero.png');
+  background-position: center;
+}
+
+.weekend-hero .hero-overlay {
+  background:
+    linear-gradient(90deg, rgba(0,0,0,0.62), rgba(0,0,0,0.28) 48%, rgba(0,0,0,0.12)),
+    rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+.weekend-hero .hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 760px;
+}
+
+.weekend-hero-pins {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.weekend-hero-pin {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.92);
+  color: #111827;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.24);
+  white-space: nowrap;
+}
+
+.weekend-hero-pin::before {
+  content: "";
+  width: 0.78rem;
+  height: 0.78rem;
+  border-radius: 50% 50% 50% 0;
+  background: #dc2626;
+  transform: rotate(-45deg);
+  box-shadow: inset 0 0 0 2px #ffffff;
+}
+
+.pin-eol { left: 49%; top: 54%; }
+.pin-vibe { left: 51%; top: 62%; }
+.pin-winery { left: 61%; top: 52%; }
+.pin-49er { left: 52%; top: 43%; }
+.pin-rogers { left: 38%; top: 56%; }
+.pin-sunset { left: 47%; top: 35%; }
+.pin-coffee { left: 54%; top: 22%; }
+
+@media (max-width: 760px) {
+  .weekend-hero .hero-overlay {
+    background: rgba(0,0,0,0.48);
+  }
+
+  .weekend-hero-pin {
+    font-size: 0;
+    padding: 0.32rem;
+  }
+
+  .weekend-hero-pin::before {
+    width: 0.95rem;
+    height: 0.95rem;
+  }
+}
+
 /* Date page hero — A1 layout (text left, image right) */
 
 .date-hero-row {
