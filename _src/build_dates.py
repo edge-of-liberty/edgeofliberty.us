@@ -5,6 +5,7 @@ import os
 
 import re
 import sys
+from datetime import date
 
 
 def yaml_quote(s: str) -> str:
@@ -101,6 +102,15 @@ def slug_to_ymd(slug):
         return None
     return (int(year), MONTHS[mon], int(day))
 
+
+def slug_to_date(slug):
+    ymd = slug_to_ymd(slug)
+    if not ymd:
+        return None
+    year, month, day = ymd
+    return date(year, month, day)
+
+
 with open(BUILD_JSON, encoding="utf-8") as f:
     data = json.load(f)
 
@@ -117,21 +127,34 @@ sorted_dates = sorted(
 )
 
 
-# Build a list of (slug, display) for valid date slugs, in sorted order
+# Build date lists for navigation and homepage.
+# Homepage shows only today/future dates; dropdown keeps past dates, moved below upcoming dates.
+today = date.today()
 date_links = []
+upcoming_date_links = []
+past_date_links = []
 for slug, date_info in sorted_dates:
-    if slug_to_ymd(slug) is None:
+    event_date = slug_to_date(slug)
+    if event_date is None:
         continue
     display = (date_info.get("display") or "").strip()
-    date_links.append((slug, display))
+    link = (slug, display)
+    date_links.append(link)
+    if event_date < today:
+        past_date_links.append(link)
+    else:
+        upcoming_date_links.append(link)
+
+dropdown_date_links = upcoming_date_links + past_date_links
 
 # Write the _includes/home_dates.html file (homepage date list with Facebook links)
 home_dates_path = os.path.join(INCLUDES, "home_dates.html")
 with open(home_dates_path, "w", encoding="utf-8") as f:
     f.write('<ul class="home-date-list">\n')
-    for slug, display in date_links:
-        fb_url = facebook_events[slug].get("url")
-        nd_url = facebook_events[slug].get("nextdoor")
+    for slug, display in upcoming_date_links:
+        fb_event = facebook_events.get(slug, {})
+        fb_url = fb_event.get("url")
+        nd_url = fb_event.get("nextdoor")
         f.write(f'<li class="home-date-row">')
         f.write(f'<a class="home-date-link" href="/{slug}/">{display}</a>')
         if fb_url:
@@ -156,7 +179,7 @@ print(f"[OK] Wrote home dates include: {home_dates_path}", file=sys.stderr)
 dropdown_path = os.path.join(INCLUDES, "dates_dropdown.html")
 with open(dropdown_path, "w", encoding="utf-8") as f:
     f.write('<ul class="nav-dropdown-list dates-dropdown">\n')
-    for slug, display in date_links:
+    for slug, display in dropdown_date_links:
         f.write(f'<li><a href="/{slug}/">{display}</a></li>\n')
     f.write('</ul>\n')
 print(f"[OK] Wrote dates dropdown: {dropdown_path}", file=sys.stderr)
