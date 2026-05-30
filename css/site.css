@@ -239,7 +239,12 @@ footer {
 }
 
 .weekend-hero .hero-overlay {
-  background: rgba(0,0,0,0.42);
+  background: transparent;
+}
+
+.weekend-hero .hero-tagline,
+.weekend-hero .hero-subtitle {
+  text-shadow: 0 2px 12px rgba(0,0,0,0.75);
 }
 
 /* Date page hero — A1 layout (text left, image right) */
