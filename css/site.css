@@ -948,6 +948,26 @@ body.menu-open {
   border: 0;
 }
 
+.weekend-map-placeholder {
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2rem;
+  background: #f3f4f6;
+  color: var(--text);
+}
+
+.weekend-map-placeholder strong {
+  font-size: 1.35rem;
+}
+
+.weekend-map-placeholder span {
+  color: var(--muted);
+  max-width: 30rem;
+}
+
 /* CHH subnav */
 .chh-subnav {
   margin: 0 0 1.5rem 0;
