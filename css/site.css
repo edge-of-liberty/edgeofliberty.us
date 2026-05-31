@@ -667,10 +667,37 @@ footer {
 
 /* Home page date list — social icon sizing + alignment */
 
+.home-date-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(220px, 0.75fr);
+  gap: 2rem;
+  align-items: start;
+}
+
+.home-date-column h2 {
+  margin-bottom: 0.75rem;
+}
+
+.home-date-list {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+}
+
 .home-date-row {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  min-height: 32px;
+  margin-bottom: 0.35rem;
+}
+
+.home-date-list-past .home-date-row {
+  opacity: 0.72;
+}
+
+.home-date-list-past .home-date-link {
+  color: var(--muted);
 }
 
 /* Common icon wrapper */
@@ -708,6 +735,13 @@ footer {
   height: 22px;
   object-fit: contain;
   display: block;
+}
+
+@media (max-width: 760px) {
+  .home-date-columns {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
 }
 
 @media (max-width: 640px) {

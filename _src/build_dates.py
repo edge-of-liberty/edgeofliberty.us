@@ -147,30 +147,44 @@ for slug, date_info in sorted_dates:
 
 dropdown_date_links = upcoming_date_links + past_date_links
 
-# Write the _includes/home_dates.html file (homepage date list with Facebook links)
-home_dates_path = os.path.join(INCLUDES, "home_dates.html")
-with open(home_dates_path, "w", encoding="utf-8") as f:
-    f.write('<ul class="home-date-list">\n')
-    for slug, display in upcoming_date_links:
+# Write the _includes/home_dates.html file (homepage date lists with Facebook links)
+def write_home_date_list(f, links, list_class):
+    f.write(f'<ul class="{list_class} home-date-list">\n')
+    for slug, display in links:
         fb_event = facebook_events.get(slug, {})
         fb_url = fb_event.get("url")
         nd_url = fb_event.get("nextdoor")
-        f.write(f'<li class="home-date-row">')
-        f.write(f'<a class="home-date-link" href="/{slug}/">{display}</a>')
+        f.write('<li class="home-date-row">')
+        f.write(f'<a class="home-date-link" href="/{html_attr(slug)}/">{html_text(display)}</a>')
         if fb_url:
             f.write(
-                f'<a class="home-date-fb" href="{fb_url}" target="_blank" rel="noopener" aria-label="View on Facebook">'
+                f'<a class="home-date-fb" href="{html_attr(fb_url)}" target="_blank" rel="noopener" aria-label="View on Facebook">'
                 f'<img src="https://facebook.com/favicon.ico" alt="Facebook" class="fb-icon" loading="lazy" />'
                 f'</a>'
             )
         if nd_url:
             f.write(
-                f'<a class="home-date-nd" href="{nd_url}" target="_blank" rel="noopener" aria-label="View on Nextdoor">'
+                f'<a class="home-date-nd" href="{html_attr(nd_url)}" target="_blank" rel="noopener" aria-label="View on Nextdoor">'
                 f'<img src="https://nextdoor.com/favicon.ico" alt="Nextdoor" class="nd-icon" loading="lazy" />'
                 f'</a>'
             )
         f.write('</li>\n')
     f.write('</ul>\n')
+
+
+home_dates_path = os.path.join(INCLUDES, "home_dates.html")
+with open(home_dates_path, "w", encoding="utf-8") as f:
+    f.write('<div class="home-date-columns">\n')
+    f.write('<div class="home-date-column home-date-column-upcoming">\n')
+    f.write('<h2>Next Sundays</h2>\n')
+    write_home_date_list(f, upcoming_date_links, "home-date-list-upcoming")
+    f.write('</div>\n')
+    if past_date_links:
+        f.write('<div class="home-date-column home-date-column-past">\n')
+        f.write('<h2>Market Memories</h2>\n')
+        write_home_date_list(f, past_date_links, "home-date-list-past")
+        f.write('</div>\n')
+    f.write('</div>\n')
 
 print(f"[OK] Wrote home dates include: {home_dates_path}", file=sys.stderr)
 
