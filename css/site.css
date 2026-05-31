@@ -342,6 +342,11 @@ footer {
   text-decoration: none;
 }
 
+.vendor-absent,
+.vendor-absent a {
+  color: #9ca3af;
+}
+
 .vendor-photo {
   width: 100%;
   height: auto;              /* let height be natural */

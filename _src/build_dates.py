@@ -382,7 +382,8 @@ for date_slug, date_info in sorted_dates:
                         vshort = full.get("short_description", "").strip()
                         break
 
-                f.write(f'<li><a href="/{html_attr(vslug)}/">{html_text(vname)}</a>')
+                li_class = ' class="vendor-absent"' if vstatus == "absent" else ""
+                f.write(f'<li{li_class}><a href="/{html_attr(vslug)}/">{html_text(vname)}</a>')
 
                 if vshort:
                     f.write(f' — {html_text(vshort)}')
