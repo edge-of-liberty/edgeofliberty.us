@@ -1033,9 +1033,9 @@ body.menu-open {
 }
 
 .food-truck-date-card {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(130px, 0.75fr) minmax(240px, 1.5fr) minmax(110px, 0.55fr);
   align-items: center;
-  justify-content: space-between;
   gap: 1rem;
   padding: 1rem;
   background: #ffffff;
@@ -1043,8 +1043,9 @@ body.menu-open {
   border-radius: 8px;
 }
 
-.food-truck-date-main h3 {
-  margin: 0 0 0.4rem 0;
+.food-truck-date-cell {
+  margin: 0;
+  font-size: 1.05rem;
 }
 
 .food-truck-booking-status p {
@@ -1057,8 +1058,14 @@ body.menu-open {
   font-size: 0.95rem;
 }
 
+.food-truck-action-cell {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .food-truck-book-link {
-  flex: 0 0 auto;
+  width: 100%;
+  max-width: 8rem;
 }
 
 .food-truck-feature-list {
@@ -1106,12 +1113,20 @@ body.menu-open {
 
 @media (max-width: 760px) {
   .food-truck-date-card {
+    grid-template-columns: 1fr;
     align-items: stretch;
-    flex-direction: column;
   }
 
   .food-truck-feature-list {
     grid-template-columns: 1fr;
+  }
+
+  .food-truck-action-cell {
+    justify-content: flex-start;
+  }
+
+  .food-truck-book-link {
+    max-width: none;
   }
 }
 
