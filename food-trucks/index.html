@@ -7,6 +7,7 @@ permalink: /food-trucks/
 ---
 
 {% assign booking_link = "https://batshitcrazyfarms.com/off-season-market/ols/products/the-edge-of-liberty-craft-fair-space" %}
+{% assign first_open_booking_link = booking_link | append: "/v/260628" %}
 
 <section class="home-section intro-section food-truck-page">
   <h1>Food Trucks at The Edge of Liberty Craft Fair</h1>
@@ -16,7 +17,7 @@ permalink: /food-trucks/
   <p><strong>Event time:</strong> Select Sundays, 10 AM - 3 PM at 606 N Calumet Ave, Valparaiso, Indiana. Free admission and parking for visitors.</p>
 
   <p>
-    <a class="food-truck-cta" href="{{ booking_link }}" target="_blank" rel="noopener">Book an open food truck date</a>
+    <a class="food-truck-cta" href="{{ first_open_booking_link }}" target="_blank" rel="noopener">Book an open food truck date</a>
   </p>
 </section>
 
@@ -28,6 +29,36 @@ permalink: /food-trucks/
       {% assign date_slug = date_entry[0] %}
       {% assign date_info = date_entry[1] %}
       {% assign has_food_truck = false %}
+      {% assign booking_variant = "" %}
+      {% case date_slug %}
+        {% when "may-17-2026" %}
+          {% assign booking_variant = "260517" %}
+        {% when "may-31-2026" %}
+          {% assign booking_variant = "260531" %}
+        {% when "june-14-2026" %}
+          {% assign booking_variant = "260614" %}
+        {% when "june-28-2026" %}
+          {% assign booking_variant = "260628" %}
+        {% when "july-12-2026" %}
+          {% assign booking_variant = "260712" %}
+        {% when "july-26-2026" %}
+          {% assign booking_variant = "260726" %}
+        {% when "august-09-2026" %}
+          {% assign booking_variant = "260809" %}
+        {% when "august-23-2026" %}
+          {% assign booking_variant = "260823" %}
+        {% when "september-06-2026" %}
+          {% assign booking_variant = "260906" %}
+        {% when "september-20-2026" %}
+          {% assign booking_variant = "260920" %}
+        {% when "october-04-2026" %}
+          {% assign booking_variant = "261004" %}
+        {% when "october-18-2026" %}
+          {% assign booking_variant = "261018" %}
+        {% when "november-01-2026" %}
+          {% assign booking_variant = "261101" %}
+      {% endcase %}
+      {% assign date_booking_link = booking_link | append: "/v/" | append: booking_variant %}
 
       <article class="food-truck-date-card">
         <div class="food-truck-date-main">
@@ -54,7 +85,7 @@ permalink: /food-trucks/
         </div>
 
         {% unless has_food_truck %}
-          <a class="food-truck-book-link" href="{{ booking_link }}" target="_blank" rel="noopener">Book now</a>
+          <a class="food-truck-book-link" href="{{ date_booking_link }}" target="_blank" rel="noopener">Book now</a>
         {% endunless %}
       </article>
     {% endfor %}
@@ -84,4 +115,3 @@ permalink: /food-trucks/
     </article>
   </div>
 </section>
-

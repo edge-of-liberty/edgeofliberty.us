@@ -1001,6 +1001,132 @@ body.menu-open {
   border: 0;
 }
 
+.food-truck-page h1 {
+  margin-top: 0;
+  font-size: 2rem;
+}
+
+.food-truck-cta,
+.food-truck-book-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #ffffff;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.food-truck-cta:hover,
+.food-truck-book-link:hover {
+  color: #ffffff;
+  text-decoration: none;
+  filter: brightness(0.95);
+}
+
+.food-truck-date-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.food-truck-date-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.food-truck-date-main h3 {
+  margin: 0 0 0.4rem 0;
+}
+
+.food-truck-booking-status p {
+  margin: 0.25rem 0 0 0;
+}
+
+.food-truck-booking-status span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.food-truck-book-link {
+  flex: 0 0 auto;
+}
+
+.food-truck-feature-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.food-truck-feature-card {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.food-truck-feature-card img,
+.food-truck-photo-placeholder {
+  width: 140px;
+  aspect-ratio: 1 / 1;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.food-truck-photo-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #111827;
+  color: #ffffff;
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+
+.food-truck-feature-card h3 {
+  margin: 0 0 0.25rem 0;
+}
+
+.food-truck-feature-card p {
+  margin: 0.25rem 0;
+}
+
+@media (max-width: 760px) {
+  .food-truck-date-card {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .food-truck-feature-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .food-truck-feature-card {
+    grid-template-columns: 1fr;
+  }
+
+  .food-truck-feature-card img,
+  .food-truck-photo-placeholder {
+    width: 100%;
+    max-height: 220px;
+  }
+}
+
 /* CHH subnav */
 .chh-subnav {
   margin: 0 0 1.5rem 0;
