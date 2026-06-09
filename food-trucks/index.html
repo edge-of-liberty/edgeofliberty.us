@@ -1,0 +1,87 @@
+---
+layout: default
+title: Food Trucks at The Edge of Liberty Craft Fair
+description: "See which food trucks are scheduled for each 2026 Edge of Liberty Craft Fair date, and book an open food truck date."
+image: "/las-cubanitas/480056858_122104374872776363_5324870097119858857_n.jpg"
+permalink: /food-trucks/
+---
+
+{% assign booking_link = "https://batshitcrazyfarms.com/off-season-market/ols/products/the-edge-of-liberty-craft-fair-space" %}
+
+<section class="home-section intro-section food-truck-page">
+  <h1>Food Trucks at The Edge of Liberty Craft Fair</h1>
+
+  <p>Food trucks help turn craft fair Sundays into a full afternoon out. Use this page to see which trucks are scheduled for each 2026 date, and which dates are still open for booking.</p>
+
+  <p><strong>Event time:</strong> Select Sundays, 10 AM - 3 PM at 606 N Calumet Ave, Valparaiso, Indiana. Free admission and parking for visitors.</p>
+
+  <p>
+    <a class="food-truck-cta" href="{{ booking_link }}" target="_blank" rel="noopener">Book an open food truck date</a>
+  </p>
+</section>
+
+<section class="home-section food-truck-schedule">
+  <h2>2026 Food Truck Schedule</h2>
+
+  <div class="food-truck-date-list">
+    {% for date_entry in site.data.build.dates %}
+      {% assign date_slug = date_entry[0] %}
+      {% assign date_info = date_entry[1] %}
+      {% assign has_food_truck = false %}
+
+      <article class="food-truck-date-card">
+        <div class="food-truck-date-main">
+          <h3><a href="/{{ date_slug }}/">{{ date_info.display }}</a></h3>
+
+          <div class="food-truck-booking-status">
+            {% for vendor in date_info.vendors %}
+              {% if vendor.status == "Food Truck" %}
+                {% assign has_food_truck = true %}
+                <p>
+                  <strong><a href="/{{ vendor.slug }}/">{{ vendor.name }}</a></strong>
+                  <span>Scheduled food truck</span>
+                </p>
+              {% endif %}
+            {% endfor %}
+
+            {% unless has_food_truck %}
+              <p>
+                <strong>Food truck spot available</strong>
+                <span>This date is open for a food truck.</span>
+              </p>
+            {% endunless %}
+          </div>
+        </div>
+
+        {% unless has_food_truck %}
+          <a class="food-truck-book-link" href="{{ booking_link }}" target="_blank" rel="noopener">Book now</a>
+        {% endunless %}
+      </article>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="home-section food-truck-page">
+  <h2>Scheduled Food Trucks</h2>
+
+  <div class="food-truck-feature-list">
+    <article class="food-truck-feature-card">
+      <img src="/las-cubanitas/480056858_122104374872776363_5324870097119858857_n.jpg" alt="Las Cubanitas food">
+      <div>
+        <h3><a href="/las-cubanitas/">Las Cubanitas</a></h3>
+        <p>Authentic Cuban cuisine.</p>
+        <p><a href="https://www.facebook.com/profile.php?id=61573290911465" target="_blank" rel="noopener">Follow Las Cubanitas on Facebook</a></p>
+      </div>
+    </article>
+
+    <article class="food-truck-feature-card">
+      <div class="food-truck-photo-placeholder">BBQ</div>
+      <div>
+        <h3><a href="/grateful-grubs-bbq/">Grateful Grubs BBQ</a></h3>
+        <p>No glitz, no glamour, just rolling smoke and slinging grub.</p>
+        <p><a href="https://www.facebook.com/GratefulgrubsBBQ" target="_blank" rel="noopener">Follow Grateful Grubs BBQ on Facebook</a></p>
+      </div>
+    </article>
+  </div>
+</section>
+
