@@ -1025,6 +1025,10 @@ body.menu-open {
   border: 1px solid var(--border);
 }
 
+.food-truck-hero-action {
+  margin-bottom: 0;
+}
+
 .food-truck-cta,
 .food-truck-book-link {
   display: inline-flex;
