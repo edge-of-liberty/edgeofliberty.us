@@ -7,7 +7,82 @@ permalink: /food-trucks/
 ---
 
 {% assign booking_link = "https://batshitcrazyfarms.com/off-season-market/ols/products/the-edge-of-liberty-craft-fair-space" %}
-{% assign first_open_booking_link = booking_link | append: "/v/260614" %}
+{% assign today_stamp = site.time | date: "%Y%m%d" %}
+{% assign first_open_booking_link = "" %}
+{% assign next_food_truck_date_slug = "" %}
+{% assign featured_food_truck_slugs = "" %}
+
+{% for date_entry in site.data.build.dates %}
+  {% assign date_slug = date_entry[0] %}
+  {% assign date_info = date_entry[1] %}
+  {% assign date_stamp = date_info.display | date: "%Y%m%d" %}
+  {% assign has_food_truck = false %}
+
+  {% for vendor in date_info.vendors %}
+    {% if vendor.status == "Food Truck" %}
+      {% assign has_food_truck = true %}
+    {% endif %}
+  {% endfor %}
+
+  {% if date_stamp >= today_stamp and has_food_truck and next_food_truck_date_slug == "" %}
+    {% assign next_food_truck_date_slug = date_slug %}
+    {% for vendor in date_info.vendors %}
+      {% if vendor.status == "Food Truck" %}
+        {% assign featured_food_truck_slugs = featured_food_truck_slugs | append: "|" | append: vendor.slug | append: "|" %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+
+  {% if date_stamp >= today_stamp and has_food_truck == false and first_open_booking_link == "" %}
+    {% assign booking_variant = "" %}
+    {% case date_slug %}
+      {% when "may-17-2026" %}
+        {% assign booking_variant = "260517" %}
+      {% when "may-31-2026" %}
+        {% assign booking_variant = "260531" %}
+      {% when "june-14-2026" %}
+        {% assign booking_variant = "260614" %}
+      {% when "june-28-2026" %}
+        {% assign booking_variant = "260628" %}
+      {% when "july-12-2026" %}
+        {% assign booking_variant = "260712" %}
+      {% when "july-26-2026" %}
+        {% assign booking_variant = "260726" %}
+      {% when "august-09-2026" %}
+        {% assign booking_variant = "260809" %}
+      {% when "august-23-2026" %}
+        {% assign booking_variant = "260823" %}
+      {% when "september-06-2026" %}
+        {% assign booking_variant = "260906" %}
+      {% when "september-20-2026" %}
+        {% assign booking_variant = "260920" %}
+      {% when "october-04-2026" %}
+        {% assign booking_variant = "261004" %}
+      {% when "october-18-2026" %}
+        {% assign booking_variant = "261018" %}
+      {% when "november-01-2026" %}
+        {% assign booking_variant = "261101" %}
+    {% endcase %}
+    {% assign first_open_booking_link = booking_link | append: "/v/" | append: booking_variant %}
+  {% endif %}
+{% endfor %}
+
+{% for vendor in site.data.build.vendors %}
+  {% assign is_food_truck = false %}
+  {% assign featured_key = "|" | append: vendor.slug | append: "|" %}
+
+  {% for date in vendor.dates %}
+    {% if date.status == "Food Truck" %}
+      {% assign is_food_truck = true %}
+    {% endif %}
+  {% endfor %}
+
+  {% if is_food_truck %}
+    {% unless featured_food_truck_slugs contains featured_key %}
+      {% assign featured_food_truck_slugs = featured_food_truck_slugs | append: "|" | append: vendor.slug | append: "|" %}
+    {% endunless %}
+  {% endif %}
+{% endfor %}
 
 <section class="home-section intro-section food-truck-page food-truck-hero">
   <div class="food-truck-hero-copy">
@@ -29,23 +104,37 @@ permalink: /food-trucks/
   <h2>Scheduled Food Trucks</h2>
 
   <div class="food-truck-feature-list">
-    <article class="food-truck-feature-card">
-      <img src="/las-cubanitas/480056858_122104374872776363_5324870097119858857_n.jpg" alt="Las Cubanitas food">
-      <div>
-        <h3><a href="/las-cubanitas/">Las Cubanitas</a></h3>
-        <p>Authentic Cuban cuisine.</p>
-        <p><a href="https://www.facebook.com/profile.php?id=61573290911465" target="_blank" rel="noopener">Follow Las Cubanitas on Facebook</a></p>
-      </div>
-    </article>
+    {% assign featured_food_truck_slug_list = featured_food_truck_slugs | split: "|" | uniq %}
+    {% for featured_slug in featured_food_truck_slug_list %}
+      {% if featured_slug != "" %}
+        {% for vendor in site.data.build.vendors %}
+          {% if vendor.slug == featured_slug %}
+            {% assign food_truck_image = "/images/food-trucks.png" %}
+            {% case vendor.slug %}
+              {% when "pico-de-gallo" %}
+                {% assign food_truck_image = "/pico-de-gallo/00_706912845_1001389905730617_3863042411866073338_n.jpg" %}
+              {% when "las-cubanitas" %}
+                {% assign food_truck_image = "/las-cubanitas/480056858_122104374872776363_5324870097119858857_n.jpg" %}
+              {% when "grateful-grubs-bbq" %}
+                {% assign food_truck_image = "/grateful-grubs-bbq/0000_701306620_904259352672666_7144999862013500586_n.jpg" %}
+            {% endcase %}
 
-    <article class="food-truck-feature-card">
-      <img src="/grateful-grubs-bbq/0000_701306620_904259352672666_7144999862013500586_n.jpg" alt="Grateful Grubs BBQ logo">
-      <div>
-        <h3><a href="/grateful-grubs-bbq/">Grateful Grubs BBQ</a></h3>
-        <p>No glitz, no glamour, just rolling smoke and slinging grub.</p>
-        <p><a href="https://www.facebook.com/GratefulgrubsBBQ" target="_blank" rel="noopener">Follow Grateful Grubs BBQ on Facebook</a></p>
-      </div>
-    </article>
+            <article class="food-truck-feature-card">
+              <img src="{{ food_truck_image }}" alt="{{ vendor.name }}">
+              <div>
+                <h3><a href="/{{ vendor.slug }}/">{{ vendor.name }}</a></h3>
+                {% if vendor.short_description != "" %}
+                  <p>{{ vendor.short_description }}</p>
+                {% endif %}
+                {% if vendor.facebook != "" %}
+                  <p><a href="{{ vendor.facebook }}" target="_blank" rel="noopener">Follow {{ vendor.name }} on Facebook</a></p>
+                {% endif %}
+              </div>
+            </article>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+    {% endfor %}
   </div>
 </section>
 
