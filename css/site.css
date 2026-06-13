@@ -1029,6 +1029,13 @@ body.menu-open {
   margin-bottom: 0;
 }
 
+.food-truck-logistics-note {
+  padding: 0.75rem 0.9rem;
+  border-left: 4px solid var(--accent);
+  background: #ffffff;
+  border-radius: 0 8px 8px 0;
+}
+
 .food-truck-cta,
 .food-truck-book-link {
   display: inline-flex;
