@@ -11,6 +11,7 @@ vendor/
 
 # OS junk
 .DS_Store
+__pycache__/
 
 # Logs
 *.log
