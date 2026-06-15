@@ -149,6 +149,11 @@ permalink: /food-trucks/
     {% for date_entry in site.data.build.dates %}
       {% assign date_slug = date_entry[0] %}
       {% assign date_info = date_entry[1] %}
+      {% assign date_stamp = date_info.display | date: "%Y%m%d" %}
+      {% assign is_upcoming_date = false %}
+      {% if date_stamp >= today_stamp %}
+        {% assign is_upcoming_date = true %}
+      {% endif %}
       {% assign has_food_truck = false %}
       {% assign booking_variant = "" %}
       {% case date_slug %}
@@ -197,18 +202,23 @@ permalink: /food-trucks/
             {% endif %}
           {% endfor %}
 
-          {% unless has_food_truck %}
+          {% if has_food_truck == false and is_upcoming_date %}
             <p>
               <strong>Food truck spot available</strong>
               <span>This date is open for a food truck.</span>
             </p>
-          {% endunless %}
+          {% elsif has_food_truck == false %}
+            <p>
+              <strong>Past event</strong>
+              <span>No food truck is listed for this date.</span>
+            </p>
+          {% endif %}
         </div>
 
         <div class="food-truck-action-cell">
-          {% unless has_food_truck %}
+          {% if has_food_truck == false and is_upcoming_date %}
             <a class="food-truck-book-link" href="{{ date_booking_link }}" target="_blank" rel="noopener">Book now</a>
-          {% endunless %}
+          {% endif %}
         </div>
       </article>
     {% endfor %}

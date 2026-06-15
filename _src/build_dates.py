@@ -245,11 +245,11 @@ with open(home_dates_path, "w", encoding="utf-8") as f:
         if next_vendor_booking:
             f.write('<a class="home-booking-button" ')
             f.write(f'href="{html_attr(next_vendor_booking["url"])}" target="_blank" rel="noopener">')
-            f.write(f'Book the Next Vendor Spot: {html_text(next_vendor_booking["display"])}</a>\n')
+            f.write(f'Reserve a Vendor Booth</a>\n')
         if next_food_truck_booking:
             f.write('<a class="home-booking-button home-booking-button-secondary" ')
             f.write(f'href="{html_attr(next_food_truck_booking["url"])}" target="_blank" rel="noopener">')
-            f.write(f'Book the Next Open Food Truck Date: {html_text(next_food_truck_booking["display"])}</a>\n')
+            f.write(f'Book a Food Truck Date</a>\n')
         f.write('</div>\n')
 
     f.write('<div class="home-date-columns">\n')
@@ -398,6 +398,12 @@ for date_slug, date_info in sorted_dates:
         and booking_url
         and has_vendor_space(date_info)
     )
+    food_truck_space_available = (
+        event_date is not None
+        and event_date >= today
+        and booking_url
+        and not has_food_truck(date_info)
+    )
 
     json_ld = {
         "@context": "https://schema.org",
@@ -469,17 +475,24 @@ for date_slug, date_info in sorted_dates:
         if nd_url:
             f.write(f'<p><strong>Nextdoor event:</strong> <a href="{nd_url}" target="_blank" rel="noopener">View on Nextdoor</a></p>\n')
 
-        if vendor_space_available:
-            spots_needed = date_info.get("spots_needed")
-            f.write('<div class="date-booking-card">\n')
-            f.write('<div>\n')
-            f.write('<h3>Vendor spaces are still available</h3>\n')
-            if isinstance(spots_needed, int):
-                f.write(f'<p>This date is currently at {spots_needed} of {VENDOR_SPOT_LIMIT} planned vendor spots.</p>\n')
-            else:
-                f.write('<p>This date is currently open for vendor booking.</p>\n')
-            f.write('</div>\n')
-            f.write(f'<a class="date-booking-button" href="{html_attr(booking_url)}" target="_blank" rel="noopener">Book Now</a>\n')
+        if vendor_space_available or food_truck_space_available:
+            f.write('<div class="date-booking-actions">\n')
+            if vendor_space_available:
+                f.write('<div class="date-booking-card">\n')
+                f.write('<div>\n')
+                f.write('<h3>Sell at this craft fair</h3>\n')
+                f.write('<p>Reserve your booth and join local makers, growers, and food vendors for this Sunday market.</p>\n')
+                f.write('</div>\n')
+                f.write(f'<a class="date-booking-button" href="{html_attr(booking_url)}" target="_blank" rel="noopener">Book a Vendor Booth</a>\n')
+                f.write('</div>\n')
+            if food_truck_space_available:
+                f.write('<div class="date-booking-card">\n')
+                f.write('<div>\n')
+                f.write('<h3>Bring your food truck</h3>\n')
+                f.write('<p>This date is open for a self-contained food truck ready to serve craft fair visitors.</p>\n')
+                f.write('</div>\n')
+                f.write(f'<a class="date-booking-button" href="{html_attr(booking_url)}" target="_blank" rel="noopener">Book Food Truck Spot</a>\n')
+                f.write('</div>\n')
             f.write('</div>\n')
 
         if vendors:

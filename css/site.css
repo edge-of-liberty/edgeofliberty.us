@@ -278,12 +278,17 @@ footer {
   display: block;
 }
 
+.date-booking-actions {
+  display: grid;
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
 .date-booking-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  margin: 1.5rem 0;
   padding: 1rem;
   background: #ffffff;
   border: 1px solid var(--border);
@@ -301,6 +306,9 @@ footer {
 
 .date-booking-button {
   flex: 0 0 auto;
+  min-height: 3rem;
+  padding-inline: 1.25rem;
+  font-size: 1.05rem;
 }
 
 /* Stack on mobile */
@@ -730,7 +738,7 @@ footer {
 }
 
 .home-booking-button-secondary {
-  background: #374151;
+  background: var(--accent);
 }
 
 .home-booking-button:hover,
@@ -738,6 +746,12 @@ footer {
   color: #ffffff;
   text-decoration: none;
   filter: brightness(0.95);
+}
+
+.date-booking-card .date-booking-button {
+  min-height: 3rem;
+  padding: 0.8rem 1.25rem;
+  font-size: 1.05rem;
 }
 
 .home-date-list {
