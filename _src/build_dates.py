@@ -52,6 +52,24 @@ EVENT_DESC = (
 ORG_NAME = "The Edge of Liberty"
 ORG_URL = "https://www.edgeofliberty.us/"
 GOOGLE_MAPS_PLACE_URL = "https://www.google.com/maps/place/The+Edge+of+Liberty/@41.521809,-87.036052,673m/data=!3m1!1e3!4m12!1m5!3m4!2zNDHCsDMxJzE4LjUiTiA4N8KwMDInMDkuOCJX!8m2!3d41.521809!4d-87.036052!3m5!1s0x8811992fc22aca43:0x4d56a127dde0ee9c!8m2!3d41.5215535!4d-87.0360516!16s%2Fg%2F11j78ky1z0"
+BOOKING_BASE_URL = "https://batshitcrazyfarms.com/off-season-market/ols/products/the-edge-of-liberty-craft-fair-space"
+BOOKING_VARIANTS = {
+    "may-17-2026": "260517",
+    "may-31-2026": "260531",
+    "june-14-2026": "260614",
+    "june-28-2026": "260628",
+    "july-12-2026": "260712",
+    "july-19-2026": "260719",
+    "july-26-2026": "260726",
+    "august-09-2026": "260809",
+    "august-23-2026": "260823",
+    "september-06-2026": "260906",
+    "september-20-2026": "260920",
+    "october-04-2026": "261004",
+    "october-18-2026": "261018",
+    "november-01-2026": "261101",
+}
+VENDOR_SPOT_LIMIT = 30
 TZ_OFFSET = "-05:00"
 START_TIME = "10:00:00"
 END_TIME = "15:00:00"
@@ -111,6 +129,25 @@ def slug_to_date(slug):
     return date(year, month, day)
 
 
+def date_booking_url(slug):
+    variant = BOOKING_VARIANTS.get(slug)
+    if not variant:
+        return ""
+    return f"{BOOKING_BASE_URL}/v/{variant}"
+
+
+def has_food_truck(date_info):
+    for vendor in date_info.get("vendors", []):
+        if (vendor.get("status") or "").strip().lower() == "food truck":
+            return True
+    return False
+
+
+def has_vendor_space(date_info):
+    spots_needed = date_info.get("spots_needed")
+    return isinstance(spots_needed, int) and spots_needed < VENDOR_SPOT_LIMIT
+
+
 with open(BUILD_JSON, encoding="utf-8") as f:
     data = json.load(f)
 
@@ -147,6 +184,35 @@ for slug, date_info in sorted_dates:
 
 dropdown_date_links = upcoming_date_links + past_date_links
 
+next_vendor_booking = None
+next_food_truck_booking = None
+for slug, date_info in sorted_dates:
+    event_date = slug_to_date(slug)
+    if event_date is None or event_date < today:
+        continue
+
+    booking_url = date_booking_url(slug)
+    if not booking_url:
+        continue
+
+    display = (date_info.get("display") or "").strip()
+    if next_vendor_booking is None and has_vendor_space(date_info):
+        next_vendor_booking = {
+            "slug": slug,
+            "display": display,
+            "url": booking_url,
+            "spots_needed": date_info.get("spots_needed"),
+        }
+    if next_food_truck_booking is None and not has_food_truck(date_info):
+        next_food_truck_booking = {
+            "slug": slug,
+            "display": display,
+            "url": booking_url,
+        }
+
+    if next_vendor_booking and next_food_truck_booking:
+        break
+
 # Write the _includes/home_dates.html file (homepage date lists with Facebook links)
 def write_home_date_list(f, links, list_class):
     f.write(f'<ul class="{list_class} home-date-list">\n')
@@ -174,6 +240,18 @@ def write_home_date_list(f, links, list_class):
 
 home_dates_path = os.path.join(INCLUDES, "home_dates.html")
 with open(home_dates_path, "w", encoding="utf-8") as f:
+    if next_vendor_booking or next_food_truck_booking:
+        f.write('<div class="home-booking-actions">\n')
+        if next_vendor_booking:
+            f.write('<a class="home-booking-button" ')
+            f.write(f'href="{html_attr(next_vendor_booking["url"])}" target="_blank" rel="noopener">')
+            f.write(f'Book the Next Vendor Spot: {html_text(next_vendor_booking["display"])}</a>\n')
+        if next_food_truck_booking:
+            f.write('<a class="home-booking-button home-booking-button-secondary" ')
+            f.write(f'href="{html_attr(next_food_truck_booking["url"])}" target="_blank" rel="noopener">')
+            f.write(f'Book the Next Open Food Truck Date: {html_text(next_food_truck_booking["display"])}</a>\n')
+        f.write('</div>\n')
+
     f.write('<div class="home-date-columns">\n')
     f.write('<div class="home-date-column home-date-column-upcoming">\n')
     f.write('<h2>Next Sundays</h2>\n')
@@ -300,6 +378,7 @@ for date_slug, date_info in sorted_dates:
 
     year, month, day = ymd
     iso_date = f"{year:04d}-{month:02d}-{day:02d}"
+    event_date = date(year, month, day)
     hero_image = f"/{date_slug}/hero.jpg"
 
     outdir = os.path.join(ROOT, date_slug)
@@ -312,6 +391,13 @@ for date_slug, date_info in sorted_dates:
 
     fb_url = facebook_events.get(date_slug, {}).get("url")
     nd_url = facebook_events.get(date_slug, {}).get("nextdoor")
+    booking_url = date_booking_url(date_slug)
+    vendor_space_available = (
+        event_date is not None
+        and event_date >= today
+        and booking_url
+        and has_vendor_space(date_info)
+    )
 
     json_ld = {
         "@context": "https://schema.org",
@@ -382,6 +468,19 @@ for date_slug, date_info in sorted_dates:
             f.write(f'<p><strong>Facebook event:</strong> <a href="{fb_url}" target="_blank" rel="noopener">View on Facebook</a></p>\n')
         if nd_url:
             f.write(f'<p><strong>Nextdoor event:</strong> <a href="{nd_url}" target="_blank" rel="noopener">View on Nextdoor</a></p>\n')
+
+        if vendor_space_available:
+            spots_needed = date_info.get("spots_needed")
+            f.write('<div class="date-booking-card">\n')
+            f.write('<div>\n')
+            f.write('<h3>Vendor spaces are still available</h3>\n')
+            if isinstance(spots_needed, int):
+                f.write(f'<p>This date is currently at {spots_needed} of {VENDOR_SPOT_LIMIT} planned vendor spots.</p>\n')
+            else:
+                f.write('<p>This date is currently open for vendor booking.</p>\n')
+            f.write('</div>\n')
+            f.write(f'<a class="date-booking-button" href="{html_attr(booking_url)}" target="_blank" rel="noopener">Book Now</a>\n')
+            f.write('</div>\n')
 
         if vendors:
             f.write("<h3>Vendors</h3>\n<ul>\n")

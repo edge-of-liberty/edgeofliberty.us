@@ -278,6 +278,31 @@ footer {
   display: block;
 }
 
+.date-booking-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.date-booking-card h3 {
+  margin: 0 0 0.25rem 0;
+}
+
+.date-booking-card p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.date-booking-button {
+  flex: 0 0 auto;
+}
+
 /* Stack on mobile */
 @media (max-width: 768px) {
   .date-hero-row {
@@ -290,6 +315,11 @@ footer {
 
   .event-hero-image {
     max-height: 240px;
+  }
+
+  .date-booking-card {
+    align-items: stretch;
+    flex-direction: column;
   }
 }
 
@@ -678,6 +708,38 @@ footer {
   margin-bottom: 0.75rem;
 }
 
+.home-booking-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.home-booking-button,
+.date-booking-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #ffffff;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.home-booking-button-secondary {
+  background: #374151;
+}
+
+.home-booking-button:hover,
+.date-booking-button:hover {
+  color: #ffffff;
+  text-decoration: none;
+  filter: brightness(0.95);
+}
+
 .home-date-list {
   margin: 0;
   padding-left: 0;
@@ -741,6 +803,11 @@ footer {
   .home-date-columns {
     grid-template-columns: 1fr;
     gap: 1.5rem;
+  }
+
+  .home-booking-actions {
+    flex-direction: column;
+    align-items: stretch;
   }
 }
 

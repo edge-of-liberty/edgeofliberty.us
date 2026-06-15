@@ -57,15 +57,46 @@ def parse_header(h):
     return {"header": h, "slug": slug, "display": display}
 
 with open(CSV_FILE, encoding="utf-8-sig", newline="") as f:
-    for _ in range(8):
-        next(f)
-    reader = csv.DictReader(f)
+    rows = list(csv.reader(f))
 
-    date_cols = [d for h in reader.fieldnames if (d := parse_header(h))]
+    header_row_index = 8
+    spots_needed_row_index = 5
+    if len(rows) <= header_row_index:
+        raise SystemExit(f"CSV is missing expected header row {header_row_index + 1}")
+
+    fieldnames = rows[header_row_index]
+    spots_needed_row = rows[spots_needed_row_index] if len(rows) > spots_needed_row_index else []
+
+    def row_cell(row, index):
+        return (row[index] if index < len(row) else "").strip()
+
+    date_cols = []
+    for index, h in enumerate(fieldnames):
+        parsed = parse_header(h)
+        if not parsed:
+            continue
+
+        spots_needed = row_cell(spots_needed_row, index)
+        parsed["spots_needed"] = int(spots_needed) if spots_needed.isdigit() else None
+        date_cols.append(parsed)
+
     vendors = []
-    dates = {d["slug"]: {"display": d["display"], "vendors": []} for d in date_cols}
+    dates = {
+        d["slug"]: {
+            "display": d["display"],
+            "spots_needed": d["spots_needed"],
+            "vendors": []
+        }
+        for d in date_cols
+    }
 
-    for row in reader:
+    for raw_row in rows[header_row_index + 1:]:
+        row = {
+            field: row_cell(raw_row, index)
+            for index, field in enumerate(fieldnames)
+            if field
+        }
+
         if (row.get(str(YEAR)) or "").strip() in ("", "0"):
             continue
 
