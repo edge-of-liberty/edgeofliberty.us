@@ -304,6 +304,34 @@ footer {
   color: var(--muted);
 }
 
+/* FOMO tier: filling up (spots_needed 20-24) */
+.date-booking-card-filling {
+  border-color: #e0a000;
+  background: #fff8e6;
+}
+
+.date-booking-card-filling h3 {
+  color: #9a6b00;
+}
+
+.date-booking-card-filling p {
+  color: #7a5500;
+}
+
+/* FOMO tier: almost sold out (spots_needed 25-29) */
+.date-booking-card-urgent {
+  border-color: #d23b2e;
+  background: #fdecea;
+}
+
+.date-booking-card-urgent h3 {
+  color: #b3271b;
+}
+
+.date-booking-card-urgent p {
+  color: #8f2017;
+}
+
 .date-booking-button {
   flex: 0 0 auto;
   min-height: 3rem;

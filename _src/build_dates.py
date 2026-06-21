@@ -70,6 +70,8 @@ BOOKING_VARIANTS = {
     "november-01-2026": "261101",
 }
 VENDOR_SPOT_LIMIT = 30
+VENDOR_FOMO_FILLING = 20  # spots_needed 20-24: "filling up" panic
+VENDOR_FOMO_URGENT = 25   # spots_needed 25-29: "almost sold out" panic
 TZ_OFFSET = "-05:00"
 START_TIME = "10:00:00"
 END_TIME = "15:00:00"
@@ -146,6 +148,38 @@ def has_food_truck(date_info):
 def has_vendor_space(date_info):
     spots_needed = date_info.get("spots_needed")
     return isinstance(spots_needed, int) and spots_needed < VENDOR_SPOT_LIMIT
+
+
+def vendor_booth_pitch(date_info):
+    """Return (heading, paragraph, extra_css_class) for the vendor booth card.
+
+    Escalates urgency as spots_needed (CSV line 6, "The James Number") climbs
+    toward the 30-spot cap. Below 20 it's the calm "plenty of space" message;
+    the button text itself never changes — only this text block.
+    """
+    spots = date_info.get("spots_needed")
+    if isinstance(spots, int):
+        remaining = max(VENDOR_SPOT_LIMIT - spots, 0)
+        if spots >= VENDOR_FOMO_URGENT:
+            booth = "booth" if remaining == 1 else "booths"
+            return (
+                "🚨 Almost sold out!",
+                f"Only {remaining} {booth} left for this Sunday — once we hit capacity, "
+                f"booking closes. Don't be the maker who waited too long.",
+                " date-booking-card-urgent",
+            )
+        if spots >= VENDOR_FOMO_FILLING:
+            return (
+                "🔥 Filling up fast!",
+                f"Just {remaining} booths left for this Sunday and they're going quick. "
+                f"Lock yours in before your spot becomes someone else's.",
+                " date-booking-card-filling",
+            )
+    return (
+        "Sell at this craft fair",
+        "Reserve your booth and join local makers, growers, and food vendors for this Sunday market.",
+        "",
+    )
 
 
 with open(BUILD_JSON, encoding="utf-8") as f:
@@ -478,10 +512,11 @@ for date_slug, date_info in sorted_dates:
         if vendor_space_available or food_truck_space_available:
             f.write('<div class="date-booking-actions">\n')
             if vendor_space_available:
-                f.write('<div class="date-booking-card">\n')
+                booth_heading, booth_para, booth_css = vendor_booth_pitch(date_info)
+                f.write(f'<div class="date-booking-card{booth_css}">\n')
                 f.write('<div>\n')
-                f.write('<h3>Sell at this craft fair</h3>\n')
-                f.write('<p>Reserve your booth and join local makers, growers, and food vendors for this Sunday market.</p>\n')
+                f.write(f'<h3>{html_text(booth_heading)}</h3>\n')
+                f.write(f'<p>{html_text(booth_para)}</p>\n')
                 f.write('</div>\n')
                 f.write(f'<a class="date-booking-button" href="{html_attr(booking_url)}" target="_blank" rel="noopener">Book a Vendor Booth</a>\n')
                 f.write('</div>\n')
