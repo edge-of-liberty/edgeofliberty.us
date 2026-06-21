@@ -359,6 +359,14 @@ footer {
   }
 }
 
+/* SEO lead line: present for crawlers/screen readers, visually de-emphasized */
+.vendor-lead {
+  font-size: 0.8rem;
+  font-style: italic;
+  color: var(--muted);
+  margin: 0 0 0.75rem 0;
+}
+
 .vendor-masonry {
   display: grid;
   grid-template-columns: repeat(3, 1fr); /* ~1/3 width each on desktop */
