@@ -29,6 +29,69 @@ def html_attr(s):
     return html.escape(s or "", quote=True)
 
 
+SITE_BASE = "https://www.edgeofliberty.us"
+VENUE_CITY = "Valparaiso"
+VENUE_REGION = "IN"
+
+
+def clean_truncate(s, limit):
+    """Collapse whitespace and truncate on a word boundary (never mid-word)."""
+    s = " ".join((s or "").split())
+    if len(s) <= limit:
+        return s
+    return s[:limit].rsplit(" ", 1)[0].rstrip(" ,.;:—-")
+
+
+def build_title(name, short_desc):
+    """Keyword- and location-rich <title>, e.g.
+    'Down The Rabbit Hole Sourdough – Artisan sourdough breads | Valparaiso, IN'."""
+    if short_desc:
+        base = clean_truncate(f"{name} – {short_desc}", 60)
+        return f"{base} | {VENUE_CITY}, {VENUE_REGION}"
+    return f"{name} | The Edge of Liberty Craft Fair, {VENUE_CITY} {VENUE_REGION}"
+
+
+def build_meta_description(text, short_desc, name):
+    """Clean, sentence-safe meta description with product + location, never cut mid-word."""
+    base = (text.split("\n")[0].strip() if text else "") or short_desc or name
+    suffix = f" Find {name} at The Edge of Liberty Craft Fair in {VENUE_CITY}, {VENUE_REGION}."
+    base = clean_truncate(base, max(40, 157 - len(suffix)))
+    if base and base[-1] not in ".!?":
+        base += "."
+    return (base + suffix).strip()
+
+
+def vendor_jsonld(v, name, slug, hero_image, desc):
+    """Organization + breadcrumb structured data so search engines recognize the vendor."""
+    url = f"{SITE_BASE}/{slug}/"
+    org = {"@type": "Organization", "@id": url + "#org", "name": name, "url": url}
+    if desc:
+        org["description"] = clean_truncate(desc, 300)
+    if hero_image:
+        org["image"] = f"{SITE_BASE}/{slug}/{hero_image}"
+    same_as = [
+        (v.get(field) or "").strip()
+        for field in ("website", "store", "facebook", "instagram", "youtube", "tiktok")
+        if (v.get(field) or "").strip().startswith("http")
+    ]
+    if same_as:
+        org["sameAs"] = same_as
+    if (v.get("public_phone") or "").strip():
+        org["telephone"] = v["public_phone"].strip()
+    if (v.get("public_email") or "").strip():
+        org["email"] = v["public_email"].strip()
+    org["areaServed"] = {"@type": "City", "name": f"{VENUE_CITY}, Indiana"}
+    breadcrumb = {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {"@type": "ListItem", "position": 1, "name": "Home", "item": SITE_BASE + "/"},
+            {"@type": "ListItem", "position": 2, "name": name, "item": url},
+        ],
+    }
+    graph = {"@context": "https://schema.org", "@graph": [org, breadcrumb]}
+    return '<script type="application/ld+json">\n' + json.dumps(graph, indent=2, ensure_ascii=False) + "\n</script>\n"
+
+
 def render_markdownish(text):
     lines = text.splitlines()
     out = []
@@ -146,41 +209,57 @@ for v in regular_vendors:
     # Primary image for OG / social sharing (first alphabetically)
     hero_image = images[0] if images else ""
 
-    # Description
+    # Description sources
     desc_path = os.path.join(src_dir, "description.txt")
-    text = ""
+    file_text = ""
     if os.path.exists(desc_path):
         with open(desc_path, encoding="utf-8") as f:
-            text = f.read().strip()
+            file_text = f.read().strip()
 
-    if not text:
-        text = v.get("short_description", "").strip()
+    short_desc = (v.get("short_description") or "").strip()
+    body_text = file_text or short_desc
+    lead_source = short_desc or (body_text.split("\n")[0].strip() if body_text else "")
+
+    page_title = build_title(name, short_desc)
+    meta_desc = build_meta_description(short_desc or file_text, short_desc, name)
+    img_alt = clean_truncate(f"{name} – {short_desc}", 110) if short_desc else name
 
     with open(os.path.join(outdir, "index.html"), "w", encoding="utf-8") as f:
         f.write("---\n")
         f.write("layout: default\n")
-        f.write(f"title: {yaml_quote(f'{name} — at The Edge of Liberty Craft Fair')}\n")
-        f.write(f"og_title: {yaml_quote(f'{name} — at The Edge of Liberty Craft Fair')}\n")
+        f.write(f"title: {yaml_quote(page_title)}\n")
+        f.write(f"og_title: {yaml_quote(page_title)}\n")
 
         # OG / social metadata (used by layout)
         if hero_image:
             f.write(f"image: {yaml_quote(f'/{slug}/{hero_image}')}\n")
             f.write(f"og_image: {yaml_quote(f'/{slug}/{hero_image}')}\n")
 
-        if text:
-            safe_desc = text.split("\n")[0][:160]
-            f.write(f"description: {yaml_quote(safe_desc)}\n")
-            f.write(f"og_description: {yaml_quote(safe_desc)}\n")
+        if meta_desc:
+            f.write(f"description: {yaml_quote(meta_desc)}\n")
+            f.write(f"og_description: {yaml_quote(meta_desc)}\n")
 
         f.write("---\n\n")
 
+        # Structured data: identify the vendor as an Organization + breadcrumb
+        f.write(vendor_jsonld(v, name, slug, hero_image, lead_source))
+
         f.write('<section class="vendor-page">\n')
-        f.write(f"<h2>{html_text(name)}</h2>\n")
+        f.write(f"<h1>{html_text(name)}</h1>\n")
 
         f.write('<div class="vendor-content">\n')
 
-        if text:
-            f.write(render_markdownish(text))
+        # SEO lead line: product + location keywords as real, crawlable body copy
+        if lead_source:
+            lead = (
+                f"{html_text(lead_source)} — find {html_text(name)} at The Edge of Liberty "
+                f"Craft Fair in {VENUE_CITY}, {VENUE_REGION} (Northwest Indiana)."
+            )
+            f.write(f'<p class="vendor-lead">{lead}</p>\n')
+
+        # Vendor's own write-up (only when it adds copy beyond the one-line description)
+        if file_text and file_text.strip() != short_desc:
+            f.write(render_markdownish(file_text))
 
         # Contact & Links block
         contact_fields = [
@@ -230,7 +309,7 @@ for v in regular_vendors:
             f.write('<div class="vendor-masonry">\n')
             for img in images:
                 src = img
-                f.write(f'<img class="vendor-photo" src="{html_attr(src)}" alt="{html_attr(name)}">\n')
+                f.write(f'<img class="vendor-photo" src="{html_attr(src)}" alt="{html_attr(img_alt)}" loading="lazy">\n')
             f.write("</div>\n")
             f.write("</div>\n")
 
