@@ -23,6 +23,7 @@ EXCLUDE_DIRS = {"_tmp", "_includes"}
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
 SITE_URL = "https://www.edgeofliberty.us"
 TOUR_URL = "https://batshitcrazyfarms.com/home/ola/services/create-happiness-house-tour"
+FACEBOOK_URL = "https://www.facebook.com/createhappinesshouse"
 CHH_NAME = "Create Happiness House"
 
 ADDRESS = {
@@ -344,6 +345,9 @@ def render_chh_nav(current_slug=""):
         ("travel-nurse-friendly", "Travel Nurse Friendly"),
         ("rental-terms", "Rental Terms"),
     ]
+    site_links = [
+        ("/things-to-do-valparaiso-weekends/", "Things to Do"),
+    ]
 
     out = []
     out.append('<nav class="chh-subnav" aria-label="Create Happiness House pages">')
@@ -354,6 +358,9 @@ def render_chh_nav(current_slug=""):
         cls = ' class="current"' if slug == current_slug else ""
         out.append(f'<li><a{cls} href="{html_attr(href)}">{html_text(label)}</a></li>')
 
+    for href, label in site_links:
+        out.append(f'<li class="chh-subnav-back"><a href="{html_attr(href)}">{html_text(label)}</a></li>')
+
     out.append('</ul>')
     out.append('</nav>')
     return "\n".join(out)
@@ -363,7 +370,10 @@ def render_cta_block():
     return (
         '<div class="chh-cta-block">\n'
         '<p><strong>Need a furnished room soon?</strong> Send a tour request and ask what is available now.</p>\n'
+        '<div class="chh-action-row">\n'
         f'<a class="chh-button" href="{html_attr(TOUR_URL)}">Request a Tour</a>\n'
+        f'<a class="chh-secondary-link" href="{html_attr(FACEBOOK_URL)}" target="_blank" rel="noopener">Follow on Facebook</a>\n'
+        '</div>\n'
         '</div>\n'
     )
 
@@ -666,7 +676,10 @@ with open(landing_path, "w", encoding="utf-8") as f:
     f.write('<div class="chh-hero-panel">\n')
     f.write('<strong>Available by the week or month</strong>\n')
     f.write('<span>Private room, shared home, easy on-site parking pad, laundry, WiFi, kitchen, and outdoor space.</span>\n')
+    f.write('<div class="chh-action-row">\n')
     f.write(f'<a class="chh-button" href="{html_attr(TOUR_URL)}">Request a Tour</a>\n')
+    f.write(f'<a class="chh-secondary-link" href="{html_attr(FACEBOOK_URL)}" target="_blank" rel="noopener">Follow on Facebook</a>\n')
+    f.write('</div>\n')
     f.write('</div>\n')
     f.write('</div>\n')
 
