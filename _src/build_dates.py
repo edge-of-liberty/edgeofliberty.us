@@ -171,7 +171,7 @@ def vendor_booth_pitch(date_info):
         if spots >= VENDOR_FOMO_FILLING:
             return (
                 "🔥 Filling up fast!",
-                f"Just {remaining} booths left for this Sunday and they're going quick. "
+                f"Just {remaining} booths left for this Sunday and they're going quickly. "
                 f"Lock yours in before your spot becomes someone else's.",
                 " date-booking-card-filling",
             )
