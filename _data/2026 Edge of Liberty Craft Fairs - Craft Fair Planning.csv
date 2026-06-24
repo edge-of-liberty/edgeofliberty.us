@@ -1,9 +1,9 @@
-,,,,,,,,,,,,,,,0,2,2,10,6,8,9,11,15,14,18,17,17,14,15,6,<On Hand,,,,,,,,Vendor's Page,,,
-,,,,,,,,,,,,,,,0,2,2,10,6,8,9,11,15,14,18,17,17,14,15,6,<Available Inventory,,,,,,,,,,,
-,,,,,,,,,,,,,,,3,21,26,31,29,27,26,24,20,21,16,17,17,20,19,,<Advertisable Vendors,,,,,,,,,,,
-,,,,,,,,,,,,,37,,0,4,4,4,4,4,4,4,4,4,3,3,3,3,3,,<Spots that don't count,,,,,,,,,,,
-,,,,,,,,,,,,,,,3,17,22,27,25,23,22,20,16,17,13,14,14,17,16,,<Vendor Spots Reserved $,,,,,,,,,,,
-,,,,38,54,53,18,43,51,55,109,,,The James Number,3,13,18,20,24,22,21,19,15,16,12,13,13,16,15,,<Spots Needed (minus Absent),,,,,,,,,,,
+,,,,,,,,,,,,,,,0,2,2,10,6,8,9,11,15,15,18,17,17,15,15,6,<On Hand,,,,,,,,Vendor's Page,,,
+,,,,,,,,,,,,,,,0,2,2,10,6,8,9,11,15,15,18,17,17,15,15,6,<Available Inventory,,,,,,,,,,,
+,,,,,,,,,,,,,,,3,21,26,31,29,27,26,25,20,21,16,17,17,20,19,,<Advertisable Vendors,,,,,,,,,,,
+,,,,,,,,,,,,,38,,0,4,4,4,4,4,4,5,4,5,3,3,3,4,3,,<Spots that don't count,,,,,,,,,,,
+,,,,,,,,,,,,,,,3,17,22,27,25,23,22,20,16,16,13,14,14,16,16,,<Vendor Spots Reserved $,,,,,,,,,,,
+,,,,38,54,53,18,43,51,55,109,,,The James Number,3,13,18,20,24,22,21,19,15,15,12,13,13,15,15,,<Spots Needed (minus Absent),,,,,,,,,,,
 ,,,,,,,,,,,,,,,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,,,,,,,,,,,,,
 ,,,,,,,,,,,,,,,SPONSOR,260517,260531,260614,260628,260712,260719,260726,260809,260823,260906,260920,261004,261018,261101,26SEASON,,,,,,,,,,,,
 Company,Status,Order,FB Group Name,FB Group Member,sitemap,Order fulfilled,21-23,2024,2025,2026,Total Fairs,order email,order phone,order name,SPONSOR,May-17,May-31,Jun-14,Jun-28,Jul-12,Jul-19,Jul-26,Aug-9,Aug-23,Sep-6,Sep-20,Oct-4,Oct-18,Nov-1,Season Pass,Short Description,Website,Store,Facebook,Instagram,Youtube,TikTok,Public email,Public phone,slug,URL,form email
@@ -43,7 +43,7 @@ Flavia's Greetings,700,70,Flavia Licudis,10,X,Yes,0,0,0,13,13,flavlic@duck.com,9
 For The Birds,700,26,Nancy Haskett Rogers,11,X,Yes,0,0,1,1,2,nfr857@bellsouth.net,9543478511,Nancy Rogers,,Paid,,,,,,,,,,,,,,,Birdbaths and bird feeders made of glass,,,,,,,,,for-the-birds,https://www.edgeofliberty.us/for-the-birds/,email only
 Garlic Begonias,500,113,,,X,Yes,0,0,0,1,1,Mike+Begonias@garlicbegonias.com,,Michael Raavel,,,,,,,,,Paid,,,,,,,,Small batch apothecary,https://www.garlicbegonias.com/,,https://www.facebook.com/profile.php?id=100092658284836,,,,melynda@garlicbegonias.com,219-771-2405,garlic-begonias,https://www.edgeofliberty.us/garlic-begonias/,email only
 Gina's Garden,200,#N/A,Regina Haan,12,,,0,0,1,0,1,ginasgardencrochet@gmail.com,,,,,,,,,,,,,,,,,,,,,,,,,,,,ginas-garden,https://www.edgeofliberty.us/ginas-garden/,wildflowercreation@yahoo.com
-Ginger Designs,500,82,,,X,Yes,0,0,0,2,2,lucylewter@yahoo.com,not collected,Lyniece Hafner,,,,Paid,,,Makeup,,,,,,,,,,Personalized and custom items,,,https://www.facebook.com/groups/4479423855491850,,,,,,ginger-designs,https://www.edgeofliberty.us/ginger-designs/,email only
+Ginger Designs,500,82,,,X,Yes,0,0,0,3,3,lucylewter@yahoo.com,not collected,Lyniece Hafner,,,,Paid,,,Makeup,Rain,,,,,,,,,Personalized and custom items,,,https://www.facebook.com/groups/4479423855491850,,,,,,ginger-designs,https://www.edgeofliberty.us/ginger-designs/,email only
 Glass Stitches,700,3,Jessica Hurni,13,X,Yes,16,13,11,14,54,jmhurni0801@yahoo.com,2194778252,Jessica Hurni,,Paid,Paid,Paid,Paid,Paid,Paid,Paid,Paid,Paid,Paid,Paid,Paid,Paid,Paid,Paid,Crochet animals & clothes and sewn totes & quilts,,,,,,,glass_stitches@yahoo.com,,glass-stitches,https://www.edgeofliberty.us/glass-stitches/,no change
 Grateful Grubs BBQ,500,112,,,X,Yes,0,0,0,1,1,Mike@garlicbegonias.com,,Michael Raavel,,,,,,,,,Food Truck,,,,,,,,"No glitz, no glamour, just rolling smoke and slinging grub",,,https://www.facebook.com/GratefulgrubsBBQ,,,,mike@garlicbegonias.com,219-964-9192,grateful-grubs-bbq,https://www.edgeofliberty.us/grateful-grubs-bbq/,email only
 Gridiron Grill,0,#N/A,,,,,0,0,1,0,1,gridironfoodtruck@gmail.com,,,,,,,,,,,,,,,,,,,,,,,,,,,,gridiron-grill,https://www.edgeofliberty.us/gridiron-grill/,email only
@@ -74,7 +74,7 @@ Madame Jezebel Jewelry and Rarities,0,#N/A,,,,,0,0,3,0,3,madamejezebeljewelry@gm
 Mariana Publishing,0,#N/A,,,,,0,0,1,0,1,rogercarlson1@hotmail.com,,,,,,,,,,,,,,,,,,,,,,,,,,,,mariana-publishing,https://www.edgeofliberty.us/mariana-publishing/,email only
 Mommy Mustache Shop,700,36,Samantha Harrigan,23,X,Yes,0,3,11,8,22,MommyMustache@gmail.com,,Samantha Harrigan,,Paid,Paid,,Paid,,,Paid,,Paid,Paid,,,Paid,Paid,,Cookies & pastries & cakes...and stickers!,,,https://www.facebook.com/profile.php?id=100084633290888,,,,mommymustache@gmail.com,,mommy-mustache-shop,https://www.edgeofliberty.us/mommy-mustache-shop/,MommyMustache@gmail.com
 Moonie Bird Feeder Rides,200,#N/A,Kevin Rooster Clay,24,,,0,0,1,0,1,roosterclay@yahoo.com,,,,,,,,,,,,,,,,,,,,,,,,,,,,moonie-bird-feeder-rides,https://www.edgeofliberty.us/moonie-bird-feeder-rides/,email only
-Nanie's SugarBuns,500,79,,,X,Yes,0,0,0,5,5,snm4life+shared@myyahoo.com,2198858022,Sherry Welman,,,,Shared,,,Shared,Paid,,Paid,,,,Paid,,,Cinnamon Rolls,,,https://www.facebook.com/profile.php?id=61560492784281,,,,,,nanies-sugarbuns,https://www.edgeofliberty.us/nanies-sugarbuns/,email only
+Nanie's SugarBuns,500,79,,,X,Yes,0,0,0,5,5,snm4life+shared@myyahoo.com,2198858022,Sherry Welman,,,,Shared,,,Shared,Shared,,Shared,,,,Shared,,,Cinnamon Rolls,,,https://www.facebook.com/profile.php?id=61560492784281,,,,,,nanies-sugarbuns,https://www.edgeofliberty.us/nanies-sugarbuns/,email only
 No Llama Drama,200,#N/A,Liann Lewis,25,,,0,0,5,0,5,LIANN_LEWIS@YAHOO.COM,,,,,,,,,,,,,,,,,,,,,,,,,,,,no-llama-drama,https://www.edgeofliberty.us/no-llama-drama/,email only
 Of Forest and Heather,200,#N/A,Heather Autenrieth Banas,26,,,0,0,10,0,10,craftymomma_7@msn.com,,,,,,,,,,,,,,,,,,,,,,,,,,,,of-forest-and-heather,https://www.edgeofliberty.us/of-forest-and-heather/,craftymomma_7@msn.com
 Olson Custom Creations,200,#N/A,Ruth Anne Olson,27,,,0,0,1,0,1,ruthanneolson@hotmail.com,,,,,,,,,,,,,,,,,,,,,,,,,,,,olson-custom-creations,https://www.edgeofliberty.us/olson-custom-creations/,email only
