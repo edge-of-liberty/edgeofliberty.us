@@ -114,14 +114,16 @@ permalink: /food-trucks/
         {% for vendor in site.data.build.vendors %}
           {% if vendor.slug == featured_slug %}
             {% assign food_truck_image = "/images/food-trucks.png" %}
-            {% case vendor.slug %}
-              {% when "pico-de-gallo" %}
-                {% assign food_truck_image = "/pico-de-gallo/00_706912845_1001389905730617_3863042411866073338_n.jpg" %}
-              {% when "las-cubanitas" %}
-                {% assign food_truck_image = "/las-cubanitas/480056858_122104374872776363_5324870097119858857_n.jpg" %}
-              {% when "grateful-grubs-bbq" %}
-                {% assign food_truck_image = "/grateful-grubs-bbq/0000_701306620_904259352672666_7144999862013500586_n.jpg" %}
-            {% endcase %}
+            {% assign food_truck_image_prefix = "/" | append: vendor.slug | append: "/" %}
+            {% assign food_truck_files = site.static_files | sort: "path" %}
+            {% for static_file in food_truck_files %}
+              {% assign static_file_ext = static_file.extname | downcase %}
+              {% if food_truck_image == "/images/food-trucks.png" and static_file.path contains food_truck_image_prefix %}
+                {% if static_file_ext == ".jpg" or static_file_ext == ".jpeg" or static_file_ext == ".png" or static_file_ext == ".webp" or static_file_ext == ".gif" %}
+                  {% assign food_truck_image = static_file.path %}
+                {% endif %}
+              {% endif %}
+            {% endfor %}
 
             <article class="food-truck-feature-card">
               <img src="{{ food_truck_image }}" alt="{{ vendor.name }}">
