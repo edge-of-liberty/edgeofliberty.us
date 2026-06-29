@@ -69,7 +69,7 @@ BOOKING_VARIANTS = {
     "october-18-2026": "261018",
     "november-01-2026": "261101",
 }
-VENDOR_SPOT_LIMIT = 30
+VENDOR_SPOT_LIMIT = 28
 VENDOR_FOMO_FILLING = 20  # spots_needed 20-24: "filling up" panic
 VENDOR_FOMO_URGENT = 25   # spots_needed 25-29: "almost sold out" panic
 TZ_OFFSET = "-05:00"
