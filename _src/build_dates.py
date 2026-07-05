@@ -217,6 +217,7 @@ for slug, date_info in sorted_dates:
         upcoming_date_links.append(link)
 
 dropdown_date_links = upcoming_date_links + past_date_links
+next_craft_fair = upcoming_date_links[0] if upcoming_date_links else None
 
 next_vendor_booking = None
 next_food_truck_booking = None
@@ -309,6 +310,38 @@ with open(dropdown_path, "w", encoding="utf-8") as f:
         f.write(f'<li><a href="/{slug}/">{display}</a></li>\n')
     f.write('</ul>\n')
 print(f"[OK] Wrote dates dropdown: {dropdown_path}", file=sys.stderr)
+
+
+# Write /craft-fair/ redirect to the next upcoming craft fair.
+craft_fair_dir = os.path.join(ROOT, "craft-fair")
+os.makedirs(craft_fair_dir, exist_ok=True)
+craft_fair_redirect_path = os.path.join(craft_fair_dir, "index.html")
+if next_craft_fair:
+    redirect_slug, redirect_display = next_craft_fair
+    redirect_url = f"{ORG_URL.rstrip('/')}/{redirect_slug}/"
+    with open(craft_fair_redirect_path, "w", encoding="utf-8") as f:
+        f.write("<!DOCTYPE html>\n")
+        f.write('<html lang="en">\n')
+        f.write("<head>\n")
+        f.write('  <meta charset="UTF-8">\n')
+        f.write("  <title>Redirecting...</title>\n")
+        f.write(f'  <meta http-equiv="refresh" content="0; url={html_attr(redirect_url)}">\n')
+        f.write(f'  <link rel="canonical" href="{html_attr(redirect_url)}">\n')
+        f.write(f"  <script>window.location.replace({json.dumps(redirect_url)});</script>\n")
+        f.write("</head>\n")
+        f.write("<body>\n")
+        f.write(
+            f'  <p>Redirecting to <a href="{html_attr(redirect_url)}">'
+            f'{html_text(redirect_display)}</a></p>\n'
+        )
+        f.write("</body>\n")
+        f.write("</html>\n")
+    print(
+        f"[OK] Wrote craft fair redirect: {craft_fair_redirect_path} -> /{redirect_slug}/",
+        file=sys.stderr,
+    )
+else:
+    print("[WARN] No upcoming craft fair date found; craft-fair redirect was not updated.", file=sys.stderr)
 
 # Write FAQ master events JSON
 faq_events = []
