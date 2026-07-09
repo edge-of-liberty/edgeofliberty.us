@@ -1,9 +1,9 @@
-,,,,,,,,,,,,,,,0,2,2,10,7,10,11,8,15,15,15,16,16,14,14,7,<On Hand,,,,,,,,Vendor's Page,,,
-,,,,,,,,,,,,,,,0,2,2,10,7,10,11,8,15,15,15,16,16,14,14,7,<Available Inventory,,,,,,,,,,,
-,,,,,,,,,,,,,,,3,21,26,31,29,27,27,28,20,21,19,18,18,21,20,,<Advertisable Vendors,,,,,,,,,,,
-,,,,,,,,,,,,,51,,0,4,4,4,4,5,6,5,4,5,3,3,3,4,3,,<Spots that don't count,,,,,,,,,,,
-,,,,,,,,,,,,,,,3,17,22,27,25,22,21,23,16,16,16,15,15,17,17,,<Vendor Spots Reserved $,,,,,,,,,,,
-,,,,38,54,54,18,43,51,56,110,,,The James Number,3,13,18,20,23,20,19,22,15,15,15,14,14,16,16,,<Spots Needed (minus Absent),,,,,,,,,,,
+,,,,,,,,,,,,,,,0,2,2,10,7,9,11,8,15,15,15,16,16,14,14,7,<On Hand,,,,,,,,Vendor's Page,,,
+,,,,,,,,,,,,,,,0,2,2,10,7,9,11,8,15,15,15,16,16,14,14,7,<Available Inventory,,,,,,,,,,,
+,,,,,,,,,,,,,,,3,21,26,31,29,28,27,28,20,21,19,18,18,21,20,,<Advertisable Vendors,,,,,,,,,,,
+,,,,,,,,,,,,,52,,0,4,4,4,4,5,6,5,4,5,3,3,3,4,3,,<Spots that don't count,,,,,,,,,,,
+,,,,,,,,,,,,,,,3,17,22,27,25,23,21,23,16,16,16,15,15,17,17,,<Vendor Spots Reserved $,,,,,,,,,,,
+,,,,38,54,55,18,43,51,57,111,,,The James Number,3,13,18,20,23,21,19,22,15,15,15,14,14,16,16,,<Spots Needed (minus Absent),,,,,,,,,,,
 ,,,,,,,,,,,,,,,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,,,,,,,,,,,,,
 ,,,,,,,,,,,,,,,SPONSOR,260517,260531,260614,260628,260712,260719,260726,260809,260823,260906,260920,261004,261018,261101,26SEASON,,,,,,,,,,,,
 Company,Status,Order,FB Group Name,FB Group Member,sitemap,Order fulfilled,21-23,2024,2025,2026,Total Fairs,order email,order phone,order name,SPONSOR,May-17,May-31,Jun-14,Jun-28,Jul-12,Jul-19,Jul-26,Aug-9,Aug-23,Sep-6,Sep-20,Oct-4,Oct-18,Nov-1,Season Pass,Short Description,Website,Store,Facebook,Instagram,Youtube,TikTok,Public email,Public phone,slug,URL,form email
@@ -119,3 +119,4 @@ Wolf Den Print,700,103,,44,X,Yes,0,0,0,3,3,lindsey.wolf37@gmail.com,2197898586,L
 zzAmandaSellas,400,71,,,,No,0,0,0,0,0,amanda.sellas@championwindow.com,2316795136,Amanda Sellas,,,,,,,,,,,,,,,,,,,,,,,,,,zzamandasellas,https://www.edgeofliberty.us/zzamandasellas/,email only
 zzCOMPANY NAME,0,#N/A,,,,,0,0,0,0,0,ORDEREMAIL,,,,,,,,,,,,,,,,,,,,,,,,,,,,zzcompany-name,https://www.edgeofliberty.us/zzcompany-name/,email only
 Las Mamacitas,400,163,,,,Yes,0,0,0,1,1,monica@lasmamacitasnwi.com,,,,,,,,,Food Truck,,,,,,,,,,"Out of the box Mexican fusion: tacos, nachos and tamales",,,https://www.facebook.com/lasmamacitasnwi,https://www.instagram.com/lasmamacitasnwi/,,,monica@lasmamacitasnwi.com,219-455-1744,las-mamacitas,https://www.edgeofliberty.us/las-mamacitas/,email only
+B & C 3d Prints,400,169,,,,Yes,0,0,0,1,1,carlose480@gmail.com,12192181318,Carlos Espinoza,,,,,,Paid,,,,,,,,,,,,,,,,,,,,b-c-3d-prints,https://www.edgeofliberty.us/b-c-3d-prints/,email only
