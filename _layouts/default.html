@@ -5,6 +5,9 @@
   <title>{{ page.title | default: site.title }}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   {% assign meta_description = page.description | default: page.og_description %}
+  {% assign social_title = page.og_title | default: page.title | default: site.title %}
+  {% assign social_description = page.og_description | default: meta_description %}
+  {% assign social_image = page.og_image | default: page.image %}
   <link rel="canonical" href="{{ page.url | absolute_url }}">
   {% if meta_description %}
   <meta name="description" content="{{ meta_description | escape }}">
@@ -14,16 +17,16 @@
   <link rel="icon" type="image/png" sizes="512x512" href="/favicon-512.png">
   <link rel="apple-touch-icon" href="/favicon-512.png">
   <!-- Open Graph -->
-  <meta property="og:title" content="{{ page.title | default: site.title }}">
+  <meta property="og:title" content="{{ social_title | escape }}">
   <meta property="og:type" content="website">
   <meta property="og:url" content="{{ page.url | absolute_url }}">
   <meta property="og:site_name" content="{{ site.title }}">
-  {% if meta_description %}
-  <meta property="og:description" content="{{ meta_description | escape }}">
+  {% if social_description %}
+  <meta property="og:description" content="{{ social_description | escape }}">
   {% endif %}
-  {% if page.image %}
-  <meta property="og:image" content="{{ page.image | absolute_url }}">
-  <meta property="og:image:secure_url" content="{{ page.image | absolute_url }}">
+  {% if social_image %}
+  <meta property="og:image" content="{{ social_image | absolute_url }}">
+  <meta property="og:image:secure_url" content="{{ social_image | absolute_url }}">
   {% if page.image_type %}
   <meta property="og:image:type" content="{{ page.image_type }}">
   {% endif %}
@@ -40,12 +43,12 @@
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="{{ page.title | default: site.title }}">
-  {% if meta_description %}
-  <meta name="twitter:description" content="{{ meta_description | escape }}">
+  <meta name="twitter:title" content="{{ social_title | escape }}">
+  {% if social_description %}
+  <meta name="twitter:description" content="{{ social_description | escape }}">
   {% endif %}
-  {% if page.image %}
-  <meta name="twitter:image" content="{{ page.image | absolute_url }}">
+  {% if social_image %}
+  <meta name="twitter:image" content="{{ social_image | absolute_url }}">
   {% if page.image_alt %}
   <meta name="twitter:image:alt" content="{{ page.image_alt | escape }}">
   {% endif %}

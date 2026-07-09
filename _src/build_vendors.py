@@ -51,6 +51,11 @@ def build_title(name, short_desc):
     return f"{name} | The Edge of Liberty Craft Fair, {VENUE_CITY} {VENUE_REGION}"
 
 
+def build_social_title(name):
+    """Short title for Facebook/Twitter cards; keep the event context visible."""
+    return f"{name} at The Edge of Liberty Craft Fair"
+
+
 def build_meta_description(text, short_desc, name):
     """Clean, sentence-safe meta description with product + location, never cut mid-word."""
     base = (text.split("\n")[0].strip() if text else "") or short_desc or name
@@ -221,6 +226,7 @@ for v in regular_vendors:
     lead_source = short_desc or (body_text.split("\n")[0].strip() if body_text else "")
 
     page_title = build_title(name, short_desc)
+    social_title = build_social_title(name)
     meta_desc = build_meta_description(short_desc or file_text, short_desc, name)
     img_alt = clean_truncate(f"{name} – {short_desc}", 110) if short_desc else name
 
@@ -228,7 +234,7 @@ for v in regular_vendors:
         f.write("---\n")
         f.write("layout: default\n")
         f.write(f"title: {yaml_quote(page_title)}\n")
-        f.write(f"og_title: {yaml_quote(page_title)}\n")
+        f.write(f"og_title: {yaml_quote(social_title)}\n")
 
         # OG / social metadata (used by layout)
         if hero_image:
