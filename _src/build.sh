@@ -136,6 +136,27 @@ build_chh() {
 }
 
 ###############################################################################
+# Build Porter County temp-event permit packets (dates within next 30 days)
+# Output -> $ROOT/_permits/  (git-ignored: contains personal contact info)
+###############################################################################
+
+build_permits() {
+  echo "[INFO] Generating temporary-event permit packets..."
+  require_file "$SRC/build_permits.py"
+
+  # Ensure Python deps are available (pypdf + reportlab)
+  if ! python3 -c "import pypdf, reportlab" >/dev/null 2>&1; then
+    echo "[INFO] Installing Python deps (pypdf, reportlab)..."
+    python3 -m pip install --quiet pypdf reportlab \
+      || python3 -m pip install --quiet --user pypdf reportlab \
+      || python3 -m pip install --quiet --break-system-packages pypdf reportlab
+  fi
+
+  parse_csv
+  python3 "$SRC/build_permits.py" "$ROOT" "$BUILD_JSON"
+}
+
+###############################################################################
 # Dispatcher
 ###############################################################################
 
@@ -152,12 +173,16 @@ case "${1:-}" in
   chh)
     build_chh
     ;;
+  permits)
+    build_permits
+    ;;
   all)
     echo "[INFO] Starting full site build..."
     build_vendors
     build_dates
     build_home
     build_chh
+    build_permits
     build_sitemap
 
     echo "[INFO] Staging all changes..."
@@ -181,6 +206,6 @@ case "${1:-}" in
     echo "[INFO] Build complete."
     ;;
   *)
-    echo "Usage: ./build.sh [all|vendors|dates|home|chh|scaffold]"
+    echo "Usage: ./build.sh [all|vendors|dates|home|chh|permits|scaffold]"
     ;;
 esac

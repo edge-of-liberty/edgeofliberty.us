@@ -15,3 +15,7 @@ __pycache__/
 
 # Logs
 *.log
+
+# Temp-event permit packets (contain personal contact info; never publish)
+_permits/
+EdgeOfLiberty_TempEvent_*.pdf
