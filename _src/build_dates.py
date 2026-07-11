@@ -69,9 +69,9 @@ BOOKING_VARIANTS = {
     "october-18-2026": "261018",
     "november-01-2026": "261101",
 }
-VENDOR_SPOT_LIMIT = 28
-VENDOR_FOMO_FILLING = 20  # spots_needed 20-24: "filling up" panic
-VENDOR_FOMO_URGENT = 25   # spots_needed 25-29: "almost sold out" panic
+VENDOR_SPOT_LIMIT = 25
+VENDOR_FOMO_FILLING = 20  # spots_needed 20-22: "filling up" panic
+VENDOR_FOMO_URGENT = 23   # spots_needed 23-24: "almost sold out" panic
 TZ_OFFSET = "-05:00"
 START_TIME = "10:00:00"
 END_TIME = "15:00:00"
@@ -154,7 +154,7 @@ def vendor_booth_pitch(date_info):
     """Return (heading, paragraph, extra_css_class) for the vendor booth card.
 
     Escalates urgency as spots_needed (CSV line 6, "The James Number") climbs
-    toward the 30-spot cap. Below 20 it's the calm "plenty of space" message;
+    toward the 25-spot cap. Below 20 it's the calm "plenty of space" message;
     the button text itself never changes — only this text block.
     """
     spots = date_info.get("spots_needed")
