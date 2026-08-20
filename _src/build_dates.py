@@ -283,7 +283,7 @@ with open(home_dates_path, "w", encoding="utf-8") as f:
             f.write(f'Reserve a Vendor Booth</a>\n')
         if next_food_truck_booking:
             f.write('<a class="home-booking-button home-booking-button-secondary" ')
-            f.write(f'href="{html_attr(next_food_truck_booking["url"])}" target="_blank" rel="noopener">')
+            f.write('href="/food-trucks/">')
             f.write(f'Book a Food Truck Date</a>\n')
         f.write('</div>\n')
 
