@@ -1204,6 +1204,18 @@ body.menu-open {
   border-radius: 8px;
 }
 
+.food-truck-past-section {
+  margin-top: 2rem;
+}
+
+.food-truck-past-section h2 {
+  color: var(--muted);
+}
+
+.food-truck-date-card-past {
+  background: #f8faf6;
+}
+
 .food-truck-date-cell {
   margin: 0;
   font-size: 1.05rem;

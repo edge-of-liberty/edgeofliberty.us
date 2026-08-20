@@ -145,84 +145,31 @@ permalink: /food-trucks/
 </section>
 
 <section class="home-section food-truck-schedule">
-  <h2>2026 Food Truck Schedule</h2>
+  <h2>Upcoming 2026 Food Truck Dates</h2>
 
   <div class="food-truck-date-list">
     {% for date_entry in site.data.build.dates %}
       {% assign date_slug = date_entry[0] %}
       {% assign date_info = date_entry[1] %}
       {% assign date_stamp = date_info.display | date: "%Y%m%d" %}
-      {% assign is_upcoming_date = false %}
       {% if date_stamp >= today_stamp %}
-        {% assign is_upcoming_date = true %}
+        {% include food_truck_date_card.html date_slug=date_slug date_info=date_info today_stamp=today_stamp booking_link=booking_link %}
       {% endif %}
-      {% assign has_food_truck = false %}
-      {% assign booking_variant = "" %}
-      {% case date_slug %}
-        {% when "may-17-2026" %}
-          {% assign booking_variant = "260517" %}
-        {% when "may-31-2026" %}
-          {% assign booking_variant = "260531" %}
-        {% when "june-14-2026" %}
-          {% assign booking_variant = "260614" %}
-        {% when "june-28-2026" %}
-          {% assign booking_variant = "260628" %}
-        {% when "july-12-2026" %}
-          {% assign booking_variant = "260712" %}
-        {% when "july-19-2026" %}
-          {% assign booking_variant = "260719" %}
-        {% when "july-26-2026" %}
-          {% assign booking_variant = "260726" %}
-        {% when "august-09-2026" %}
-          {% assign booking_variant = "260809" %}
-        {% when "august-23-2026" %}
-          {% assign booking_variant = "260823" %}
-        {% when "september-06-2026" %}
-          {% assign booking_variant = "260906" %}
-        {% when "september-20-2026" %}
-          {% assign booking_variant = "260920" %}
-        {% when "october-04-2026" %}
-          {% assign booking_variant = "261004" %}
-        {% when "october-18-2026" %}
-          {% assign booking_variant = "261018" %}
-        {% when "november-01-2026" %}
-          {% assign booking_variant = "261101" %}
-      {% endcase %}
-      {% assign date_booking_link = booking_link | append: "/v/" | append: booking_variant %}
+    {% endfor %}
+  </div>
+</section>
 
-      <article class="food-truck-date-card">
-        <h3 class="food-truck-date-cell"><a href="/{{ date_slug }}/">{{ date_info.display }}</a></h3>
+<section class="home-section food-truck-schedule food-truck-past-section">
+  <h2>Past 2026 Food Truck Events</h2>
 
-        <div class="food-truck-booking-status">
-          {% for vendor in date_info.vendors %}
-            {% if vendor.status == "Food Truck" %}
-              {% assign has_food_truck = true %}
-              <p>
-                <strong><a href="/{{ vendor.slug }}/">{{ vendor.name }}</a></strong>
-                <span>Scheduled food truck</span>
-              </p>
-            {% endif %}
-          {% endfor %}
-
-          {% if has_food_truck == false and is_upcoming_date %}
-            <p>
-              <strong>Food truck spot available</strong>
-              <span>This date is open for a food truck.</span>
-            </p>
-          {% elsif has_food_truck == false %}
-            <p>
-              <strong>Past event</strong>
-              <span>No food truck is listed for this date.</span>
-            </p>
-          {% endif %}
-        </div>
-
-        <div class="food-truck-action-cell">
-          {% if has_food_truck == false and is_upcoming_date %}
-            <a class="food-truck-book-link" href="{{ date_booking_link }}" target="_blank" rel="noopener">Book now</a>
-          {% endif %}
-        </div>
-      </article>
+  <div class="food-truck-date-list">
+    {% for date_entry in site.data.build.dates %}
+      {% assign date_slug = date_entry[0] %}
+      {% assign date_info = date_entry[1] %}
+      {% assign date_stamp = date_info.display | date: "%Y%m%d" %}
+      {% if date_stamp < today_stamp %}
+        {% include food_truck_date_card.html date_slug=date_slug date_info=date_info today_stamp=today_stamp booking_link=booking_link %}
+      {% endif %}
     {% endfor %}
   </div>
 </section>
