@@ -19,3 +19,12 @@ __pycache__/
 # Temp-event permit packets (contain personal contact info; never publish)
 _permits/
 EdgeOfLiberty_TempEvent_*.pdf
+
+# Local Google Sheets authorization, comparison data, and isolated dependencies
+_local/
+.venv-sheets/
+credentials.json
+client_secret*.json
+token.json
+token-*.json
+sheets.local.json

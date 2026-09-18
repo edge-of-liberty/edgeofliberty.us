@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Repository-aware build and publishing behind ./_src/build.sh."""
 import argparse
+from contextlib import contextmanager
 from datetime import date, datetime
 import json
 import os
@@ -31,6 +32,9 @@ TOOL_FILES = {
     '_src/render_markdownish.py', '_src/chh_output.py', '_src/site_build.py',
     '_src/sites.json', '_src/templates/chh.html', '_src/templates/chh-404.html',
     '_src/test_site_build.py',
+    '_src/google_sheets.py', '_src/fetch_planning_sheet.py',
+    '_src/google_sheets.example.json', '_src/requirements-sheets.txt',
+    '_src/test_google_sheets.py',
 }
 
 
@@ -55,9 +59,40 @@ def write_sitemap(output, urls, jekyll=False):
     output.write_text(text + '</urlset>\n')
 
 
-def build_component(name, as_of):
+@contextmanager
+def planning_snapshot():
+    """One fresh, validated, invocation-specific CSV; never fall back to old data."""
+    python = ROOT / '.venv-sheets/bin/python'
+    if not python.is_file():
+        raise RuntimeError('Sheets environment missing. Create .venv-sheets and install _src/requirements-sheets.txt; see README.md.')
+    python_command = [str(python)]
+    if sys.platform == 'darwin':
+        # An Intel Homebrew bash can launch the build under Rosetta. The Sheets
+        # venv was installed natively; run its compiled dependencies natively too.
+        arm = subprocess.run(['/usr/sbin/sysctl', '-n', 'hw.optional.arm64'],
+                             capture_output=True, text=True)
+        if arm.returncode == 0 and arm.stdout.strip() == '1':
+            python_command = ['/usr/bin/arch', '-arm64', str(python)]
+    local = ROOT / '_local/google-sheets'
+    local.mkdir(parents=True, exist_ok=True, mode=0o700)
+    with tempfile.TemporaryDirectory(prefix='build-', dir=local) as temp:
+        output = Path(temp) / 'planning.csv'
+        print('[INFO] Retrieving one fresh Planning snapshot from Google Sheets...', flush=True)
+        result = run(*python_command, SRC / 'fetch_planning_sheet.py', 'snapshot', '--output', output, capture=True)
+        receipt = json.loads(result.stdout)
+        if receipt.get('path') != str(output.resolve()) or not output.is_file():
+            raise RuntimeError('Sheets retrieval did not return the expected fresh snapshot.')
+        print('[OK] Fresh Planning snapshot validated; using it for this build.', flush=True)
+        yield output, str(receipt['year'])
+
+
+def build_component(name, as_of, planning_csv=None, year=None):
     if name == 'chh':
         run(sys.executable, SRC / 'build_chh.py', ROOT / 'chh', '--as-of', as_of)
+        return
+    if planning_csv is None:
+        with planning_snapshot() as (snapshot, snapshot_year):
+            build_component(name, as_of, snapshot, snapshot_year)
         return
     if name == 'permits':
         probe = subprocess.run([sys.executable, '-c', 'import pypdf, reportlab'], capture_output=True)
@@ -68,16 +103,16 @@ def build_component(name, as_of):
                     break
             else:
                 raise RuntimeError('Could not install permit dependencies: pypdf and reportlab')
-    csv = ROOT / '_data/2026 Edge of Liberty Craft Fairs - Craft Fair Planning.csv'
-    data = run(sys.executable, SRC / 'parse_csv.py', csv, '2026', capture=True).stdout
+    data = run(sys.executable, SRC / 'parse_csv.py', planning_csv, year, capture=True).stdout
     json.loads(data)  # Do not replace valid data with a failed/empty parse.
     (ROOT / '_data/build.json').write_text(data)
     run(sys.executable, SRC / f'build_{name}.py', ROOT, ROOT / '_data/build.json')
 
 
 def build_eol(as_of):
-    for name in ('vendors', 'dates', 'home', 'chh', 'permits'):
-        build_component(name, as_of)
+    with planning_snapshot() as (snapshot, year):
+        for name in ('vendors', 'dates', 'home', 'chh', 'permits'):
+            build_component(name, as_of, snapshot, year)
     # Preserve existing public routes and add every generated nested CHH page.
     paths = {p for p in tracked(ROOT) if p.endswith('.html') and not p.startswith(('_', '.'))}
     paths.update(p.relative_to(ROOT).as_posix() for p in (ROOT / 'chh').glob('*/index.html'))
