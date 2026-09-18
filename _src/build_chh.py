@@ -9,19 +9,31 @@ from datetime import date, datetime, timedelta
 # Build CHH pages from directory structure:
 # ROOT/<slug>/{description.txt, images...}
 
-if len(sys.argv) != 2:
-    print("Usage: build_chh.py <root>", file=sys.stderr)
-    sys.exit(1)
+import argparse
+from pathlib import Path
+from chh_output import page_writer
 
-ROOT = sys.argv[1]
+parser = argparse.ArgumentParser()
+parser.add_argument("root", help="Authoritative CHH content directory")
+parser.add_argument("--target", choices=("eol", "chh"), default="eol")
+parser.add_argument("--output", help="Output directory; defaults to the source for eol")
+parser.add_argument("--as-of", default=date.today().isoformat())
+args = parser.parse_args()
+ROOT = str(Path(args.root).resolve())
+OUTPUT = Path(args.output or ROOT).resolve()
+if args.target == "chh" and (not args.output or OUTPUT == Path(ROOT)):
+    parser.error("Standalone output must be separate from authoritative content")
+SETTINGS = json.loads((Path(__file__).parent / "sites.json").read_text())[args.target]
+SITE_URL = SETTINGS["url"]
+BASE_PATH = SETTINGS["prefix"]
+BUILD_DATE = date.fromisoformat(args.as_of)
 
-if os.path.basename(os.path.normpath(ROOT)) != "chh":
-    print(f"ERROR: build_chh.py must be run against the chh directory, got: {ROOT}", file=sys.stderr)
-    sys.exit(1)
+
+def write_page(path):
+    return page_writer(Path(path), OUTPUT, SETTINGS)
 
 EXCLUDE_DIRS = {"_tmp", "_includes"}
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
-SITE_URL = "https://www.edgeofliberty.us"
 TOUR_URL = "https://batshitcrazyfarms.com/home/ola/services/create-happiness-house-tour"
 FACEBOOK_URL = "https://www.facebook.com/createhappinesshouse"
 CHH_NAME = "Create Happiness House"
@@ -179,7 +191,7 @@ def read_availability(path):
         days_until_sunday = 7
     available_date = rented_until + timedelta(days=days_until_sunday)
 
-    if available_date <= date.today():
+    if available_date <= BUILD_DATE:
         return {
             "label": "Available Now",
             "note": "Tour requests are open.",
@@ -346,7 +358,7 @@ def render_chh_nav(current_slug=""):
         ("rental-terms", "Rental Terms"),
     ]
     site_links = [
-        ("/things-to-do-valparaiso-weekends/", "Things to Do"),
+        (SETTINGS["things_to_do"], "Things to Do"),
     ]
 
     out = []
@@ -354,7 +366,7 @@ def render_chh_nav(current_slug=""):
     out.append('<ul>')
 
     for slug, label in items:
-        href = "/chh/" if slug == "" else f"/chh/{slug}/"
+        href = f"{BASE_PATH}/" if slug == "" else f"{BASE_PATH}/{slug}/"
         cls = ' class="current"' if slug == current_slug else ""
         out.append(f'<li><a{cls} href="{html_attr(href)}">{html_text(label)}</a></li>')
 
@@ -451,19 +463,19 @@ def room_offer_schema(slug, display_name, price, hero_image=""):
             "unitText": "month",
         })
 
-    room_url = f"{SITE_URL}/chh/{slug}/"
+    room_url = f"{SITE_URL}{BASE_PATH}/{slug}/"
     item = {
         "@type": "Room",
         "name": f"{display_name} at {CHH_NAME}",
         "url": room_url,
-        "containedInPlace": {"@id": f"{SITE_URL}/chh/#lodging"},
+        "containedInPlace": {"@id": f"{SITE_URL}{BASE_PATH}/#lodging"},
         "amenityFeature": [
             {"@type": "LocationFeatureSpecification", "name": fact, "value": True}
             for fact in ROOM_FACTS.get(slug, [])
         ],
     }
     if hero_image:
-        item["image"] = f"{SITE_URL}/chh/{slug}/{hero_image}"
+        item["image"] = f"{SITE_URL}{BASE_PATH}/{slug}/{hero_image}"
 
     offer = {
         "@context": "https://schema.org",
@@ -492,10 +504,10 @@ def lodging_schema(room_prices=None):
     schema = {
         "@context": "https://schema.org",
         "@type": "LodgingBusiness",
-        "@id": f"{SITE_URL}/chh/#lodging",
+        "@id": f"{SITE_URL}{BASE_PATH}/#lodging",
         "name": CHH_NAME,
-        "url": f"{SITE_URL}/chh/",
-        "image": f"{SITE_URL}/chh/hero.jpg",
+        "url": f"{SITE_URL}{BASE_PATH}/",
+        "image": f"{SITE_URL}{BASE_PATH}/hero.jpg",
         "description": "Furnished private rooms in a quiet shared home on a five-acre farm near Valparaiso, Indiana.",
         "address": ADDRESS,
         "areaServed": [
@@ -568,17 +580,17 @@ for slug in get_pages():
     hero_image = images[0] if images else ""
     display_name = TITLE_MAP.get(slug, slug.replace("-", " ").title())
 
-    out_path = os.path.join(page_dir, "index.html")
+    out_path = OUTPUT / slug / "index.html"
 
-    with open(out_path, "w", encoding="utf-8") as f:
+    with write_page(out_path) as f:
         f.write("---\n")
         f.write("layout: default\n")
         f.write(f"title: {yaml_quote(f'{display_name} — Create Happiness House')}\n")
         f.write(f"og_title: {yaml_quote(f'{display_name} — Create Happiness House')}\n")
 
         if hero_image:
-            f.write(f"image: {yaml_quote(f'/chh/{slug}/{hero_image}')}\n")
-            f.write(f"og_image: {yaml_quote(f'/chh/{slug}/{hero_image}')}\n")
+            f.write(f"image: {yaml_quote(f'{BASE_PATH}/{slug}/{hero_image}')}\n")
+            f.write(f"og_image: {yaml_quote(f'{BASE_PATH}/{slug}/{hero_image}')}\n")
 
         if body_text:
             safe_desc = text_summary(
@@ -638,7 +650,7 @@ for slug in get_pages():
 print(f"Generated {count} CHH pages", file=sys.stderr)
 
 # Generate CHH landing page
-landing_path = os.path.join(ROOT, "index.html")
+landing_path = OUTPUT / "index.html"
 landing_desc_path = os.path.join(ROOT, "description.txt")
 
 landing_text = ""
@@ -651,7 +663,7 @@ else:
 hero_path = os.path.join(ROOT, "hero.jpg")
 hero_exists = os.path.exists(hero_path)
 
-with open(landing_path, "w", encoding="utf-8") as f:
+with write_page(landing_path) as f:
     f.write("---\n")
     f.write("layout: default\n")
     f.write('title: "Furnished Rooms for Rent in Valparaiso, IN — Create Happiness House"\n')
@@ -659,8 +671,8 @@ with open(landing_path, "w", encoding="utf-8") as f:
     f.write('description: "Furnished private rooms for rent in a quiet shared home on a five-acre farm near Valparaiso, Indiana. Weekly and monthly options available."\n')
 
     if hero_exists:
-        f.write('image: /chh/hero.jpg\n')
-        f.write('og_image: /chh/hero.jpg\n')
+        f.write(f'image: {BASE_PATH}/hero.jpg\n')
+        f.write(f'og_image: {BASE_PATH}/hero.jpg\n')
 
     f.write("---\n\n")
 
@@ -685,7 +697,7 @@ with open(landing_path, "w", encoding="utf-8") as f:
 
     if hero_exists:
         f.write('<div class="chh-hero">\n')
-        f.write('<img src="/chh/hero.jpg" alt="Create Happiness House">\n')
+        f.write(f'<img src="{BASE_PATH}/hero.jpg" alt="Create Happiness House">\n')
         f.write('</div>\n')
 
     if landing_text:
@@ -699,7 +711,7 @@ with open(landing_path, "w", encoding="utf-8") as f:
         name = TITLE_MAP.get(slug, slug.title())
         price = ROOM_PRICES.get(slug, "Ask for current pricing")
         f.write('<article class="chh-room-card">\n')
-        f.write(f'<h3><a href="/chh/{slug}/">{html_text(name)}</a></h3>\n')
+        f.write(f'<h3><a href="{BASE_PATH}/{slug}/">{html_text(name)}</a></h3>\n')
         f.write(f'<p class="chh-room-price">{html_text(price)}</p>\n')
         f.write(f'<p>{html_text(ROOM_BEST_FOR.get(slug, ""))}</p>\n')
         f.write('</article>\n')
@@ -710,14 +722,14 @@ with open(landing_path, "w", encoding="utf-8") as f:
 
     for slug in COMMON_ORDER:
         name = TITLE_MAP.get(slug, slug.replace("-", " ").title())
-        f.write(f'<li><a href="/chh/{slug}/">{name}</a></li>\n')
+        f.write(f'<li><a href="{BASE_PATH}/{slug}/">{name}</a></li>\n')
 
     f.write('</ul>\n')
 
     f.write('<h2>Helpful Details</h2>\n')
     f.write('<ul>\n')
-    f.write(f'<li><a href="/chh/travel-nurse-friendly/">{TITLE_MAP["travel-nurse-friendly"]}</a></li>\n')
-    f.write(f'<li><a href="/chh/rental-terms/">{TITLE_MAP["rental-terms"]}</a></li>\n')
+    f.write(f'<li><a href="{BASE_PATH}/travel-nurse-friendly/">{TITLE_MAP["travel-nurse-friendly"]}</a></li>\n')
+    f.write(f'<li><a href="{BASE_PATH}/rental-terms/">{TITLE_MAP["rental-terms"]}</a></li>\n')
     f.write('</ul>\n')
     f.write(render_cta_block())
     f.write('</section>\n')

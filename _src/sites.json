@@ -1,0 +1,14 @@
+{
+  "eol": {
+    "url": "https://www.edgeofliberty.us",
+    "prefix": "/chh",
+    "format": "jekyll",
+    "things_to_do": "/things-to-do-valparaiso-weekends/"
+  },
+  "chh": {
+    "url": "https://www.createhappinesshouse.com",
+    "prefix": "",
+    "format": "html",
+    "things_to_do": "https://www.edgeofliberty.us/things-to-do-valparaiso-weekends/"
+  }
+}
