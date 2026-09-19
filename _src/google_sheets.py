@@ -44,30 +44,29 @@ def load_config(path=DEFAULT_CONFIG):
     return config
 
 
-def get_client(config, auth_dir=CONFIG_DIR, *, interactive=False, scopes=READONLY_SCOPES):
+def get_credentials(config, auth_dir=CONFIG_DIR, *, interactive=False,
+                    scopes=READONLY_SCOPES, token_name="token.json"):
     """Authorize only on explicit request; normal reads refresh stored tokens.
 
-    The same helper can serve a separate future tool with explicitly chosen scopes.
-    This phase exposes only a read-only authorization command and read operations.
+    Token selection is explicit; a missing token never falls back to another file.
     """
     try:
         from google.auth.transport.requests import Request
         from google.oauth2.credentials import Credentials
         from google_auth_oauthlib.flow import InstalledAppFlow
-        from googleapiclient.discovery import build
-        import google_auth_httplib2
-        import httplib2
     except ImportError as exc:
         raise SheetsError(f'Google library import failed ({exc.name}). Use .venv-sheets/bin/python and install _src/requirements-sheets.txt.') from None
     auth_dir = Path(auth_dir).expanduser()
     client_file = auth_dir / 'credentials.json'
-    token_file = auth_dir / 'token.json'
+    if Path(token_name).name != token_name or token_name in ('', '.', '..', 'credentials.json'):
+        raise SheetsError('Invalid authorization token filename.')
+    token_file = auth_dir / token_name
     creds = None
     if token_file.exists() and not interactive:
         try:
             info = json.loads(token_file.read_text())
             if set(info.get('scopes', [])) != set(scopes):
-                raise SheetsError('Stored authorization scopes differ. Run the auth command explicitly to authorize read-only access.')
+                raise SheetsError('Stored authorization scopes differ. Run the auth command explicitly to authorize the requested access.')
             creds = Credentials.from_authorized_user_info(info, scopes=scopes)
             os.chmod(token_file, 0o600)
             if not creds.valid and creds.refresh_token:
@@ -104,7 +103,16 @@ def get_client(config, auth_dir=CONFIG_DIR, *, interactive=False, scopes=READONL
             raise SheetsError('Google authorization did not complete. Check the browser consent and Desktop/Internal client setup, then retry auth.') from None
     if not creds or not creds.valid:
         raise SheetsError('Google authorization is not ready. Run the auth command first. No browser is opened by fetch or build commands.')
+    return creds
+
+
+def get_client(config, auth_dir=CONFIG_DIR, *, interactive=False, scopes=READONLY_SCOPES):
+    """Existing website Sheets client, using its original token.json."""
+    creds = get_credentials(config, auth_dir, interactive=interactive, scopes=scopes)
     try:
+        from googleapiclient.discovery import build
+        import google_auth_httplib2
+        import httplib2
         return build('sheets', 'v4', http=google_auth_httplib2.AuthorizedHttp(
             creds, http=httplib2.Http(timeout=30)), cache_discovery=False)
     except Exception:
