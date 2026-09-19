@@ -452,7 +452,11 @@
         "@type": "Organization",
         "name": "The Edge of Liberty",
         "url": "https://www.edgeofliberty.us/"
-      }
+      },
+      "sameAs": [
+        "https://www.facebook.com/events/5116080335326024",
+        "https://nextdoor.com/local_events/gBYRhHks45sQ"
+      ]
     },
     {
       "@type": "Event",
