@@ -13,8 +13,9 @@ vendor/
 .DS_Store
 __pycache__/
 
-# Logs
+# Logs & docs
 *.log
+*.[mM][dD]
 
 # Temp-event permit packets (contain personal contact info; never publish)
 _permits/
