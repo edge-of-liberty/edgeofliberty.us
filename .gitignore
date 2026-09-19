@@ -28,3 +28,6 @@ client_secret*.json
 token.json
 token-*.json
 sheets.local.json
+
+# Private customer order emails (keep local samples out of publication)
+/_data/**/*.[eE][mM][lL]

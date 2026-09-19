@@ -6,6 +6,7 @@ from datetime import date, datetime
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
@@ -218,7 +219,23 @@ def validate_standalone(output):
                 raise ValueError(f'Incorrect canonical: {page}')
 
 
-def eol_allowed(name, known):
+def generated_eol_pages(repo):
+    """Exact date/vendor outputs named by the current parsed build data."""
+    source = repo / '_data/build.json'
+    if not source.is_file():
+        return set()
+    data = json.loads(source.read_text())
+    slugs = set(data.get('dates', {}))
+    slugs.update(v.get('slug', '') for v in data.get('vendors', []))
+    valid = {slug for slug in slugs
+             if isinstance(slug, str) and re.fullmatch(r'[a-z0-9]+(?:-[a-z0-9]+)*', slug)}
+    pages = {f'{slug}/index.html' for slug in valid}
+    # Date pages explicitly reference this asset; do not allow arbitrary siblings.
+    pages.update(f'{slug}/hero.jpg' for slug in valid if slug in data.get('dates', {}))
+    return pages
+
+
+def eol_allowed(name, known, generated=()):
     p = Path(name)
     if any(part in {'_tmp', '__pycache__'} for part in p.parts):
         return False
@@ -243,6 +260,8 @@ def eol_allowed(name, known):
     site_dir = p.parts[0]
     if site_dir.startswith('_'):
         return False
+    if name in generated:
+        return True
     established = any(n.startswith(site_dir + '/') and n.endswith('/index.html') for n in known)
     authored = (ROOT / site_dir / 'description.txt').is_file() and (ROOT / site_dir / 'index.html').is_file()
     asset_dir = site_dir in {'images', 'css', 'proof', 'post2'}
@@ -262,7 +281,8 @@ def publish_paths(repo, target):
         removed_sources = {name for name in OBSOLETE_CHH_SOURCES & known
                            if not (repo / name).exists() and not (repo / name).is_symlink()}
         return sorted(((owned | {MANIFEST}) & candidates) | removed_sources)
-    return sorted(n for n in candidates if eol_allowed(n, known))
+    generated = generated_eol_pages(repo)
+    return sorted(n for n in candidates if eol_allowed(n, known, generated))
 
 
 def publish(repo, target):

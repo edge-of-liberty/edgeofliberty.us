@@ -11,6 +11,33 @@ import site_build as build
 
 
 class StagingTests(unittest.TestCase):
+    def test_new_generated_pages_selected_without_unrelated_files(self):
+        with tempfile.TemporaryDirectory() as temp:
+            repo = Path(temp)
+            (repo / '_data').mkdir()
+            (repo / '_data/build.json').write_text(json.dumps({
+                'dates': {'september-27-2026': {}},
+                'vendors': [{'slug': 'new-vendor'}, {'slug': '../escape'},
+                            {'slug': '.hidden'}, {'slug': 'scratch'}],
+            }))
+            expected = {'september-27-2026/index.html', 'september-27-2026/hero.jpg',
+                        'new-vendor/index.html'}
+            excluded = {
+                'september-27-2026/notes.html', 'new-vendor/extra.html',
+                'unrelated/index.html', 'scratch/index.html', '.DS_Store',
+                'new-vendor/.DS_Store', '_data/private.eml',
+                '_src/ORDER_EMAIL_REVIEW.md', '_src/authorize_orders.py',
+                '_src/order_email_review.py', '_src/test_authorize_orders.py',
+                '_src/test_order_email_review.py', '../escape/index.html',
+                '.hidden/index.html',
+            }
+            with patch.object(build, 'ROOT', repo), patch.object(build, 'tracked', return_value=set()), patch.object(build, 'git', return_value='\0'.join(expected | excluded)):
+                self.assertEqual(set(build.publish_paths(repo, 'eol')), expected)
+
+    def test_missing_build_data_does_not_allow_arbitrary_pages(self):
+        with tempfile.TemporaryDirectory() as temp:
+            self.assertEqual(build.generated_eol_pages(Path(temp)), set())
+
     def test_sources_and_local_files(self):
         known = {'chh/index.html', 'chh/blue/index.html', 'index.html', '_data/build.json', '_layouts/default.html'}
         for path in ['chh/blue/rentedUntil.txt', 'chh/blue/description.txt', 'chh/blue/new.jpg', '_src/site_build.py', '_data/build.json', '_layouts/default.html']:
