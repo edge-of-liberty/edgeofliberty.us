@@ -70,7 +70,7 @@ COMMON_ORDER = ["common-upper", "common-lower", "common-other"]
 ROOM_BEST_FOR = {
     "blue": "Lower-level quiet and best weekly value",
     "green": "Lower-level quiet with more space",
-    "purple": "Upper-level natural light and lofted ceiling",
+    "purple": "Main-level room with hardwood floors, vaulted ceiling, abundant natural light, and easy kitchen access",
     "teal": "Largest room with daybed and private sitting space",
 }
 
