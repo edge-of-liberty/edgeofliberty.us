@@ -45,7 +45,8 @@ def load_config(path=DEFAULT_CONFIG):
 
 
 def get_credentials(config, auth_dir=CONFIG_DIR, *, interactive=False,
-                    scopes=READONLY_SCOPES, token_name="token.json"):
+                    scopes=READONLY_SCOPES, token_name="token.json",
+                    client_name="credentials.json"):
     """Authorize only on explicit request; normal reads refresh stored tokens.
 
     Token selection is explicit; a missing token never falls back to another file.
@@ -57,7 +58,9 @@ def get_credentials(config, auth_dir=CONFIG_DIR, *, interactive=False,
     except ImportError as exc:
         raise SheetsError(f'Google library import failed ({exc.name}). Use .venv-sheets/bin/python and install _src/requirements-sheets.txt.') from None
     auth_dir = Path(auth_dir).expanduser()
-    client_file = auth_dir / 'credentials.json'
+    if Path(client_name).name != client_name or not client_name.startswith('credentials') or not client_name.endswith('.json'):
+        raise SheetsError('Invalid OAuth client filename.')
+    client_file = auth_dir / client_name
     if Path(token_name).name != token_name or token_name in ('', '.', '..', 'credentials.json'):
         raise SheetsError('Invalid authorization token filename.')
     token_file = auth_dir / token_name
