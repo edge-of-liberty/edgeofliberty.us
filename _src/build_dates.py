@@ -65,6 +65,7 @@ BOOKING_VARIANTS = {
     "august-23-2026": "260823",
     "september-06-2026": "260906",
     "september-20-2026": "260920",
+    "september-27-2026": "260927",
     "october-04-2026": "261004",
     "october-18-2026": "261018",
     "november-01-2026": "261101",
