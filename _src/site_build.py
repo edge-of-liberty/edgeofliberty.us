@@ -36,6 +36,7 @@ TOOL_FILES = {
     '_src/google_sheets.py', '_src/fetch_planning_sheet.py',
     '_src/google_sheets.example.json', '_src/requirements-sheets.txt',
     '_src/test_google_sheets.py',
+    '_src/sync_sitemap_sheet.py', '_src/test_sync_sitemap_sheet.py',
 }
 
 
@@ -301,6 +302,16 @@ def publish(repo, target):
     print(f'[OK] {target}: push complete')
 
 
+def sync_sitemap_sheet():
+    python = ROOT / '.venv-sheets/bin/python'
+    command = [str(python)]
+    if sys.platform == 'darwin':
+        arm = subprocess.run(['/usr/sbin/sysctl', '-n', 'hw.optional.arm64'], capture_output=True, text=True)
+        if arm.returncode == 0 and arm.stdout.strip() == '1':
+            command = ['/usr/bin/arch', '-arm64', str(python)]
+    run(*command, SRC / 'sync_sitemap_sheet.py', '--write')
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('command', choices=['all', 'build-only', 'eol', 'chh-site', 'chh-build', 'vendors', 'dates', 'home', 'chh', 'permits', 'staging-preview'])
@@ -339,6 +350,8 @@ def main():
             print(f'[ERROR] {target}: {exc}', file=sys.stderr)
     if failed:
         raise SystemExit('Publication failed for: ' + ', '.join(failed))
+    if args.command == 'all':
+        sync_sitemap_sheet()
 
 
 if __name__ == '__main__':
