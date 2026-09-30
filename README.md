@@ -89,6 +89,31 @@ local links/assets, canonical URLs, and unresolved templates before syncing outp
 Edge of Liberty still uses Jekyll for final layout rendering; for local previews use
 `bundle exec jekyll build` with the Ruby/Bundler installation matching Gemfile.lock.
 
+## Known architecture issue — address before 2027 reservations open
+
+Vendor identity and year-specific participation must become separate concepts.
+The `2026` field should mean participation in 2026, not whether a vendor exists
+in the parsed dataset. A vendor may participate in 2026, 2027, both, or neither.
+
+Currently, `_src/parse_csv.py` excludes rows whose selected-year field is blank
+or `0` before creating either vendor or per-date records. `_src/build_vendors.py`
+relies on that upstream eligibility gate: its vendor-page and directory/dropdown/
+homepage-list generation has no independent year-specific publication filtering.
+`_src/build_home.py` embeds the generated vendor list without further filtering.
+Simply removing the parser gate would therefore broaden publication.
+
+Before opening 2027 reservations, design support for overlapping years: ingest
+2027 reservations/vendors while retaining existing 2026 vendors and event/history
+content. Do not require deleting or deactivating 2026 vendors to open the next
+season, or lose historical vendor/event information when a vendor does not
+participate in the newest season. Define year-specific publication rules for each
+consumer separately from general vendor identity and participation data.
+
+**This is a deferred redesign, not authorization to remove the current year gate.**
+Keep current behavior until that coordinated change is approved. The immediate
+2026 sponsor issue was resolved in the sheet by explicitly setting the three
+current Sponsor rows' `2026` fields to `1`.
+
 ## Google Sheets Phase 1 — live build input
 
 **Normal CSV-dependent builds retrieve one fresh Planning snapshot from Google
