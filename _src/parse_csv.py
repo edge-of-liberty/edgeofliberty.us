@@ -60,12 +60,12 @@ with open(CSV_FILE, encoding="utf-8-sig", newline="") as f:
     rows = list(csv.reader(f))
 
     header_row_index = 8
-    spots_needed_row_index = 5
+    available_inventory_row_index = 1  # Sheet row 2: Available Inventory
     if len(rows) <= header_row_index:
         raise SystemExit(f"CSV is missing expected header row {header_row_index + 1}")
 
     fieldnames = rows[header_row_index]
-    spots_needed_row = rows[spots_needed_row_index] if len(rows) > spots_needed_row_index else []
+    available_inventory_row = rows[available_inventory_row_index] if len(rows) > available_inventory_row_index else []
 
     def row_cell(row, index):
         return (row[index] if index < len(row) else "").strip()
@@ -76,15 +76,15 @@ with open(CSV_FILE, encoding="utf-8-sig", newline="") as f:
         if not parsed:
             continue
 
-        spots_needed = row_cell(spots_needed_row, index)
-        parsed["spots_needed"] = int(spots_needed) if spots_needed.isdigit() else None
+        available_inventory = row_cell(available_inventory_row, index)
+        parsed["available_inventory"] = int(available_inventory) if available_inventory.isdigit() else None
         date_cols.append(parsed)
 
     vendors = []
     dates = {
         d["slug"]: {
             "display": d["display"],
-            "spots_needed": d["spots_needed"],
+            "available_inventory": d["available_inventory"],
             "vendors": []
         }
         for d in date_cols

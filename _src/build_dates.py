@@ -70,9 +70,8 @@ BOOKING_VARIANTS = {
     "october-18-2026": "261018",
     "november-01-2026": "261101",
 }
-VENDOR_SPOT_LIMIT = 25
-VENDOR_FOMO_FILLING = 20  # spots_needed 20-22: "filling up" panic
-VENDOR_FOMO_URGENT = 23   # spots_needed 23-24: "almost sold out" panic
+VENDOR_FOMO_FILLING = 5  # 3-5 booths remaining
+VENDOR_FOMO_URGENT = 2   # 1-2 booths remaining
 TZ_OFFSET = "-05:00"
 START_TIME = "10:00:00"
 END_TIME = "15:00:00"
@@ -147,21 +146,21 @@ def has_food_truck(date_info):
 
 
 def has_vendor_space(date_info):
-    spots_needed = date_info.get("spots_needed")
-    return isinstance(spots_needed, int) and spots_needed < VENDOR_SPOT_LIMIT
+    available_inventory = date_info.get("available_inventory")
+    return isinstance(available_inventory, int) and available_inventory > 0
 
 
 def vendor_booth_pitch(date_info):
     """Return (heading, paragraph, extra_css_class) for the vendor booth card.
 
-    Escalates urgency as spots_needed (CSV line 6, "The James Number") climbs
-    toward the 25-spot cap. Below 20 it's the calm "plenty of space" message;
+    Uses available inventory (CSV row 2) directly for remaining booths.
+    Above five remaining it uses the calm message;
     the button text itself never changes — only this text block.
     """
-    spots = date_info.get("spots_needed")
+    spots = date_info.get("available_inventory")
     if isinstance(spots, int):
-        remaining = max(VENDOR_SPOT_LIMIT - spots, 0)
-        if spots >= VENDOR_FOMO_URGENT:
+        remaining = spots
+        if 0 < remaining <= VENDOR_FOMO_URGENT:
             booth = "booth" if remaining == 1 else "booths"
             return (
                 "🚨 Almost sold out!",
@@ -169,7 +168,7 @@ def vendor_booth_pitch(date_info):
                 f"booking closes. Don't be the maker who waited too long.",
                 " date-booking-card-urgent",
             )
-        if spots >= VENDOR_FOMO_FILLING:
+        if 0 < remaining <= VENDOR_FOMO_FILLING:
             return (
                 "🔥 Filling up fast!",
                 f"Just {remaining} booths left for this Sunday and they're going quickly. "
@@ -237,7 +236,7 @@ for slug, date_info in sorted_dates:
             "slug": slug,
             "display": display,
             "url": booking_url,
-            "spots_needed": date_info.get("spots_needed"),
+            "available_inventory": date_info.get("available_inventory"),
         }
     if next_food_truck_booking is None and not has_food_truck(date_info):
         next_food_truck_booking = {
