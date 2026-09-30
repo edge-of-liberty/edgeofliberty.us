@@ -133,10 +133,10 @@ with open(BUILD_JSON, encoding="utf-8") as f:
     data = json.load(f)
     print("[DEBUG] Total vendors:", len(data.get("vendors", [])), file=sys.stderr)
     for v in data.get("vendors", []):
-        print("[DEBUG] RAW sponsor field for", v.get("name"), "=>", repr(v.get("sponsor")), type(v.get("sponsor")), file=sys.stderr)
+        print("[DEBUG] RAW type field for", v.get("name"), "=>", repr(v.get("type")), type(v.get("type")), file=sys.stderr)
 
-regular_vendors = [v for v in data["vendors"] if not (v.get("sponsor") or "").strip()]
-sponsors = [v for v in data["vendors"] if (v.get("sponsor") or "").strip()]
+regular_vendors = [v for v in data["vendors"] if v.get("type") != "Sponsor"]
+sponsors = [v for v in data["vendors"] if v.get("type") == "Sponsor"]
 print("[DEBUG] Regular vendors:", [v.get("name") for v in regular_vendors], file=sys.stderr)
 print("[DEBUG] Sponsors:", [v.get("name") for v in sponsors], file=sys.stderr)
 

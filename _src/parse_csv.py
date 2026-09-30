@@ -65,6 +65,8 @@ with open(CSV_FILE, encoding="utf-8-sig", newline="") as f:
         raise SystemExit(f"CSV is missing expected header row {header_row_index + 1}")
 
     fieldnames = rows[header_row_index]
+    if "Type" not in fieldnames:
+        raise SystemExit("Planning row 9 is missing required column: Type")
     available_inventory_row = rows[available_inventory_row_index] if len(rows) > available_inventory_row_index else []
 
     def row_cell(row, index):
@@ -124,7 +126,7 @@ with open(CSV_FILE, encoding="utf-8-sig", newline="") as f:
             "public_email": row.get("Public email", "").strip(),
             "public_phone": row.get("Public phone", "").strip(),
             "short_description": row.get("Short Description", "").strip(),
-            "sponsor": row.get("SPONSOR").strip(),
+            "type": row.get("Type", "").strip(),
             "dates": []
         }
 

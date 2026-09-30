@@ -18,7 +18,7 @@ BASELINE = ROOT / '_data/2026 Edge of Liberty Craft Fairs - Craft Fair Planning.
 LOCAL = ROOT / '_local/google-sheets'
 CANDIDATE = LOCAL / 'planning-api.csv'
 REPORT = LOCAL / 'comparison.json'
-PUBLIC_HEADERS = ['Company', 'SPONSOR', 'Short Description', 'Website', 'Store',
+PUBLIC_HEADERS = ['Company', 'Type', 'Short Description', 'Website', 'Store',
                   'Facebook', 'Instagram', 'Youtube', 'TikTok', 'Public email', 'Public phone', 'slug']
 ERRORS = {'#REF!', '#VALUE!', '#N/A', '#DIV/0!', '#NAME?', '#NUM!', '#ERROR!', '#SPILL!', '#CALC!', '#LOADING!'}
 MONTHS = dict(zip(['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], range(1,13)))

@@ -1,4 +1,4 @@
-"""Offline tests; no Google access, spreadsheet writes, builds, or publication."""
+"""Offline tests; rendering uses temporary directories, never production sites."""
 import csv
 import hashlib
 import io
@@ -24,10 +24,11 @@ def fixture():
     rows[5] = [''] * len(headers)
     rows[5][headers.index('Sep-20')] = '12'
     values = {'Company': 'Example Company', 'slug': 'example-company', '2026': '1',
-              'SPONSOR': '', 'Sep-20': 'Paid', 'Short Description': 'Art, "gifts"\nand café supplies',
+              'Type': '', 'Sep-20': 'Paid', 'Short Description': 'Art, "gifts"\nand café supplies',
               'Public phone': '0123456789', 'order email': 'private@example.invalid'}
     rows.append([values.get(h, '') for h in headers])
-    rows.append(['zzCOMPANY NAME'])
+    hidden = {'Company': 'zzCOMPANY NAME', '2026': '1', 'Type': 'Sponsor', 'Sep-20': 'Paid'}
+    rows.append([hidden.get(h, '') for h in headers])
     return rows
 
 
@@ -137,12 +138,75 @@ class AcquisitionTests(unittest.TestCase):
 
     def test_real_baseline_parser_stays_equivalent(self):
         before = hashlib.sha256(fetch.BASELINE.read_bytes()).hexdigest()
-        parsed = fetch.parse_snapshot(fetch.BASELINE, 2026)
+        rows = fetch.read_rows(fetch.BASELINE)
+        # Historical SPONSOR values have no Type meaning. Adapt only this test copy.
+        column = rows[8].index('SPONSOR')
+        rows[8][column] = 'Type'
+        for row in rows[9:]:
+            if len(row) > column:
+                row[column] = ''
         with tempfile.TemporaryDirectory() as temp:
-            copy = Path(temp) / 'roundtrip.csv'
-            write_csv(copy, fetch.read_rows(fetch.BASELINE))
+            adapted, copy = Path(temp) / 'adapted.csv', Path(temp) / 'roundtrip.csv'
+            write_csv(adapted, rows)
+            parsed = fetch.parse_snapshot(adapted, 2026)
+            write_csv(copy, fetch.read_rows(adapted))
             self.assertEqual(parsed, fetch.parse_snapshot(copy, 2026))
+            self.assertTrue(all(v['type'] == '' for v in parsed['vendors']))
         self.assertEqual(before, hashlib.sha256(fetch.BASELINE.read_bytes()).hexdigest())
+
+    def test_type_header_is_required_without_legacy_fallback(self):
+        rows = fixture()
+        rows[8][rows[8].index('Type')] = 'SPONSOR'
+        with self.assertRaisesRegex(google.SheetsError, 'Type'):
+            fetch.validate_rows(rows, 2026)
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / 'legacy.csv'
+            write_csv(path, rows)
+            result = subprocess.run([sys.executable, str(fetch.ROOT / '_src/parse_csv.py'),
+                                     str(path), '2026'], capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('Type', result.stderr)
+
+    def test_type_classification_rendering_and_order(self):
+        rows = fixture()
+        headers = rows[8]
+        rows = rows[:9]
+        entries = [('Zulu Vendor', ''), ('Zulu Sponsor', 'Sponsor'),
+                   ('Alpha Truck', 'Food Truck'), ('Alpha Sponsor', 'Sponsor'),
+                   ('Legacy Free', 'FREE'), ('Legacy Paid', 'Paid'),
+                   ('Other Vendor', 'Other'), ('Lowercase Vendor', 'sponsor'),
+                   ('zzCOMPANY NAME', 'Sponsor')]
+        for name, kind in entries:
+            values = {'Company': name, '2026': '1', 'Type': kind, 'Sep-20': 'Paid'}
+            rows.append([values.get(h, '') for h in headers])
+        fetch.validate_rows(rows, 2026)
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            csv_path = root / 'planning.csv'
+            write_csv(csv_path, rows)
+            parsed = fetch.parse_snapshot(csv_path, 2026)
+            self.assertEqual([(v['name'], v['type']) for v in parsed['vendors']], entries[:-1])
+            self.assertTrue(all('sponsor' not in v for v in parsed['vendors']))
+            self.assertNotIn('zzCOMPANY NAME', json.dumps(parsed))
+            data = root / 'build.json'
+            data.write_text(json.dumps(parsed))
+            subprocess.run([sys.executable, str(fetch.ROOT / '_src/build_vendors.py'),
+                            str(root), str(data)], check=True, capture_output=True, text=True)
+            sponsors = (root / 'sponsors.html').read_text()
+            self.assertLess(sponsors.index('Zulu Sponsor'), sponsors.index('Alpha Sponsor'))
+            normal = [v for v in parsed['vendors'] if v['type'] != 'Sponsor']
+            for vendor in parsed['vendors']:
+                self.assertEqual((root / vendor['slug'] / 'index.html').exists(),
+                                 vendor['type'] != 'Sponsor')
+            for vendor in normal:
+                self.assertNotIn(vendor['name'], sponsors)
+            for filename in ['vendors_dropdown.html', 'home_vendors.html']:
+                rendered = (root / '_includes' / filename).read_text()
+                positions = [rendered.index(v['name']) for v in sorted(normal, key=lambda v: v['name'].lower())]
+                self.assertEqual(positions, sorted(positions))
+                self.assertNotIn('Zulu Sponsor', rendered)
+                self.assertNotIn('Alpha Sponsor', rendered)
+                self.assertNotIn('zzCOMPANY NAME', rendered)
 
     def test_local_files_excluded_from_publish_selection(self):
         for name in ['_local/google-sheets/planning-api.csv', '.venv-sheets/bin/python',
