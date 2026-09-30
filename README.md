@@ -2,13 +2,32 @@
 
 Website sources and shared build tooling for Edge of Liberty and Create Happiness House.
 
+## Create Happiness House source of truth
+
+**Make persistent CHH content/code changes in this repository
+(`/Users/nancy/edgeofliberty.us/`). Do not hand-edit generated CHH HTML.**
+Both this repository's `/chh/` HTML and the standalone
+`createhappinesshouse.com` HTML are generated output; builds replace them.
+
+Editable content lives in `chh/description.txt`, `chh/rental-terms/description.txt`,
+and the `description.txt` files under `chh/{blue,green,purple,teal}/` and
+`chh/{common-upper,common-lower,common-other,travel-nurse-friendly}/`.
+Room availability (`rentedUntil.txt`), kitchen inventory (`kitchenStock.txt`),
+and photos also live under `chh/`. `_src/build_chh.py` owns shared rendering,
+facts/copy, pricing presentation, and structured data. Site settings and wrappers
+live in `_src/sites.json` and `_src/templates/`.
+
 ## Normal publishing workflow
 
 From this repository, run:
 
 ```bash
-./_src/build.sh all
+./_src/process_orders.sh && ./_src/build.sh all
 ```
+
+`&&` prevents the production build from running if order processing fails.
+`build.sh all` regenerates and synchronizes both sites, then performs the normal
+commit/push workflow.
 
 This builds the existing Edge of Liberty content (including local permit packets),
 its `/chh/` pages, and the standalone CHH site, then commits and pushes website
@@ -20,20 +39,6 @@ All builds finish before publishing begins. The two remote pushes are not atomic
 The standalone checkout defaults to `../createhappinesshouse.com`. Override with
 `CHH_REPO=/path/to/createhappinesshouse.com` or `--chh-repo /path/to/createhappinesshouse.com`.
 Git commands always address the selected repository explicitly.
-
-## One editable CHH source
-
-Edit descriptions, prices, `rentedUntil.txt`, kitchen inventory, and photos only in
-`chh/` in **this** repository. Both outputs use those files and the same build date.
-Availability follows the existing rule: the Sunday strictly after the rented-until
-date, changing to Available Now once that Sunday arrives. Rebuild to update it.
-
-`_src/build_chh.py` owns shared rendering and shared facts/copy. `_src/sites.json`
-selects domain, URL prefix, output format, and the Things to Do link. Standalone
-page wrappers live in `_src/templates/`; Edge of Liberty retains its Jekyll layout.
-Standalone is generated static HTML with `.nojekyll`. Its `.chh-generated.json`
-records owned deployment files; only previously owned files can be removed by sync.
-Redundant standalone `.txt` sources are not read or staged by the build.
 
 ## Secondary commands
 
@@ -88,13 +93,14 @@ Edge of Liberty still uses Jekyll for final layout rendering; for local previews
 
 **Normal CSV-dependent builds retrieve one fresh Planning snapshot from Google
 Sheets.** The initial live/manual comparison matched all cells and parser output.
-No Sheets writes or order processing are implemented.
+`_src/process_orders.sh` imports Gmail orders into DOWNLOAD orders through the
+Sheets API before the build; the Planning snapshot fetch itself is read-only.
 
 The live Planning tab calculates values from DOWNLOAD orders. Fetch retrieves its
 formatted results, not formula expressions, from row 1 onward. The sheet remains
-the master. The two numeric tab IDs are stored in local configuration; only Planning
-is read. The `zzCOMPANY NAME` template row is retained in CSV and excluded by the
-existing parser. Future order processing must use API formula-copy operations,
+the master. The two numeric tab IDs are stored in local configuration; the build
+snapshot reads Planning. The `zzCOMPANY NAME` template row is retained in CSV and excluded by the
+existing parser. Order processing uses the Sheets API to preserve formulas,
 not this flattened CSV export.
 
 ### Local environment
