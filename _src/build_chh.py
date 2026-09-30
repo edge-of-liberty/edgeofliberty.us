@@ -68,7 +68,7 @@ ROOM_ORDER = ["blue", "green", "purple", "teal"]
 COMMON_ORDER = ["common-upper", "common-lower", "common-other"]
 
 ROOM_BEST_FOR = {
-    "blue": "Lower-level quiet and best weekly value",
+    "blue": "Lower-level quiet and best monthly value",
     "green": "Lower-level quiet with more space",
     "purple": "Main-level room with hardwood floors, vaulted ceiling, abundant natural light, and easy kitchen access",
     "teal": "Largest room with daybed and private sitting space",
@@ -234,7 +234,11 @@ ROOM_AVAILABILITY = {
 }
 
 
-def render_markdownish(text):
+def render_markdownish(text, page_slug=""):
+    # Only the approved rental-policy headings receive anchors.
+    policy_anchors = {"Before You Tour or Apply": "before-you-apply",
+                      "Occupancy": "guest-rules",
+                      "Quiet Use and Shared Spaces": "shared-house-expectations"}
     lines = text.splitlines()
     out = []
     in_list = False
@@ -266,7 +270,10 @@ def render_markdownish(text):
             if in_list:
                 out.append("</ul>")
                 in_list = False
-            out.append(f"<h2>{html_text(stripped[3:].strip())}</h2>")
+            heading = stripped[3:].strip()
+            anchor = policy_anchors.get(heading) if page_slug == "rental-terms" else None
+            attr = f' id="{anchor}"' if anchor else ""
+            out.append(f"<h2{attr}>{html_text(heading)}</h2>")
             continue
 
         if stripped.startswith("# "):
@@ -287,7 +294,11 @@ def render_markdownish(text):
             if not in_list:
                 out.append("<ul>")
                 in_list = True
-            out.append(f"<li>{html_text(stripped[2:].strip())}</li>")
+            item = html_text(stripped[2:].strip())
+            # One explicit authored link; no general Markdown or raw HTML support.
+            if page_slug == "teal" and stripped[2:].strip() == "Twin sized day bed and coffee table for relaxing or hosting guests in keeping with the house guest rules":
+                item = item.removesuffix("house guest rules") + f'<a href="{BASE_PATH}/rental-terms/#guest-rules">house guest rules</a>'
+            out.append(f"<li>{item}</li>")
         else:
             if in_list:
                 out.append("</ul>")
@@ -378,10 +389,16 @@ def render_chh_nav(current_slug=""):
     return "\n".join(out)
 
 
+def render_tour_intro():
+    return ('<p>Private bedrooms, shared living. Before requesting a tour, read '
+            f'<a href="{BASE_PATH}/rental-terms/#before-you-apply">how we offer rooms and what to expect in the house</a>.</p>\n')
+
+
 def render_cta_block():
     return (
         '<div class="chh-cta-block">\n'
         '<p><strong>Need a furnished room soon?</strong> Send a tour request and ask what is available now.</p>\n'
+        f'{render_tour_intro()}'
         '<div class="chh-action-row">\n'
         f'<a class="chh-button" href="{html_attr(TOUR_URL)}">Request a Tour</a>\n'
         f'<a class="chh-secondary-link" href="{html_attr(FACEBOOK_URL)}" target="_blank" rel="noopener">Follow on Facebook</a>\n'
@@ -434,11 +451,19 @@ def render_medical_map():
     )
 
 
+def monthly_price(price):
+    return f"${int(parse_price_amounts(price)['month']):,}/month"
+
+
+def extension_price_text(price):
+    return f"Additional partial weeks after the initial full month: ${parse_price_amounts(price)['week']}/week."
+
+
 def render_room_facts(slug, price=""):
     facts = ROOM_FACTS.get(slug, [])
     out = ['<div class="chh-facts">']
     if price:
-        out.append(f'<div><span>Price</span><strong>{html_text(price)}</strong></div>')
+        out.append(f'<div><span>Price</span><strong>{monthly_price(price)}</strong><span>1-month minimum</span></div>')
     for fact in facts:
         out.append(f'<div><span>Included</span><strong>{html_text(fact)}</strong></div>')
     out.append("</div>")
@@ -448,19 +473,22 @@ def render_room_facts(slug, price=""):
 def room_offer_schema(slug, display_name, price, hero_image=""):
     amounts = parse_price_amounts(price)
     price_specs = []
-    if "week" in amounts:
-        price_specs.append({
-            "@type": "UnitPriceSpecification",
-            "price": amounts["week"],
-            "priceCurrency": "USD",
-            "unitText": "week",
-        })
     if "month" in amounts:
         price_specs.append({
             "@type": "UnitPriceSpecification",
             "price": amounts["month"],
             "priceCurrency": "USD",
             "unitText": "month",
+            "description": "Monthly rent with a 1-month minimum.",
+        })
+    if "week" in amounts:
+        price_specs.append({
+            "@type": "UnitPriceSpecification",
+            "price": amounts["week"],
+            "priceCurrency": "USD",
+            "unitText": "week",
+            "name": "Additional partial weeks after the initial full month",
+            "description": "Extension rate only after completing the initial full-month minimum; not a standalone weekly rental rate.",
         })
 
     room_url = f"{SITE_URL}{BASE_PATH}/{slug}/"
@@ -485,6 +513,8 @@ def room_offer_schema(slug, display_name, price, hero_image=""):
         "availability": "https://schema.org/InStock",
         "businessFunction": "https://schema.org/LeaseOut",
         "itemOffered": item,
+        "description": "1-month minimum. Weekly rates apply only to additional partial weeks after the initial full month.",
+        "eligibleDuration": {"@type": "QuantitativeValue", "minValue": 1, "unitText": "month"},
     }
     if price_specs:
         offer["priceSpecification"] = price_specs
@@ -614,12 +644,13 @@ for slug in get_pages():
             f.write('<p class="chh-page-kicker">Furnished private room for rent in Valparaiso, Indiana</p>\n')
             f.write(render_availability_badge(ROOM_AVAILABILITY.get(slug, DEFAULT_AVAILABILITY)))
             f.write(render_room_facts(slug, price))
+            f.write(f"<p>{extension_price_text(price)} Weekly rates are not available for stays shorter than one month.</p>\n")
             f.write(render_cta_block())
         elif slug != "rental-terms":
             f.write(render_cta_block())
 
         if body_text:
-            f.write(render_markdownish(body_text))
+            f.write(render_markdownish(body_text, slug))
 
         if slug in {"common-upper", "travel-nurse-friendly"}:
             f.write("\n")
@@ -668,7 +699,7 @@ with write_page(landing_path) as f:
     f.write("layout: default\n")
     f.write('title: "Furnished Rooms for Rent in Valparaiso, IN — Create Happiness House"\n')
     f.write('og_title: "Furnished Rooms for Rent in Valparaiso, IN — Create Happiness House"\n')
-    f.write('description: "Furnished private rooms for rent in a quiet shared home on a five-acre farm near Valparaiso, Indiana. Weekly and monthly options available."\n')
+    f.write('description: "Furnished private rooms for rent in a quiet shared home on a five-acre farm near Valparaiso, Indiana. Monthly rentals with a 1-month minimum."\n')
 
     if hero_exists:
         f.write(f'image: {BASE_PATH}/hero.jpg\n')
@@ -686,8 +717,9 @@ with write_page(landing_path) as f:
     f.write('<p class="chh-lede">Private furnished rooms in a quiet shared home on a five-acre farm. Built for travel nurses, contract workers, remote workers, and anyone who needs a calm place to land soon.</p>\n')
     f.write('</div>\n')
     f.write('<div class="chh-hero-panel">\n')
-    f.write('<strong>Available by the week or month</strong>\n')
+    f.write('<strong>Monthly rentals · 1-month minimum</strong>\n')
     f.write('<span>Private room, shared home, easy on-site parking pad, laundry, WiFi, kitchen, and outdoor space.</span>\n')
+    f.write(render_tour_intro())
     f.write('<div class="chh-action-row">\n')
     f.write(f'<a class="chh-button" href="{html_attr(TOUR_URL)}">Request a Tour</a>\n')
     f.write(f'<a class="chh-secondary-link" href="{html_attr(FACEBOOK_URL)}" target="_blank" rel="noopener">Follow on Facebook</a>\n')
@@ -706,13 +738,15 @@ with write_page(landing_path) as f:
     f.write(render_kitchen_stock())
 
     f.write('<h2>Rooms</h2>\n')
+    f.write("<p>Start with a full month, then stay for additional months or add partial weeks at your room's extension rate. Stays of only 1, 2, or 3 weeks are not available.</p>\n")
     f.write('<div class="chh-room-grid">\n')
     for slug in ROOM_ORDER:
         name = TITLE_MAP.get(slug, slug.title())
         price = ROOM_PRICES.get(slug, "Ask for current pricing")
         f.write('<article class="chh-room-card">\n')
         f.write(f'<h3><a href="{BASE_PATH}/{slug}/">{html_text(name)}</a></h3>\n')
-        f.write(f'<p class="chh-room-price">{html_text(price)}</p>\n')
+        f.write(f'<p class="chh-room-price">{monthly_price(price)}</p>\n')
+        f.write(f"<p>1-month minimum. {extension_price_text(price)}</p>\n")
         f.write(f'<p>{html_text(ROOM_BEST_FOR.get(slug, ""))}</p>\n')
         f.write('</article>\n')
     f.write('</div>\n')
