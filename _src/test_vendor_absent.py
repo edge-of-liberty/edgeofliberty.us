@@ -1,5 +1,10 @@
 """Offline only: no credentials, spreadsheet writes, production build, or publication."""
 import unittest
+import io
+import tempfile
+from pathlib import Path
+from types import SimpleNamespace
+from contextlib import redirect_stdout
 from unittest.mock import MagicMock, patch
 import subprocess
 import vendor_absent as v
@@ -78,14 +83,13 @@ class WorkflowTests(unittest.TestCase):
         with patch.object(v,'check_repositories') as pre,patch.object(v,'load_config',return_value=CONFIG),\
              patch.object(v,'service'),patch.object(v,'private_write'),\
              patch.object(v,'override',return_value=target) as override,\
-             patch.object(v.subprocess,'run') as run,patch.object(v,'verify_output') as verify:
+             patch.object(v,'run_logged') as run:
             if failure:run.side_effect=subprocess.CalledProcessError(1,'production')
             if failure:
                 with self.assertRaisesRegex(v.Stop,'Absent was not undone'):v.run('Bright Beads','Oct 4')
-                verify.assert_not_called()
             else:
-                v.run('Bright Beads','Oct 4');verify.assert_called_once_with(target)
-                self.assertEqual(pre.call_count,2)
+                v.run('Bright Beads','Oct 4')
+                self.assertEqual(pre.call_count,1)
             override.assert_called_once()
             self.assertEqual(run.call_args.args[0],['bash','-c','./_src/process_orders.sh && ./_src/build.sh all'])
     def test_success_handoff(self):self.workflow()
@@ -94,9 +98,38 @@ class WorkflowTests(unittest.TestCase):
         with patch.object(v,'check_repositories',side_effect=v.Stop('dirty')),patch.object(v,'service') as service:
             with self.assertRaises(v.Stop):v.run('Bright Beads','Oct 4')
             service.assert_not_called()
-    def test_absence_check_scoped_to_vendor(self):
-        html='<li class="vendor-absent"><a href="/other/">Other</a> unable to attend</li><li><a href="/bright-beads/">Bright</a></li>'
-        self.assertFalse(v.reflects_absence(html,'bright-beads'))
-        self.assertTrue(v.reflects_absence(html,'other'))
+    def test_blank_date_still_allows_authoritative_override(self):
+        data=rows(); data[9][3]=''
+        api=MagicMock()
+        with patch.object(v,'snapshot',return_value=data),patch.object(v,'entered',side_effect=[{}, {}, {'stringValue':'Absent'}]):
+            v.override(api,CONFIG,'Bright Beads','Oct 4',MagicMock())
+        api.spreadsheets().batchUpdate.assert_called_once()
+
+class OutputTests(unittest.TestCase):
+    def test_success_output_stays_in_local_log(self):
+        with tempfile.TemporaryDirectory() as temp:
+            def child(command,**kwargs):
+                kwargs['stdout'].write('verbose build output\n')
+                self.assertEqual(kwargs['stderr'],subprocess.STDOUT)
+                return SimpleNamespace(returncode=0)
+            stdout=io.StringIO()
+            with patch.object(v,'ROOT',Path(temp)),patch.object(v.subprocess,'run',side_effect=child) as run,redirect_stdout(stdout):
+                v.run_logged(['production'],check=True)
+            self.assertEqual(stdout.getvalue(),'')
+            logs=list((Path(temp)/'_local/operations').glob('*.log'))
+            self.assertEqual(len(logs),1)
+            self.assertEqual(logs[0].read_text(),'verbose build output\n')
+            self.assertEqual(logs[0].stat().st_mode & 0o777,0o600)
+            run.assert_called_once()
+    def test_failure_reports_excerpt_and_keeps_full_log(self):
+        with tempfile.TemporaryDirectory() as temp:
+            def child(command,**kwargs):
+                kwargs['stdout'].write(''.join(f'line {i}\n' for i in range(20)))
+                return SimpleNamespace(returncode=1)
+            with patch.object(v,'ROOT',Path(temp)),patch.object(v.subprocess,'run',side_effect=child):
+                with self.assertRaises(v.Stop) as exc:v.run_logged(['production'],check=True)
+            self.assertIn('line 19',str(exc.exception))
+            self.assertNotIn('line 0\n',str(exc.exception))
+            self.assertEqual(len(next((Path(temp)/'_local/operations').glob('*.log')).read_text().splitlines()),20)
 
 if __name__=='__main__':unittest.main()

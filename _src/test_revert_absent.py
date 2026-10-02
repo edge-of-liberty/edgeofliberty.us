@@ -50,14 +50,15 @@ class RestoreTests(unittest.TestCase):
     def test_formula_readback_required(self):
         with self.assertRaises(r.Stop):self.invoke({'stringValue':'Absent'},after={'stringValue':'Paid'})
     def test_production_failure_retains_formula(self):
-        with patch.object(r,'check_repositories'),patch.object(r,'load_config'),patch.object(r,'service'),patch.object(r,'private_write'),patch.object(r,'restore',return_value=TARGET) as restore,patch.object(r.subprocess,'run',side_effect=RuntimeError('build failed')),patch.object(r,'verify_publication') as verify:
+        with patch.object(r,'check_repositories'),patch.object(r,'load_config'),patch.object(r,'service'),patch.object(r,'private_write'),patch.object(r,'restore',return_value=TARGET) as restore,patch.object(r,'run_logged',side_effect=RuntimeError('build failed')):
             with self.assertRaisesRegex(r.Stop,'Formula retained'):r.run('Example','Oct 4')
-            restore.assert_called_once();verify.assert_not_called()
-    def test_success_checks_publication_without_forcing_status(self):
-        with patch.object(r,'check_repositories'),patch.object(r,'load_config'),patch.object(r,'service'),patch.object(r,'private_write'),patch.object(r,'restore',return_value=TARGET),patch.object(r.subprocess,'run') as run,patch.object(r,'verify_publication') as verify:
+            restore.assert_called_once()
+    def test_success_ends_at_production_completion(self):
+        with patch.object(r,'check_repositories') as pre,patch.object(r,'load_config'),patch.object(r,'service'),patch.object(r,'private_write'),patch.object(r,'restore',return_value=TARGET),patch.object(r,'run_logged') as run:
             r.run('Example','Oct 4')
             self.assertIn('./_src/process_orders.sh && ./_src/build.sh all',run.call_args.args[0])
-            verify.assert_called_once()
+            self.assertEqual(pre.call_count,1)
+            run.assert_called_once()
 
 class BelowTests(unittest.TestCase):
     def test_relative_absolute_and_quoted_references(self):

@@ -6,8 +6,7 @@ import re
 import subprocess
 import uuid
 from vendor_absent import (ROOT, Stop, check_repositories, load_config, service,
-                           snapshot, resolve, entered, private_write)
-from process_new_order import verify_publication
+                           snapshot, resolve, entered, private_write, run_logged)
 
 
 def original_formula(target, directory):
@@ -114,11 +113,9 @@ def run(vendor,day,from_below=False):
         private_write(path,json.dumps(records,indent=2)+'\n')
     target=restore(api,config,vendor,day,audit,from_below=True) if from_below else restore(api,config,vendor,day,audit)
     try:
-        subprocess.run(['bash','-c','./_src/process_orders.sh && ./_src/build.sh all'],cwd=ROOT,check=True)
-        check_repositories()
-        verify_publication()  # Compare generated/live output; never demand Paid or attending.
+        run_logged(['bash','-c','./_src/process_orders.sh && ./_src/build.sh all'], check=True)
     except Exception as exc:
-        raise Stop(f"{target['name']} — {target['date']} formula restored; publication failed or unverified. Formula retained. {exc}") from None
+        raise Stop(f"{target['name']} — {target['date']} formula restored; rebuild/push failed. Formula retained. {exc}") from None
     audit({'phase':'published','target':target})
     print(f"✓ {target['name']} — {target['date']} formula restored\n✓ Site rebuilt and published")
 

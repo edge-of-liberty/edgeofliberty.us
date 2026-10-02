@@ -14,7 +14,7 @@ class WorkflowTests(unittest.TestCase):
     def exercise(self,status='complete',orders=None,code=0,build_fail=False):
         receipt={'status':status,'orders':[] if orders is None else orders}
         with patch.object(w,'check_repositories') as check,patch.object(w,'read_result',return_value=receipt),\
-             patch.object(w.subprocess,'run') as run,patch.object(w,'verify_publication') as verify:
+             patch.object(w,'run_logged') as run:
             def response(args,**kwargs):
                 if args[0]=='./_src/process_orders.sh':return SimpleNamespace(returncode=code)
                 if build_fail:raise w.subprocess.CalledProcessError(1,args)
@@ -29,7 +29,7 @@ class WorkflowTests(unittest.TestCase):
                     self.assertNotIn('No changes made',message)
             builds=[c for c in run.call_args_list if c.args[0]==['./_src/build.sh','all']]
             self.assertEqual(len(builds),1)
-            self.assertEqual(verify.call_count,int(success))
+            self.assertEqual(check.call_count,2)
             self.assertEqual(sum(c.args[0][0]=='./_src/process_orders.sh' for c in run.call_args_list),1)
     def test_zero_imports_still_builds(self):self.exercise()
     def test_one_import_builds(self):self.exercise(orders=[ORDER])
@@ -40,14 +40,14 @@ class WorkflowTests(unittest.TestCase):
     def test_incomplete_receipt_still_builds(self):self.exercise('write_attempted')
     def test_build_failure_retains_import(self):self.exercise(orders=[ORDER],build_fail=True)
     def test_dirty_repo_never_imports(self):
-        with patch.object(w,'check_repositories',side_effect=w.Stop('dirty')),patch.object(w.subprocess,'run') as run:
+        with patch.object(w,'check_repositories',side_effect=w.Stop('dirty')),patch.object(w,'run_logged') as run:
             with self.assertRaises(w.Stop):w.run()
             run.assert_not_called()
     def test_missing_receipt_still_builds(self):
-        with patch.object(w,'check_repositories'),patch.object(w,'read_result',side_effect=w.Stop('missing')),patch.object(w.subprocess,'run',return_value=SimpleNamespace(returncode=1)) as run,patch.object(w,'verify_publication') as verify:
+        with patch.object(w,'check_repositories'),patch.object(w,'read_result',side_effect=w.Stop('missing')),patch.object(w,'run_logged',return_value=SimpleNamespace(returncode=0)) as run:
             w.run()
             self.assertEqual(run.call_args.args[0],['./_src/build.sh','all'])
-            verify.assert_called_once()
+            self.assertEqual(run.call_count,2)
     def test_unrecognized_order_no_sheet_write_but_refresh_completes(self):
         gmail,sheets=MagicMock(),MagicMock()
         gmail.users().getProfile().execute.return_value={'emailAddress':'admin@batshitcrazyfarms.com'}
@@ -62,11 +62,11 @@ class WorkflowTests(unittest.TestCase):
             try:imp.process(report=report)
             except RuntimeError:return SimpleNamespace(returncode=1)
             self.fail('Malformed order must be rejected')
-        with patch('order_email_review.clients',return_value=(gmail,sheets)),patch('google_sheets.load_config',return_value={'spreadsheet_id':'test','orders_sheet_id':123}),patch.object(imp,'fetch_rows',return_value=([],[bad])),patch.object(w,'check_repositories'),patch.object(w,'read_result',side_effect=lambda p:receipt),patch.object(w.subprocess,'run',side_effect=process) as run,patch.object(w,'verify_publication') as verify:
+        with patch('order_email_review.clients',return_value=(gmail,sheets)),patch('google_sheets.load_config',return_value={'spreadsheet_id':'test','orders_sheet_id':123}),patch.object(imp,'fetch_rows',return_value=([],[bad])),patch.object(w,'check_repositories'),patch.object(w,'read_result',side_effect=lambda p:receipt),patch.object(w,'run_logged',side_effect=process) as run:
             w.run()
             sheets.spreadsheets().batchUpdate.assert_not_called()
             self.assertEqual(run.call_args.args[0],['./_src/build.sh','all'])
-            verify.assert_called_once()
+            self.assertEqual(run.call_count,2)
 
     def test_invalid_missing_receipt(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -74,15 +74,6 @@ class WorkflowTests(unittest.TestCase):
             with self.assertRaises(w.Stop):w.read_result(p)
             p.write_text('{}')
             with self.assertRaises(w.Stop):w.read_result(p)
-    def test_stale_live_page_never_success(self):
-        with patch.object(w,'publication_targets',return_value=[('url',['new'])]),patch.object(w,'matches_live',return_value=False),patch.object(w.time,'sleep'):
-            with self.assertRaises(w.Stop):w.verify_publication()
-    def test_generated_targets_include_next_fair_and_history(self):
-        targets=w.publication_targets()
-        self.assertTrue(any(url.endswith('/craft-fair/') and all('https://' in chunk for chunk in chunks) for url,chunks in targets))
-        self.assertTrue(any('/may-17-2026/' in url for url,_ in targets))
-        self.assertTrue(any('/october-18-2026/' in url for url,_ in targets))
-
 class ReceiptTests(unittest.TestCase):
     def test_zero_import_receipt_no_write(self):
         gmail,sheets=MagicMock(),MagicMock()

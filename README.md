@@ -40,6 +40,19 @@ The standalone checkout defaults to `../createhappinesshouse.com`. Override with
 `CHH_REPO=/path/to/createhappinesshouse.com` or `--chh-repo /path/to/createhappinesshouse.com`.
 Git commands always address the selected repository explicitly.
 
+## Routine command handling
+
+For local or Remote operation: interpret the short command, resolve vendor/date
+conservatively, invoke the appropriate deterministic helper once, let it own the
+operation, report its concise result, and end the turn. Voice transcription correction
+may use the known vendor vocabulary; mutation scripts still require the exact
+resolved identity and never fuzzy-match. Ask Nancy if the intended vendor/date is
+uncertain. On failure, report and stop; investigate only when subsequently asked.
+Do not reread architecture, inspect Git/generated files, or supervise public
+publication after helper success. If the execution tool yields, wait for the same
+process with reasonably spaced waits rather than repeated short polls; do not
+rerun the helper. Live-site verification requires Nancy's explicit request.
+
 ## Remote vendor call-offs
 
 Command: **`Vendor absent: <vendor>, <date>`**, for example
@@ -64,7 +77,7 @@ Do not change the year gate or any vendor's year value to bypass an exclusion.
 **The target attendance formula is intentionally replaced.** Read and record its
 underlying value/formula, then write literal `Absent` to that one vendor/date cell.
 A formula displaying Absent is not already a literal override. An existing literal
-`Absent` is idempotent success; continue to production verification. The helper
+`Absent` is idempotent success; continue to the production command. The helper
 stores a private local audit under `_local/vendor-absent/`, outside publication.
 
 Do not modify DOWNLOAD orders, payment/fulfillment status, order history, Type,
@@ -78,11 +91,14 @@ After verifying the live underlying value is literal `Absent`, the helper runs:
 ./_src/process_orders.sh && ./_src/build.sh all
 ```
 
-It checks both repositories against remote main, generated date data, the generated
-event page, and the live vendor entry's existing `vendor-absent` / “unable to attend”
-display. Live deployment is checked with bounded retries. A successful push alone
-is not proof of live publication. If any later step fails, retain Absent and report
-the failed step; never restore the formula or retry the spreadsheet write blindly.
+Successful completion of the deterministic production command (including its
+pushes) ends the routine operation. Do not inspect generated output, recheck Git
+after push, fetch public pages, sleep, or poll publication. Live-site checks happen
+only when Nancy explicitly requests them. Retain Absent if production fails.
+
+An explicit absence command may populate a previously blank date cell for an
+otherwise eligible/publishable vendor. There is no date-registration requirement.
+Keep today's eligibility gate; do not redesign yearly participation in this workflow.
 
 The phone response should be only:
 
@@ -91,10 +107,9 @@ The phone response should be only:
 ✓ Site rebuilt and published
 ```
 
-On partial success, retain the first line and replace the second with a short
-failure/pending-verification explanation. Do not claim publication before verification.
-The helper logs production output for diagnostics; summarize it rather than pasting
-it into the phone response. Offline tests use mocks and never call live services:
+On partial success, retain the first line and replace the second with the failure.
+Routine child output is saved to private `_local/operations/*.log` files; a failure
+reports its log path and a short excerpt. Do not paste full logs into phone replies. Offline tests use mocks and never call live services:
 
 ```bash
 PYTHONDONTWRITEBYTECODE=1 .venv-sheets/bin/python -B -m unittest discover -s _src -p test_vendor_absent.py -v
@@ -127,8 +142,8 @@ Unsupported or ambiguous formula syntax stops for manual review. Manually marked
 manual review. Recheck the identity and cell immediately before writing.
 
 After verified restoration, run the same production workflow as vendor absence:
-`./_src/process_orders.sh && ./_src/build.sh all`, then verify repository/remote
-state and generated/live publication. Do not require the result to be attending;
+`./_src/process_orders.sh && ./_src/build.sh all`. Successful deterministic
+completion/push ends the routine operation, with no post-success checks or polling. Do not require the result to be attending;
 the restored lookup controls it. Retain the restored formula if publication fails.
 Private restoration receipts live under `_local/revert-absent/`.
 
@@ -137,7 +152,8 @@ Phone result: `✓ Vendor — date formula restored` and
 
 ## Remote order processing and production refresh
 
-Command: **`Process new order`**. Nancy need not provide an order number or email.
+Commands: **`Refresh site`** and **`Process new order`** invoke the same helper.
+Nancy need not provide an order number or email.
 **Order processing is best-effort; site refresh is mandatory.** Run on this Mac:
 
 ```bash
@@ -167,11 +183,13 @@ verified imports. Never claim nothing changed after an uncertain write. Report
 order and site outcomes separately. An order warning must not be presented as a
 website failure if the refresh succeeds, or suppress a real build failure.
 
-Verification checks both repositories against remote main, the live standalone
-CHH homepage, Edge homepage date/vendor lists, generated versus live event content,
-and the next-fair redirect, with bounded deployment retries. This includes refreshing
-date-dependent content when no orders are imported. Existing attendance overrides
-remain authoritative; payment does not imply attending.
+The initial repository safety check and the check immediately before building
+remain. After successful `build.sh all` completion/push, report and end; do not
+recheck Git, inspect generated HTML, or fetch/poll public sites. No live publication
+verification occurs unless Nancy explicitly asks. The build still refreshes
+date-dependent content even with zero imports. Attendance overrides remain authoritative.
+Routine subprocess output stays in private `_local/operations/*.log` files, with
+short failure excerpts and log paths available for later requested troubleshooting.
 
 Keep phone replies to two short lines, for example:
 

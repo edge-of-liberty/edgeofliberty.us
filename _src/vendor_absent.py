@@ -1,12 +1,10 @@
 """One-cell attendance override followed by the established production workflow."""
 import argparse
 from datetime import date, datetime, timezone
-from html.parser import HTMLParser
 import json
 from pathlib import Path
 import re
 import subprocess
-import time
 import unicodedata
 import uuid
 
@@ -170,41 +168,25 @@ def check_repositories():
             raise Stop(f'{repo.name}: local HEAD differs from remote main; review first.')
 
 
-class AbsenceEntry(HTMLParser):
-    def __init__(self, slug):
-        super().__init__(); self.slug = slug; self.active = False; self.link = False; self.text = ''; self.found = False
-    def handle_starttag(self, tag, attrs):
-        attrs = dict(attrs)
-        if tag == 'li':
-            self.active = 'vendor-absent' in attrs.get('class', '').split(); self.link = False; self.text = ''
-        if self.active and tag == 'a' and attrs.get('href') == f'/{self.slug}/':
-            self.link = True
-    def handle_data(self, data):
-        if self.active: self.text += data
-    def handle_endtag(self, tag):
-        if tag == 'li':
-            self.found |= self.active and self.link and 'unable to attend' in self.text
-            self.active = False
-
-
-def reflects_absence(html, slug):
-    parser = AbsenceEntry(slug); parser.feed(html); return parser.found
-
-
-def verify_output(target):
-    data = json.loads((ROOT / '_data/build.json').read_text())
-    entries = [v for v in data['dates'][target['event']]['vendors'] if v['slug'] == target['slug']]
-    if len(entries) != 1 or entries[0]['status'] != 'Absent':
-        raise Stop('Generated date data does not show the intended vendor as Absent.')
-    if not reflects_absence((ROOT / target['event'] / 'index.html').read_text(), target['slug']):
-        raise Stop('Generated event page does not show the vendor as absent.')
-    url = f"https://www.edgeofliberty.us/{target['event']}/"
-    for attempt in range(12):
-        result = subprocess.run(['curl', '--fail', '--silent', '--show-error', '--location',
-                                 '--max-time', '15', url], capture_output=True, text=True)
-        if result.returncode == 0 and reflects_absence(result.stdout, target['slug']): return
-        if attempt < 11: time.sleep(10)
-    raise Stop('Pushed, but live absence display is not verified yet.')
+def run_logged(command, *, check=False):
+    """Keep routine child output local; expose only failures and the log location."""
+    path = ROOT / '_local/operations' / (uuid.uuid4().hex + '.log')
+    private_write(path, '')
+    try:
+        with path.open('a') as output:
+            result = subprocess.run(command, cwd=ROOT, stdout=output, stderr=subprocess.STDOUT)
+    except OSError as exc:
+        raise Stop(f'Could not run {command[0]}; details: {path}. {exc}') from None
+    if result.returncode:
+        # Small failure excerpt; full output remains available for requested troubleshooting.
+        tail = '\n'.join(path.read_text(errors='replace').splitlines()[-5:])
+        message = f'{command[0]} failed (exit {result.returncode}); log: {path}'
+        if tail:
+            message += '\n' + tail
+        if check:
+            raise Stop(message)
+        print(message)
+    return result
 
 
 def run(vendor, day):
@@ -218,12 +200,10 @@ def run(vendor, day):
         private_write(audit_path, json.dumps(records, indent=2) + '\n')
     target = override(api, config, vendor, day, audit)
     try:
-        subprocess.run(['bash', '-c', './_src/process_orders.sh && ./_src/build.sh all'], cwd=ROOT, check=True)
-        check_repositories()
-        verify_output(target)
+        run_logged(['bash', '-c', './_src/process_orders.sh && ./_src/build.sh all'], check=True)
     except Exception as exc:
         audit({'phase': 'production_failed', 'target': target})
-        raise Stop(f"{target['name']} — {target['date']} marked Absent; rebuild/publish verification failed. Absent was not undone. {exc}") from None
+        raise Stop(f"{target['name']} — {target['date']} marked Absent; rebuild/push failed. Absent was not undone. {exc}") from None
     audit({'phase': 'published', 'target': target})
     print(f"✓ {target['name']} — {target['date']} marked Absent\n✓ Site rebuilt and published")
 
