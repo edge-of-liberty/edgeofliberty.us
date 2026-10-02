@@ -40,6 +40,66 @@ The standalone checkout defaults to `../createhappinesshouse.com`. Override with
 `CHH_REPO=/path/to/createhappinesshouse.com` or `--chh-repo /path/to/createhappinesshouse.com`.
 Git commands always address the selected repository explicitly.
 
+## Remote vendor call-offs
+
+Command: **`Vendor absent: <vendor>, <date>`**, for example
+`Vendor absent: Bright Beads, Oct 4`. Nancy's instruction is authoritative;
+do not search for the original email, text, or other communication. This command
+authorizes the one-cell override and the normal production rebuild/publish below.
+Ask a short clarification for ambiguous vendors or dates; never guess.
+
+Run on Nancy's Mac in `/Users/nancy/edgeofliberty.us`, using existing local Sheets
+authorization and the configured 2026 Planning tab:
+
+```bash
+.venv-sheets/bin/python -B _src/vendor_absent.py --vendor "Bright Beads" --date "Oct 4"
+```
+
+Pass the actual vendor/date as safely quoted arguments. The helper checks both
+production repositories are clean/current with remote before changing the sheet;
+the existing untracked `BCF.code-workspace` is ignored and must remain untouched.
+Resolve blockers without stashing, reverting, pulling, or publishing unrelated work.
+Do not change the year gate or any vendor's year value to bypass an exclusion.
+
+**The target attendance formula is intentionally replaced.** Read and record its
+underlying value/formula, then write literal `Absent` to that one vendor/date cell.
+A formula displaying Absent is not already a literal override. An existing literal
+`Absent` is idempotent success; continue to production verification. The helper
+stores a private local audit under `_local/vendor-absent/`, outside publication.
+
+Do not modify DOWNLOAD orders, payment/fulfillment status, order history, Type,
+year, metadata, other dates, or other cells as part of the override. There is no
+refund. Other formulas must remain untouched. The separate normal order-processing
+step below retains its existing behavior; it does not implement a call-off refund.
+
+After verifying the live underlying value is literal `Absent`, the helper runs:
+
+```bash
+./_src/process_orders.sh && ./_src/build.sh all
+```
+
+It checks both repositories against remote main, generated date data, the generated
+event page, and the live vendor entry's existing `vendor-absent` / “unable to attend”
+display. Live deployment is checked with bounded retries. A successful push alone
+is not proof of live publication. If any later step fails, retain Absent and report
+the failed step; never restore the formula or retry the spreadsheet write blindly.
+
+The phone response should be only:
+
+```text
+✓ Bright Beads — Oct 4 marked Absent
+✓ Site rebuilt and published
+```
+
+On partial success, retain the first line and replace the second with a short
+failure/pending-verification explanation. Do not claim publication before verification.
+The helper logs production output for diagnostics; summarize it rather than pasting
+it into the phone response. Offline tests use mocks and never call live services:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 .venv-sheets/bin/python -B -m unittest discover -s _src -p test_vendor_absent.py -v
+```
+
 ## Secondary commands
 
 ```bash
