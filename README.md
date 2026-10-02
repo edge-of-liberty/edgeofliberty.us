@@ -103,56 +103,59 @@ PYTHONDONTWRITEBYTECODE=1 .venv-sheets/bin/python -B -m unittest discover -s _sr
 ## Remote order processing and production refresh
 
 Command: **`Process new order`**. Nancy need not provide an order number or email.
-This authorizes the existing order importer followed by the normal production
-refresh, even when no new orders are found. Run on this Mac in the canonical repo:
+**Order processing is best-effort; site refresh is mandatory.** Run on this Mac:
 
 ```bash
+cd /Users/nancy/edgeofliberty.us
 .venv-sheets/bin/python -B _src/process_new_order.py
 ```
 
-The wrapper reuses the vendor-absence clean/current checks for both repositories
-and leaves `BCF.code-workspace` untouched. It runs `./_src/process_orders.sh` once,
-using its optional private result file in `_local/process-new-order/`, then runs
-`./_src/build.sh all` only when the importer reports verified normal completion.
-Do not call the importer a second time. Existing Gmail matching, 45-day lookback,
-deduplication, validation, authentication, and spreadsheet writes are unchanged.
+The wrapper checks both production repositories are clean/current with remote,
+leaving `BCF.code-workspace` untouched. It runs `./_src/process_orders.sh` once with
+its private result file under `_local/process-new-order/`, then independently runs
+`./_src/build.sh all`. Zero imports, unsafe notifications, missing vendor setup,
+and failed/uncertain importer results do not skip the site refresh. Repository
+safety failures or the build/publish itself may block it.
 
-- Normal completion with zero, one, or multiple new orders: build and publish.
-  Zero imports is success, not an unknown-order error. Date-dependent content must
-  refresh, including the next fair and past-event treatment.
-- Unrecognized, malformed, incomplete, conflicting, or unsafe new notification:
-  stop before build; manual review required. Never interpret unfamiliar emails,
-  change matching rules, create vendors, or attempt an alternate import method.
-- Imported order with an unmatched vendor: stop after import for vendor setup.
-  Report the order ID; do not build, create the vendor, or undo the import.
-- Failed or uncertain write/result: stop; no blind retry, rollback, or build.
-  Say “No changes made” only when the receipt establishes no write was attempted.
-- Build/push/live-verification failure after import: retain imported orders and
-  report partial success. Do not claim publication merely because a push succeeded.
+Use only the existing importer's matching, validation, deduplication and write
+behavior. Do not interpret unfamiliar emails, repair orders, change matching rules,
+create vendors, guess contents, retry uncertain writes, or undo successful imports.
+The existing importer rejects an unsafe pending batch before writing; do not add an
+alternate partial-batch importer. Report that manual review is required, then build
+from current Planning data. If an order was imported but its vendor needs setup,
+report the order IDs written to DOWNLOAD orders and the remaining setup requirement,
+then still attempt the build. Existing build validation may reject invalid sheet
+state; report that build failure without repairing data.
+
+The result receipt distinguishes no write attempted from uncertain writes and
+verified imports. Never claim nothing changed after an uncertain write. Report
+order and site outcomes separately. An order warning must not be presented as a
+website failure if the refresh succeeds, or suppress a real build failure.
 
 Verification checks both repositories against remote main, the live standalone
 CHH homepage, Edge homepage date/vendor lists, generated versus live event content,
-and the next-fair redirect, with bounded deployment retries. Existing attendance
-overrides remain authoritative; payment does not imply attending.
+and the next-fair redirect, with bounded deployment retries. This includes refreshing
+date-dependent content when no orders are imported. Existing attendance overrides
+remain authoritative; payment does not imply attending.
 
-Keep phone replies to two short lines. Examples:
+Keep phone replies to two short lines, for example:
 
 ```text
 ✓ No new orders
-✓ Site refreshed and published
+✓ Site refreshed and published using current Planning data
 ```
 
 ```text
-✓ Order R123 processed
-✓ Site refreshed and published
+⚠ Order processing requires manual review — no orders written by this run
+✓ Site refreshed and published using current Planning data
 ```
 
-Report all imported order IDs (or a concise count for a large batch). Include a
-vendor name only when verified; never treat customer names or free-text special
-instructions as an authoritative vendor identity. For setup or partial failure,
-replace the publication line with the blocker. Diagnostic output stays out of the
-phone summary. Implementation tests mock services and processes; never use a real
-order or production build as a test.
+For verified imports, identify the order IDs; include vendor names only when
+verified, not inferred from customer names or free-text instructions. For imported
+orders needing setup or uncertain writes, say so accurately on the first line.
+If publication fails, use the second line for that failure. Diagnostic output stays
+out of the phone summary. Tests mock services and production processes; never use
+real orders or production builds as implementation tests.
 
 ## Secondary commands
 

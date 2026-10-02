@@ -20,7 +20,7 @@ class WorkflowTests(unittest.TestCase):
                 if build_fail:raise w.subprocess.CalledProcessError(1,args)
                 return SimpleNamespace(returncode=0)
             run.side_effect=response
-            success=status=='complete' and code==0 and not build_fail
+            success=not build_fail
             if success:w.run()
             else:
                 with self.assertRaises(w.Stop) as exc:w.run()
@@ -28,21 +28,46 @@ class WorkflowTests(unittest.TestCase):
                 if status in ('write_attempted','needs_vendor_setup') or build_fail:
                     self.assertNotIn('No changes made',message)
             builds=[c for c in run.call_args_list if c.args[0]==['./_src/build.sh','all']]
-            self.assertEqual(len(builds),int(status=='complete' and code==0))
+            self.assertEqual(len(builds),1)
             self.assertEqual(verify.call_count,int(success))
             self.assertEqual(sum(c.args[0][0]=='./_src/process_orders.sh' for c in run.call_args_list),1)
     def test_zero_imports_still_builds(self):self.exercise()
     def test_one_import_builds(self):self.exercise(orders=[ORDER])
     def test_multiple_imports_build_once(self):self.exercise(orders=[ORDER,{**ORDER,'id':'R456'}])
-    def test_unrecognized_before_write_stops(self):self.exercise('before_write',code=1)
-    def test_uncertain_write_stops(self):self.exercise('write_attempted',code=1)
-    def test_unmatched_vendor_stops_after_import(self):self.exercise('needs_vendor_setup',[{**ORDER,'needs_vendor_setup':True}])
-    def test_incomplete_receipt_stops_even_exit_zero(self):self.exercise('write_attempted')
+    def test_unrecognized_before_write_still_builds(self):self.exercise('before_write',code=1)
+    def test_uncertain_write_still_builds(self):self.exercise('write_attempted',code=1)
+    def test_unmatched_vendor_still_builds(self):self.exercise('needs_vendor_setup',[{**ORDER,'needs_vendor_setup':True}])
+    def test_incomplete_receipt_still_builds(self):self.exercise('write_attempted')
     def test_build_failure_retains_import(self):self.exercise(orders=[ORDER],build_fail=True)
     def test_dirty_repo_never_imports(self):
         with patch.object(w,'check_repositories',side_effect=w.Stop('dirty')),patch.object(w.subprocess,'run') as run:
             with self.assertRaises(w.Stop):w.run()
             run.assert_not_called()
+    def test_missing_receipt_still_builds(self):
+        with patch.object(w,'check_repositories'),patch.object(w,'read_result',side_effect=w.Stop('missing')),patch.object(w.subprocess,'run',return_value=SimpleNamespace(returncode=1)) as run,patch.object(w,'verify_publication') as verify:
+            w.run()
+            self.assertEqual(run.call_args.args[0],['./_src/build.sh','all'])
+            verify.assert_called_once()
+    def test_unrecognized_order_no_sheet_write_but_refresh_completes(self):
+        gmail,sheets=MagicMock(),MagicMock()
+        gmail.users().getProfile().execute.return_value={'emailAddress':'admin@batshitcrazyfarms.com'}
+        sheets.spreadsheets().get().execute.return_value={'sheets':[{'properties':{'sheetId':123,'title':'DOWNLOAD orders','gridProperties':{'rowCount':10}}}]}
+        sheets.spreadsheets().values().get().execute.return_value={'values':[['header']]}
+        from test_import_gmail_orders import ImportTests
+        bad=ImportTests().row();bad[16]='No recognizable SKU line items'
+        receipt={}
+        def report(value):receipt.update(value)
+        def process(args,**kwargs):
+            if args[0]=='./_src/build.sh':return SimpleNamespace(returncode=0)
+            try:imp.process(report=report)
+            except RuntimeError:return SimpleNamespace(returncode=1)
+            self.fail('Malformed order must be rejected')
+        with patch('order_email_review.clients',return_value=(gmail,sheets)),patch('google_sheets.load_config',return_value={'spreadsheet_id':'test','orders_sheet_id':123}),patch.object(imp,'fetch_rows',return_value=([],[bad])),patch.object(w,'check_repositories'),patch.object(w,'read_result',side_effect=lambda p:receipt),patch.object(w.subprocess,'run',side_effect=process) as run,patch.object(w,'verify_publication') as verify:
+            w.run()
+            sheets.spreadsheets().batchUpdate.assert_not_called()
+            self.assertEqual(run.call_args.args[0],['./_src/build.sh','all'])
+            verify.assert_called_once()
+
     def test_invalid_missing_receipt(self):
         with tempfile.TemporaryDirectory() as temp:
             p=Path(temp)/'result.json'

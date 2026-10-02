@@ -26,7 +26,7 @@ def read_result(path):
             if not re.fullmatch(r'R\d+',order['id']) or not isinstance(order['skus'],list):raise ValueError()
         return result
     except (OSError,ValueError,KeyError,TypeError):
-        raise Stop('Importer result unavailable or uncertain. Manual review required; no build run.') from None
+        raise Stop('Importer result unavailable or uncertain. Manual order review required.') from None
 
 
 def publication_targets(root=ROOT, chh=CHH):
@@ -66,27 +66,34 @@ def verify_publication():
     raise Stop('Push completed; live refresh not yet verified. No imported orders were undone.')
 
 
+def order_outcome(result, returncode):
+    if result['status']=='complete' and returncode==0:
+        return '✓ ' + imported_label(result)
+    if result['status']=='needs_vendor_setup':
+        ids=', '.join(o['id'] for o in result['orders'])
+        return f'⚠ Order(s) {ids} written to DOWNLOAD orders; vendor setup requires manual review'
+    if result['status']=='before_write':
+        return '⚠ Order processing requires manual review — no orders written by this run'
+    return '⚠ Order write result uncertain; manual review required — nothing undone'
+
+
 def run():
     check_repositories()
     path=ROOT/'_local/process-new-order'/f'{uuid.uuid4().hex}.json'
-    imported=subprocess.run(['./_src/process_orders.sh','--result-file',str(path)],cwd=ROOT)
-    result=read_result(path)
-    if imported.returncode:
-        if result['status']=='before_write':
-            raise Stop('Order processing stopped before writing. No changes made; manual review required.')
-        raise Stop('Order import failed or write result is uncertain. Manual review required; no build run. Nothing undone.')
-    if result['status']=='needs_vendor_setup':
-        ids=', '.join(o['id'] for o in result['orders'] if o['needs_vendor_setup'])
-        raise Stop(f'Order(s) {ids} imported; vendor setup required. No build run; imported orders retained.')
-    if result['status']!='complete':
-        raise Stop('Importer result is uncertain. Manual review required; no build run.')
     try:
+        imported=subprocess.run(['./_src/process_orders.sh','--result-file',str(path)],cwd=ROOT)
+        outcome=order_outcome(read_result(path), imported.returncode)
+    except Exception:
+        outcome='⚠ Order processing failed or result uncertain; manual review required — nothing undone'
+    # Order problems never skip refresh. Recheck publication safety after processing.
+    try:
+        check_repositories()
         subprocess.run(['./_src/build.sh','all'],cwd=ROOT,check=True)
         check_repositories()
         verify_publication()
     except Exception as exc:
-        raise Stop(f'{imported_label(result)}; refresh/publish verification failed. Imported orders retained. {exc}') from None
-    print(f'✓ {imported_label(result)}\n✓ Site refreshed and published')
+        raise Stop(f'{outcome}\n⚠ Site refresh/publish verification failed: {exc}') from None
+    print(f'{outcome}\n✓ Site refreshed and published using current Planning data')
 
 
 def main():
