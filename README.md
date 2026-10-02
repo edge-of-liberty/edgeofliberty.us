@@ -100,6 +100,60 @@ it into the phone response. Offline tests use mocks and never call live services
 PYTHONDONTWRITEBYTECODE=1 .venv-sheets/bin/python -B -m unittest discover -s _src -p test_vendor_absent.py -v
 ```
 
+## Remote order processing and production refresh
+
+Command: **`Process new order`**. Nancy need not provide an order number or email.
+This authorizes the existing order importer followed by the normal production
+refresh, even when no new orders are found. Run on this Mac in the canonical repo:
+
+```bash
+.venv-sheets/bin/python -B _src/process_new_order.py
+```
+
+The wrapper reuses the vendor-absence clean/current checks for both repositories
+and leaves `BCF.code-workspace` untouched. It runs `./_src/process_orders.sh` once,
+using its optional private result file in `_local/process-new-order/`, then runs
+`./_src/build.sh all` only when the importer reports verified normal completion.
+Do not call the importer a second time. Existing Gmail matching, 45-day lookback,
+deduplication, validation, authentication, and spreadsheet writes are unchanged.
+
+- Normal completion with zero, one, or multiple new orders: build and publish.
+  Zero imports is success, not an unknown-order error. Date-dependent content must
+  refresh, including the next fair and past-event treatment.
+- Unrecognized, malformed, incomplete, conflicting, or unsafe new notification:
+  stop before build; manual review required. Never interpret unfamiliar emails,
+  change matching rules, create vendors, or attempt an alternate import method.
+- Imported order with an unmatched vendor: stop after import for vendor setup.
+  Report the order ID; do not build, create the vendor, or undo the import.
+- Failed or uncertain write/result: stop; no blind retry, rollback, or build.
+  Say “No changes made” only when the receipt establishes no write was attempted.
+- Build/push/live-verification failure after import: retain imported orders and
+  report partial success. Do not claim publication merely because a push succeeded.
+
+Verification checks both repositories against remote main, the live standalone
+CHH homepage, Edge homepage date/vendor lists, generated versus live event content,
+and the next-fair redirect, with bounded deployment retries. Existing attendance
+overrides remain authoritative; payment does not imply attending.
+
+Keep phone replies to two short lines. Examples:
+
+```text
+✓ No new orders
+✓ Site refreshed and published
+```
+
+```text
+✓ Order R123 processed
+✓ Site refreshed and published
+```
+
+Report all imported order IDs (or a concise count for a large batch). Include a
+vendor name only when verified; never treat customer names or free-text special
+instructions as an authoritative vendor identity. For setup or partial failure,
+replace the publication line with the blocker. Diagnostic output stays out of the
+phone summary. Implementation tests mock services and processes; never use a real
+order or production build as a test.
+
 ## Secondary commands
 
 ```bash

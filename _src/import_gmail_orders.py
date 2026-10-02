@@ -63,7 +63,9 @@ def requests_for(rows, sid, last, grid_rows, date_pattern='yyyy-mm-dd'):
     return requests
 
 
-def process(dry_run=False):
+def process(dry_run=False, report=None):
+    report = report or (lambda result: None)
+    report({"status": "before_write", "orders": []})
     from order_email_review import clients
     from google_sheets import load_config
     config = load_config()
@@ -91,6 +93,7 @@ def process(dry_run=False):
             for oid in dict.fromkeys(r[0] for r in rows):
                 items = [r for r in rows if r[0] == oid]
                 print(f"PENDING: {oid} — {items[0][2]} — {len(items)} line-item row(s)")
+        report({"status": "dry_run" if dry_run else "complete", "orders": []})
         return
     # Recheck live data after Gmail retrieval and immediately before mutation.
     prop=properties()
@@ -112,6 +115,7 @@ def process(dry_run=False):
     fmt=cell.get('effectiveFormat',{}).get('numberFormat',{})
     pattern=fmt.get('pattern','yyyy-mm-dd') if fmt.get('type')=='DATE' else 'yyyy-mm-dd'
     print(f'Appending {len(rows)} rows at {last+1}:{last+len(rows)}; copying A{last}:B{last}.',flush=True)
+    report({'status': 'write_attempted', 'orders': []})
     sheets.spreadsheets().batchUpdate(spreadsheetId=book,body={'requests':requests_for(rows,prop['sheetId'],last,prop['gridProperties']['rowCount'],pattern)}).execute(num_retries=0)
     if entered()!=original:raise RuntimeError('Existing-row verification differs; stop and inspect.')
     after=read(f"'DOWNLOAD orders'!A1:AX{last+len(rows)}")
@@ -136,8 +140,14 @@ def process(dry_run=False):
         for cell in row['values']:
             assert all(abs(cell['userEnteredFormat']['backgroundColor'][k]-v)<.001 for k,v in COLOR.items())
     print_summary(stats, rows)
-    for warning in missing_vendor_messages(rows, effective):
+    warnings = missing_vendor_messages(rows, effective)
+    for warning in warnings:
         print(warning)
+    missing = {r[0] for r, value in zip(rows, effective) if len(value)>1 and value[1]=='#N/A'}
+    report({'status': 'needs_vendor_setup' if warnings else 'complete',
+            'orders': [{'id': oid, 'skus': list(dict.fromkeys(r[7] for r in rows if r[0]==oid)),
+                        'needs_vendor_setup': oid in missing}
+                       for oid in dict.fromkeys(r[0] for r in rows)]})
 
 
 def print_summary(stats, rows, dry_run=False):
@@ -163,8 +173,19 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--dry-run', action='store_true', help='Read and report only; never write Sheets')
+    parser.add_argument('--result-file', help='Private machine-readable result for the Remote wrapper')
     args = parser.parse_args()
-    process(args.dry_run)
+    if args.result_file:
+        import json
+        from pathlib import Path
+        from google_sheets import private_write
+        path = Path(args.result_file).resolve()
+        local = Path(__file__).resolve().parents[1] / '_local/process-new-order'
+        if not path.is_relative_to(local.resolve()):
+            parser.error('Result file must be inside _local/process-new-order')
+        process(args.dry_run, report=lambda result: private_write(path, json.dumps(result) + '\n'))
+    else:
+        process(args.dry_run)
 
 
 if __name__=='__main__':
