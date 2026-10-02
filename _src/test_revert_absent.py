@@ -59,4 +59,25 @@ class RestoreTests(unittest.TestCase):
             self.assertIn('./_src/process_orders.sh && ./_src/build.sh all',run.call_args.args[0])
             verify.assert_called_once()
 
+class BelowTests(unittest.TestCase):
+    def test_relative_absolute_and_quoted_references(self):
+        original={'formulaValue':'=IFERROR(VLOOKUP($A11,Orders!$A$2:$B$99,2,FALSE),"A11")'}
+        with patch.object(r,'entered',return_value=original):
+            formula,source,_=r.formula_from_below(None,CONFIG,TARGET)
+        self.assertEqual(source['row'],10)
+        self.assertEqual(formula['formulaValue'],'=IFERROR(VLOOKUP($A10,Orders!$A$2:$B$99,2,FALSE),"A11")')
+    def test_invalid_source_stops(self):
+        for value in [{'stringValue':'Absent'},{'formulaValue':'=VLOOKUP($A$11,Orders!A:B,2,FALSE)'},{'formulaValue':'=VLOOKUP(INDIRECT("A11"),A:B,2,FALSE)'}]:
+            with patch.object(r,'entered',return_value=value),self.assertRaises(r.Stop):
+                r.formula_from_below(None,CONFIG,TARGET)
+    def test_only_target_written_source_preserved(self):
+        api=MagicMock();below={'formulaValue':'=VLOOKUP(A11,Orders!A:B,2,FALSE)'}
+        values=[below,{'stringValue':'Absent'},{'stringValue':'Absent'},below,FORMULA,below]
+        with patch.object(r,'snapshot'),patch.object(r,'resolve',return_value=TARGET),patch.object(r,'entered',side_effect=values):
+            r.restore(api,CONFIG,'Example','Oct 4',MagicMock(),from_below=True)
+        req=api.spreadsheets().batchUpdate.call_args.kwargs['body']['requests']
+        self.assertEqual(len(req),1)
+        self.assertEqual(req[0]['updateCells']['range']['startRowIndex'],9)
+        self.assertEqual(req[0]['updateCells']['rows'][0]['values'][0]['userEnteredValue'],FORMULA)
+
 if __name__=='__main__':unittest.main()

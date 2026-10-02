@@ -118,8 +118,12 @@ Payment, order history, Type, year, and other cells are untouched by restoration
 
 If the original formula is missing, the prior value was a literal status, the
 vendor/date moved to another row/column, audits conflict, or the current cell has
-another value/formula, stop for manual formula review. Never guess a formula or
-copy one from a neighboring cell. Manually marked absences without an audit need
+another value/formula, stop for manual formula review. Never guess a formula. With Nancy’s explicit authorization to use the cell below,
+add `--from-below`. This reads that cell in the same date column, validates a
+recognized lookup with a relative reference to its own row, adjusts relative A1
+row references up one, and preserves absolute references and quoted strings.
+Only the target is written; the source formula is rechecked before and after.
+Unsupported or ambiguous formula syntax stops for manual review. Manually marked absences without an audit need
 manual review. Recheck the identity and cell immediately before writing.
 
 After verified restoration, run the same production workflow as vendor absence:
