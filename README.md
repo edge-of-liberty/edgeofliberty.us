@@ -100,6 +100,37 @@ it into the phone response. Offline tests use mocks and never call live services
 PYTHONDONTWRITEBYTECODE=1 .venv-sheets/bin/python -B -m unittest discover -s _src -p test_vendor_absent.py -v
 ```
 
+## Remote revert absent
+
+Command: **`Revert absent: <vendor>, <date>`**. Restore the original lookup formula;
+orders determine the resulting status. Never write a forced Paid/attending value.
+
+```bash
+.venv-sheets/bin/python -B _src/revert_absent.py --vendor "Example Company" --date "Oct 4"
+```
+
+The helper reuses the absence workflow's exact vendor/date resolution, year gate,
+existing authentication, and repository safety checks. It finds the latest verified
+absence audit that actually changed the cell, ignoring idempotent Absent repeats.
+It restores only the recorded `formulaValue` into that one attendance cell and
+verifies the underlying formula by live readback. Already restored is idempotent.
+Payment, order history, Type, year, and other cells are untouched by restoration.
+
+If the original formula is missing, the prior value was a literal status, the
+vendor/date moved to another row/column, audits conflict, or the current cell has
+another value/formula, stop for manual formula review. Never guess a formula or
+copy one from a neighboring cell. Manually marked absences without an audit need
+manual review. Recheck the identity and cell immediately before writing.
+
+After verified restoration, run the same production workflow as vendor absence:
+`./_src/process_orders.sh && ./_src/build.sh all`, then verify repository/remote
+state and generated/live publication. Do not require the result to be attending;
+the restored lookup controls it. Retain the restored formula if publication fails.
+Private restoration receipts live under `_local/revert-absent/`.
+
+Phone result: `✓ Vendor — date formula restored` and
+`✓ Site rebuilt and published`, or a short partial-failure explanation.
+
 ## Remote order processing and production refresh
 
 Command: **`Process new order`**. Nancy need not provide an order number or email.

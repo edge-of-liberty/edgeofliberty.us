@@ -1,0 +1,98 @@
+"""Restore an audited attendance formula; never force an attendance/payment status."""
+import argparse
+from datetime import datetime, timezone
+import json
+import subprocess
+import uuid
+from vendor_absent import (ROOT, Stop, check_repositories, load_config, service,
+                           snapshot, resolve, entered, private_write)
+from process_new_order import verify_publication
+
+
+def original_formula(target, directory):
+    candidates=[]
+    for path in directory.glob('*.json'):
+        try:
+            records=json.loads(path.read_text())
+            # Only completed, verified absence overrides are authoritative.
+            for record in records:
+                t=record.get('target',{})
+                if record.get('phase')!='before' or t.get('slug')!=target['slug'] or t.get('date')!=target['date']:
+                    continue
+                if not any(r.get('phase')=='verified' and r.get('target')==t for r in records):
+                    continue
+                prior=record.get('before',{})
+                if prior=={'stringValue':'Absent'}:continue  # Idempotent repeat is not a new override.
+                candidates.append((record['time'],t,prior))
+        except (ValueError,KeyError,TypeError):
+            raise Stop('Absence audit is unreadable; manual formula review required.') from None
+    if not candidates:
+        raise Stop('No verified original formula found; manual formula review required. Nothing changed.')
+    candidates.sort(key=lambda item:item[0],reverse=True)
+    stamp,old,value=candidates[0]
+    if any(item[0]==stamp and item[1:]!=(old,value) for item in candidates[1:]):
+        raise Stop('Conflicting absence audits; manual formula review required.')
+    if old!=target:
+        raise Stop('Vendor/date location changed since the override; original formula needs manual review.')
+    if set(value)!={'formulaValue'} or not value['formulaValue'].startswith('='):
+        raise Stop('Original value was not a lookup formula; manual formula review required. Nothing changed.')
+    return value
+
+
+def restore(api,config,vendor,day,audit):
+    target=resolve(snapshot(api,config),vendor,day,config['year'])
+    formula=original_formula(target,ROOT/'_local/vendor-absent')
+    before=entered(api,config,target)
+    if before not in ({'stringValue':'Absent'},formula):
+        raise Stop('Cell is no longer the Absent override or original formula; nothing changed.')
+    audit({'phase':'before','target':target,'before':before,'restore':formula})
+    if resolve(snapshot(api,config),vendor,day,config['year'])!=target or entered(api,config,target)!=before:
+        raise Stop('Planning changed during verification; nothing changed.')
+    if before!=formula:
+        request={'updateCells':{'range':{'sheetId':config['planning_sheet_id'],
+            'startRowIndex':target['row'],'endRowIndex':target['row']+1,
+            'startColumnIndex':target['column'],'endColumnIndex':target['column']+1},
+            'rows':[{'values':[{'userEnteredValue':formula}]}],'fields':'userEnteredValue'}}
+        try:
+            api.spreadsheets().batchUpdate(spreadsheetId=config['spreadsheet_id'],
+                body={'requests':[request]}).execute(num_retries=0)
+        except Exception:
+            if entered(api,config,target)!=formula:
+                raise Stop('Formula write failed or is uncertain; inspect the cell. No rollback attempted.') from None
+    if entered(api,config,target)!=formula:
+        raise Stop('Formula readback differs; stopped without rollback.')
+    if resolve(snapshot(api,config),vendor,day,config['year'])!=target:
+        raise Stop('Planning changed after restoration; manual verification required. No rollback attempted.')
+    audit({'phase':'verified','target':target,'after':formula})
+    return target
+
+
+def run(vendor,day):
+    check_repositories()
+    config=load_config();api=service(config)
+    path=ROOT/'_local/revert-absent'/f'{uuid.uuid4().hex}.json';records=[]
+    def audit(record):
+        records.append({'time':datetime.now(timezone.utc).isoformat(),**record})
+        private_write(path,json.dumps(records,indent=2)+'\n')
+    target=restore(api,config,vendor,day,audit)
+    try:
+        subprocess.run(['bash','-c','./_src/process_orders.sh && ./_src/build.sh all'],cwd=ROOT,check=True)
+        check_repositories()
+        verify_publication()  # Compare generated/live output; never demand Paid or attending.
+    except Exception as exc:
+        raise Stop(f"{target['name']} — {target['date']} formula restored; publication failed or unverified. Formula retained. {exc}") from None
+    audit({'phase':'published','target':target})
+    print(f"✓ {target['name']} — {target['date']} formula restored\n✓ Site rebuilt and published")
+
+
+def main():
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--vendor',required=True);parser.add_argument('--date',required=True)
+    args=parser.parse_args()
+    try:run(args.vendor,args.date)
+    except (Stop,OSError,subprocess.SubprocessError) as exc:
+        print(f'⚠ {exc}');return 1
+    return 0
+
+
+if __name__=='__main__':raise SystemExit(main())
