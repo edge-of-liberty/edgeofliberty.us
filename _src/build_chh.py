@@ -486,13 +486,12 @@ def render_bedroom_hero(slug, display_name, price, collage, body_text):
         out.extend([
             '<figure class="chh-bedroom-visual">',
             f'<img src="{html_attr(collage)}" alt="{html_attr(display_name)} — staged collage" fetchpriority="high">',
-            '<figcaption>Staged collage — explore the actual room photos below.</figcaption>',
             '</figure>',
         ])
     out.append('<div class="chh-bedroom-details">')
     out.append(render_availability_badge(ROOM_AVAILABILITY.get(slug, DEFAULT_AVAILABILITY)))
     out.append(f'<p class="chh-bedroom-price"><strong>{monthly_price(price)}</strong><span>1-month minimum</span></p>')
-    out.append(f'<p class="chh-bedroom-extension">{extension_price_text(price)} Weekly rates are not available for stays shorter than one month.</p>')
+    out.append(f'<p class="chh-bedroom-extension">Additional partial weeks: <strong>${parse_price_amounts(price)["week"]}/week</strong>, only after the initial full month.</p>')
     facts = list(ROOM_FACTS[slug])
     # The authored descriptions supply closet details; common TV comes from amenities.
     if not any("closet" in fact.lower() for fact in facts) and "well-appointed closet" in body_text:

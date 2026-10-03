@@ -138,6 +138,7 @@ class RenderingTests(unittest.TestCase):
                     for fact in ['Queen bed', 'closet', 'TV', 'Mini fridge']:
                         self.assertIn(fact.lower(), hero.lower())
                     self.assertNotIn('Included', hero)
+                    self.assertNotIn('<figcaption>', hero)
                     # Descriptive paragraphs/highlights stay authored, in their original order.
                     original = (source / slug / 'description.txt').read_text()
                     cursor = page.index('chh-bedroom-hero')
@@ -321,7 +322,7 @@ class ApprovedPolicyTests(unittest.TestCase):
                 for slug, (monthly, weekly) in rates.items():
                     room = pages[f'{slug}/index.html']
                     self.assertIn(f'${int(monthly):,}/month</strong><span>1-month minimum', room)
-                    self.assertIn(f'Additional partial weeks after the initial full month: ${weekly}/week. Weekly rates are not available for stays shorter than one month.', visible(room))
+                    self.assertIn(f'Additional partial weeks: ${weekly}/week, only after the initial full month.', visible(room))
                     self.assertIn(f'<p class="chh-room-price">${int(monthly):,}/month</p>', pages['index.html'])
                     self.assertIn(f'1-month minimum. Additional partial weeks after the initial full month: ${weekly}/week.', visible(pages['index.html']))
                 self.assertIn(f'<a href="{prefix}/rental-terms/#guest-rules">house guest rules</a>', pages['teal/index.html'])
