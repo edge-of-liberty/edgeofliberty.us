@@ -99,6 +99,65 @@ class StagingTests(unittest.TestCase):
 
 
 class RenderingTests(unittest.TestCase):
+    def test_bedroom_hero_and_actual_gallery_in_both_formats(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / 'source'
+            source.mkdir()
+            (source / 'description.txt').write_text('Overview')
+            for slug in ['blue', 'green', 'purple', 'teal', 'common-upper']:
+                folder = source / slug
+                folder.mkdir()
+                original = (build.ROOT / 'chh' / slug / 'description.txt').read_text()
+                (folder / 'description.txt').write_text(original)
+                (folder / 'rentedUntil.txt').write_text('2026-10-09')
+                (folder / 'actual.jpg').write_bytes(b'fixture')
+                if slug != 'teal':
+                    (folder / '00_Collage.png').write_bytes(b'fixture')
+                (folder / '01_Collage.webp').write_bytes(b'fixture')
+            for target in ['eol', 'chh']:
+                output = root / target
+                subprocess.run([sys.executable, str(build.SRC / 'build_chh.py'),
+                                str(source), '--target', target, '--output', str(output),
+                                '--as-of', '2026-10-03'], check=True, capture_output=True)
+                for slug in ['blue', 'green', 'purple', 'teal']:
+                    page = (output / slug / 'index.html').read_text()
+                    hero = page.split('<div class="chh-bedroom-hero', 1)[1].split('<h2>Room Highlights', 1)[0]
+                    gallery = page.split('<h3>Gallery</h3>', 1)[1].split('chh-cta-block', 1)[0]
+                    self.assertNotIn('Collage', gallery)
+                    self.assertIn('src="actual.jpg"', gallery)
+                    self.assertNotIn('01_Collage.webp', page)
+                    if slug == 'teal':
+                        self.assertIn('chh-bedroom-hero--no-image', page)
+                        self.assertNotIn('chh-bedroom-visual', page)
+                    else:
+                        self.assertIn('src="00_Collage.png"', hero)
+                        self.assertIn('staged collage', hero)
+                        self.assertEqual(page.count('src="00_Collage.png"'), 1)
+                    self.assertIn('Available Starting October 11, 2026', html.unescape(re.sub('<[^>]+>', '', hero)))
+                    for fact in ['Queen bed', 'closet', 'TV', 'Mini fridge']:
+                        self.assertIn(fact.lower(), hero.lower())
+                    self.assertNotIn('Included', hero)
+                    # Descriptive paragraphs/highlights stay authored, in their original order.
+                    original = (source / slug / 'description.txt').read_text()
+                    cursor = page.index('chh-bedroom-hero')
+                    for line in original.split('Price:', 1)[0].splitlines():
+                        if not line.strip():
+                            continue
+                        content = line.removeprefix('## ').removeprefix('- ')
+                        if 'house guest rules' in content:
+                            content = content.split('house guest rules')[0]
+                        cursor = page.index(html.escape(content), cursor)
+                    self.assertEqual(page.count('chh-cta-block'), 1)
+                    self.assertLess(page.index('chh-bedroom-hero'), page.index('<h2>Room Highlights'))
+                    self.assertLess(page.index('<h2>Room Highlights'), page.index('<h3>Gallery'))
+                    self.assertLess(page.index('<h3>Gallery'), page.index('chh-cta-block'))
+                common = (output / 'common-upper' / 'index.html').read_text()
+                self.assertNotIn('chh-bedroom-hero', common)
+                self.assertEqual(common.count('chh-cta-block'), 2)
+                for name in ['00_Collage.png', '01_Collage.webp', 'actual.jpg']:
+                    self.assertIn(f'src="{name}"', common)
+
     def test_same_content_both_targets_and_availability_boundaries(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)

@@ -1389,3 +1389,52 @@ body.menu-open {
     padding: 0.3rem 0.6rem;
   }
 }
+
+/* Bedroom decision area; other CHH page layouts stay unchanged. */
+.chh-bedroom-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+  margin: 1rem 0 2rem;
+}
+.chh-bedroom-visual { margin: 0; }
+.chh-bedroom-visual img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+}
+.chh-bedroom-visual figcaption {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.chh-bedroom-details {
+  min-width: 0;
+  padding: 1rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.chh-bedroom-details .chh-availability-badge {
+  display: grid;
+  margin: 0 0 1rem;
+}
+.chh-bedroom-price { margin: 0; }
+.chh-bedroom-price strong { display: block; font-size: 1.7rem; }
+.chh-bedroom-price span { display: block; color: var(--muted); }
+.chh-bedroom-extension { font-size: 0.95rem; }
+.chh-bedroom-basics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem 1rem;
+  padding-left: 1.2rem;
+  margin: 1rem 0 1.5rem;
+}
+.chh-bedroom-details > p:last-child { font-size: 0.9rem; margin-bottom: 0; }
+.chh-bedroom-hero--no-image { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 800px) {
+  .chh-bedroom-hero { grid-template-columns: minmax(0, 1fr); gap: 1rem; }
+  .chh-bedroom-details .chh-button { box-sizing: border-box; width: 100%; }
+}

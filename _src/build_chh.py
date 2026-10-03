@@ -470,6 +470,44 @@ def render_room_facts(slug, price=""):
     return "\n".join(out) + "\n"
 
 
+def bedroom_images(images):
+    """Only 00_Collage has a placement role; other collages await explicit design."""
+    collages = [name for name in images
+                if re.search(r"(?:^|_)collage$", Path(name).stem, re.I)]
+    hero = next((name for name in collages
+                 if Path(name).stem.lower() == "00_collage"), "")
+    return hero, [name for name in images if name not in collages]
+
+
+def render_bedroom_hero(slug, display_name, price, collage, body_text):
+    cls = "chh-bedroom-hero" + (" chh-bedroom-hero--no-image" if not collage else "")
+    out = [f'<div class="{cls}">']
+    if collage:
+        out.extend([
+            '<figure class="chh-bedroom-visual">',
+            f'<img src="{html_attr(collage)}" alt="{html_attr(display_name)} — staged collage" fetchpriority="high">',
+            '<figcaption>Staged collage — explore the actual room photos below.</figcaption>',
+            '</figure>',
+        ])
+    out.append('<div class="chh-bedroom-details">')
+    out.append(render_availability_badge(ROOM_AVAILABILITY.get(slug, DEFAULT_AVAILABILITY)))
+    out.append(f'<p class="chh-bedroom-price"><strong>{monthly_price(price)}</strong><span>1-month minimum</span></p>')
+    out.append(f'<p class="chh-bedroom-extension">{extension_price_text(price)} Weekly rates are not available for stays shorter than one month.</p>')
+    facts = list(ROOM_FACTS[slug])
+    # The authored descriptions supply closet details; common TV comes from amenities.
+    if not any("closet" in fact.lower() for fact in facts) and "well-appointed closet" in body_text:
+        facts.insert(2, "Closet with hangers and laundry basket")
+    if "TV" not in facts and "TV in each room" in AMENITIES:
+        facts.append("TV")
+    out.append('<ul class="chh-bedroom-basics" aria-label="Room features">')
+    out.extend(f'<li>{html_text(fact)}</li>' for fact in facts)
+    out.append('</ul>')
+    out.append(f'<a class="chh-button" href="{html_attr(TOUR_URL)}">Request a Tour</a>')
+    out.append(render_tour_intro())
+    out.extend(['</div>', '</div>'])
+    return "\n".join(out) + "\n"
+
+
 def room_offer_schema(slug, display_name, price, hero_image=""):
     amounts = parse_price_amounts(price)
     price_specs = []
@@ -607,7 +645,11 @@ for slug in get_pages():
         if ext.lower() in IMAGE_EXTS:
             images.append(fn)
 
-    hero_image = images[0] if images else ""
+    collage = ""
+    gallery_images = images
+    if slug in ROOM_ORDER:
+        collage, gallery_images = bedroom_images(images)
+    hero_image = collage or (gallery_images[0] if gallery_images else "")
     display_name = TITLE_MAP.get(slug, slug.replace("-", " ").title())
 
     out_path = OUTPUT / slug / "index.html"
@@ -642,10 +684,7 @@ for slug in get_pages():
 
         if slug in ROOM_ORDER:
             f.write('<p class="chh-page-kicker">Furnished private room for rent in Valparaiso, Indiana</p>\n')
-            f.write(render_availability_badge(ROOM_AVAILABILITY.get(slug, DEFAULT_AVAILABILITY)))
-            f.write(render_room_facts(slug, price))
-            f.write(f"<p>{extension_price_text(price)} Weekly rates are not available for stays shorter than one month.</p>\n")
-            f.write(render_cta_block())
+            f.write(render_bedroom_hero(slug, display_name, price, collage, body_text))
         elif slug != "rental-terms":
             f.write(render_cta_block())
 
@@ -660,18 +699,21 @@ for slug in get_pages():
             f.write("\n")
             f.write(render_medical_map())
 
-        if slug != "rental-terms":
+        if slug not in ROOM_ORDER and slug != "rental-terms":
             f.write("\n")
             f.write(render_cta_block())
 
-        if images:
+        if gallery_images:
             f.write("<h3>Gallery</h3>\n")
             f.write('<div class="vendor-photos constrained-gallery">\n')
             f.write('<div class="vendor-masonry">\n')
-            for img in images:
+            for img in gallery_images:
                 f.write(f'<img class="vendor-photo" src="{html_attr(img)}" alt="{html_attr(display_name)}">\n')
             f.write("</div>\n")
             f.write("</div>\n")
+
+        if slug in ROOM_ORDER:
+            f.write(render_cta_block())
 
         f.write("</section>\n")
 
