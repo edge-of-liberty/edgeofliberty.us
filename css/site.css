@@ -1435,3 +1435,16 @@ body.menu-open {
   .chh-bedroom-hero { grid-template-columns: minmax(0, 1fr); gap: 1rem; }
   .chh-bedroom-details .chh-button { box-sizing: border-box; width: 100%; }
 }
+
+/* Secondary bathroom illustration within bedroom prose, not a second hero. */
+.chh-bathroom-visual {
+  width: 100%;
+  max-width: 320px;
+  margin: 0.75rem 0 1.25rem;
+}
+.chh-bathroom-visual img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}

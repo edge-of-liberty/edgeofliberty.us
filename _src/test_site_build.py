@@ -115,6 +115,9 @@ class RenderingTests(unittest.TestCase):
                 if slug != 'teal':
                     (folder / '00_Collage.png').write_bytes(b'fixture')
                 (folder / '01_Collage.webp').write_bytes(b'fixture')
+                (folder / 'FutureKitchenCollage.png').write_bytes(b'fixture')
+                if slug != 'teal':
+                    (folder / '00_BathCollage.png').write_bytes(b'fixture')
             for target in ['eol', 'chh']:
                 output = root / target
                 subprocess.run([sys.executable, str(build.SRC / 'build_chh.py'),
@@ -122,7 +125,7 @@ class RenderingTests(unittest.TestCase):
                                 '--as-of', '2026-10-03'], check=True, capture_output=True)
                 for slug in ['blue', 'green', 'purple', 'teal']:
                     page = (output / slug / 'index.html').read_text()
-                    hero = page.split('<div class="chh-bedroom-hero', 1)[1].split('<h2>Room Highlights', 1)[0]
+                    hero = page.split('<div class="chh-bedroom-hero', 1)[1].split('</div>\n</div>', 1)[0]
                     gallery = page.split('<h3>Gallery</h3>', 1)[1].split('chh-cta-block', 1)[0]
                     self.assertNotIn('Collage', gallery)
                     self.assertIn('src="actual.jpg"', gallery)
@@ -140,7 +143,21 @@ class RenderingTests(unittest.TestCase):
                     self.assertNotIn('Included', hero)
                     self.assertNotIn('<figcaption>', hero)
                     self.assertIn('Now accepting tour requests.', hero)
-                    self.assertIn('<li><strong>Bathroom</strong><br>Shared with 1 roommate</li>', hero)
+                    self.assertIn('<li>Shared bathroom</li>', hero)
+                    self.assertNotIn('<strong>Bathroom</strong>', hero)
+                    self.assertNotIn('Shared with 1 roommate', hero)
+                    self.assertNotIn('Lower level', hero)
+                    self.assertNotIn('00_BathCollage', hero)
+                    self.assertNotIn('FutureKitchenCollage', page)
+                    bathroom_copy = 'The bathroom is shared with just one other roommate and has a shower rather than a tub.'
+                    self.assertIn(bathroom_copy, page)
+                    if slug == 'teal':
+                        self.assertNotIn('chh-bathroom-visual', page)
+                        self.assertNotIn('00_BathCollage', page)
+                    else:
+                        self.assertEqual(page.count('src="00_BathCollage.png"'), 1)
+                        self.assertLess(page.index(bathroom_copy), page.index('src="00_BathCollage.png"'))
+                        self.assertLess(page.index('src="00_BathCollage.png"'), page.index('Each room includes'))
                     # Descriptive paragraphs/highlights stay authored, in their original order.
                     original = (source / slug / 'description.txt').read_text()
                     cursor = page.index('chh-bedroom-hero')
@@ -158,7 +175,7 @@ class RenderingTests(unittest.TestCase):
                 common = (output / 'common-upper' / 'index.html').read_text()
                 self.assertNotIn('chh-bedroom-hero', common)
                 self.assertEqual(common.count('chh-cta-block'), 2)
-                for name in ['00_Collage.png', '01_Collage.webp', 'actual.jpg']:
+                for name in ['00_Collage.png', '00_BathCollage.png', '01_Collage.webp', 'FutureKitchenCollage.png', 'actual.jpg']:
                     self.assertIn(f'src="{name}"', common)
 
     def test_same_content_both_targets_and_availability_boundaries(self):

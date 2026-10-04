@@ -234,7 +234,10 @@ ROOM_AVAILABILITY = {
 }
 
 
-def render_markdownish(text, page_slug=""):
+BATHROOM_COPY = 'The bathroom is shared with just one other roommate and has a shower rather than a tub.'
+
+
+def render_markdownish(text, page_slug="", bathroom_collage=""):
     # Only the approved rental-policy headings receive anchors.
     policy_anchors = {"Before You Tour or Apply": "before-you-apply",
                       "Occupancy": "guest-rules",
@@ -304,6 +307,10 @@ def render_markdownish(text, page_slug=""):
                 out.append("</ul>")
                 in_list = False
             out.append(f"<p>{html_text(stripped)}</p>")
+            if page_slug in ROOM_ORDER and stripped == BATHROOM_COPY and bathroom_collage:
+                out.append('<figure class="chh-bathroom-visual">')
+                out.append(f'<img src="{html_attr(bathroom_collage)}" alt="Shared bathroom — collage" loading="lazy">')
+                out.append('</figure>')
 
     if in_list:
         out.append("</ul>")
@@ -484,12 +491,14 @@ def render_room_facts(slug, price=""):
 
 
 def bedroom_images(images):
-    """Only 00_Collage has a placement role; other collages await explicit design."""
+    """Two explicit placements; all other collage placement awaits design."""
     collages = [name for name in images
-                if re.search(r"(?:^|_)collage$", Path(name).stem, re.I)]
+                if Path(name).stem.lower().endswith("collage")]
     hero = next((name for name in collages
                  if Path(name).stem.lower() == "00_collage"), "")
-    return hero, [name for name in images if name not in collages]
+    bathroom = next((name for name in collages
+                     if Path(name).stem.lower() == "00_bathcollage"), "")
+    return hero, bathroom, [name for name in images if name not in collages]
 
 
 def render_bedroom_hero(slug, display_name, price, collage, body_text):
@@ -505,7 +514,7 @@ def render_bedroom_hero(slug, display_name, price, collage, body_text):
     out.append(render_availability_badge(ROOM_AVAILABILITY.get(slug, DEFAULT_AVAILABILITY), bedroom=True))
     out.append(f'<p class="chh-bedroom-price"><strong>{monthly_price(price)}</strong><span>1-month minimum</span></p>')
     out.append(f'<p class="chh-bedroom-extension">Additional weeks: <strong>${parse_price_amounts(price)["week"]}/week</strong></p>')
-    facts = list(ROOM_FACTS[slug])
+    facts = [fact for fact in ROOM_FACTS[slug] if fact != "Lower level"]
     # The authored descriptions supply closet details; common TV comes from amenities.
     if not any("closet" in fact.lower() for fact in facts) and "well-appointed closet" in body_text:
         facts.insert(2, "Closet with hangers and laundry basket")
@@ -513,7 +522,7 @@ def render_bedroom_hero(slug, display_name, price, collage, body_text):
         facts.append("TV")
     out.append('<ul class="chh-bedroom-basics" aria-label="Room features">')
     out.extend(f'<li>{html_text(fact)}</li>' for fact in facts)
-    out.append('<li><strong>Bathroom</strong><br>Shared with 1 roommate</li>')
+    out.append('<li>Shared bathroom</li>')
     out.append('</ul>')
     out.append(f'<a class="chh-button" href="{html_attr(TOUR_URL)}">Request a Tour</a>')
     out.append(render_tour_intro())
@@ -659,9 +668,10 @@ for slug in get_pages():
             images.append(fn)
 
     collage = ""
+    bathroom_collage = ""
     gallery_images = images
     if slug in ROOM_ORDER:
-        collage, gallery_images = bedroom_images(images)
+        collage, bathroom_collage, gallery_images = bedroom_images(images)
     hero_image = collage or (gallery_images[0] if gallery_images else "")
     display_name = TITLE_MAP.get(slug, slug.replace("-", " ").title())
 
@@ -702,7 +712,7 @@ for slug in get_pages():
             f.write(render_cta_block())
 
         if body_text:
-            f.write(render_markdownish(body_text, slug))
+            f.write(render_markdownish(body_text, slug, bathroom_collage))
 
         if slug in {"common-upper", "travel-nurse-friendly"}:
             f.write("\n")
