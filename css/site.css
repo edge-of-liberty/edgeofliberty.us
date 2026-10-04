@@ -1436,15 +1436,25 @@ body.menu-open {
   .chh-bedroom-details .chh-button { box-sizing: border-box; width: 100%; }
 }
 
-/* Secondary bathroom illustration within bedroom prose, not a second hero. */
-.chh-bathroom-visual {
+/* Explicit supplementary collages stay subordinate to the bedroom hero. */
+.chh-supplementary-collage {
   width: 100%;
   max-width: 320px;
   margin: 0.75rem 0 1.25rem;
 }
-.chh-bathroom-visual img {
+.chh-supplementary-collage img {
   display: block;
   width: 100%;
   height: auto;
   border-radius: 8px;
 }
+
+@media (min-width: 801px) {
+  .chh-supplementary-collage {
+    float: right;
+    width: min(320px, 40%);
+    margin: 0.25rem 0 1rem 1.5rem;
+  }
+}
+/* Contain the illustration within bedroom prose, before gallery and CTA. */
+.chh-bedroom-description { display: flow-root; }

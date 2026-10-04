@@ -308,7 +308,7 @@ def render_markdownish(text, page_slug="", bathroom_collage=""):
                 in_list = False
             out.append(f"<p>{html_text(stripped)}</p>")
             if page_slug in ROOM_ORDER and stripped == BATHROOM_COPY and bathroom_collage:
-                out.append('<figure class="chh-bathroom-visual">')
+                out.append('<figure class="chh-supplementary-collage">')
                 out.append(f'<img src="{html_attr(bathroom_collage)}" alt="Shared bathroom — collage" loading="lazy">')
                 out.append('</figure>')
 
@@ -712,7 +712,11 @@ for slug in get_pages():
             f.write(render_cta_block())
 
         if body_text:
+            if slug in ROOM_ORDER:
+                f.write('<div class="chh-bedroom-description">\n')
             f.write(render_markdownish(body_text, slug, bathroom_collage))
+            if slug in ROOM_ORDER:
+                f.write('\n</div>\n')
 
         if slug in {"common-upper", "travel-nurse-friendly"}:
             f.write("\n")

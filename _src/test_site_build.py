@@ -152,10 +152,11 @@ class RenderingTests(unittest.TestCase):
                     bathroom_copy = 'The shared bathroom is used by just two roommates and includes a shower.'
                     self.assertIn(bathroom_copy, page)
                     if slug == 'teal':
-                        self.assertNotIn('chh-bathroom-visual', page)
+                        self.assertNotIn('chh-supplementary-collage', page)
                         self.assertNotIn('00_BathCollage', page)
                     else:
                         self.assertEqual(page.count('src="00_BathCollage.png"'), 1)
+                        self.assertIn('<figure class="chh-supplementary-collage">', page)
                         self.assertLess(page.index(bathroom_copy), page.index('src="00_BathCollage.png"'))
                         self.assertLess(page.index('src="00_BathCollage.png"'), page.index('Each room includes'))
                     # Descriptive paragraphs/highlights stay authored, in their original order.
@@ -174,6 +175,7 @@ class RenderingTests(unittest.TestCase):
                     self.assertLess(page.index('<h3>Gallery'), page.index('chh-cta-block'))
                 common = (output / 'common-upper' / 'index.html').read_text()
                 self.assertNotIn('chh-bedroom-hero', common)
+                self.assertNotIn('chh-bedroom-description', common)
                 self.assertEqual(common.count('chh-cta-block'), 2)
                 for name in ['00_Collage.png', '00_BathCollage.png', '01_Collage.webp', 'FutureKitchenCollage.png', 'actual.jpg']:
                     self.assertIn(f'src="{name}"', common)
