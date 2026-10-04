@@ -21,6 +21,9 @@ def read_result(path):
         if not isinstance(orders,list):raise ValueError()
         for order in orders:
             if not re.fullmatch(r'R\d+',order['id']) or not isinstance(order['skus'],list):raise ValueError()
+        warnings = result.get('warnings', [])
+        if not isinstance(warnings, list) or not all(isinstance(v, str) for v in warnings):
+            raise ValueError()
         return result
     except (OSError,ValueError,KeyError,TypeError):
         raise Stop('Importer result unavailable or uncertain. Manual order review required.') from None
@@ -28,10 +31,10 @@ def read_result(path):
 
 def order_outcome(result, returncode):
     if result['status']=='complete' and returncode==0:
-        return '✓ ' + imported_label(result)
+        return '\n'.join(['✓ ' + imported_label(result), *result.get('warnings', [])])
     if result['status']=='needs_vendor_setup':
         ids=', '.join(o['id'] for o in result['orders'])
-        return f'⚠ Order(s) {ids} written to DOWNLOAD orders; vendor setup requires manual review'
+        return '\n'.join([f'⚠ Order(s) {ids} written to DOWNLOAD orders; vendor setup requires manual review', *result.get('warnings', [])])
     if result['status']=='before_write':
         return '⚠ Order processing requires manual review — no orders written by this run'
     return '⚠ Order write result uncertain; manual review required — nothing undone'

@@ -12,6 +12,7 @@ import subprocess
 import sys
 import tempfile
 from xml.sax.saxutils import escape
+from build_legacy_links import build as build_legacy_links
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / '_src'
@@ -32,7 +33,7 @@ TOOL_FILES = {
     '_src/build_permits.py', '_src/build_vendors.py', '_src/parse_csv.py',
     '_src/render_markdownish.py', '_src/chh_output.py', '_src/site_build.py',
     '_src/sites.json', '_src/templates/chh.html', '_src/templates/chh-404.html',
-    '_src/test_site_build.py',
+    '_src/test_site_build.py', '_src/build_legacy_links.py', '_src/test_build_legacy_links.py',
     '_src/google_sheets.py', '_src/fetch_planning_sheet.py',
     '_src/google_sheets.example.json', '_src/requirements-sheets.txt',
     '_src/test_google_sheets.py',
@@ -112,6 +113,7 @@ def build_component(name, as_of, planning_csv=None, year=None):
 
 
 def build_eol(as_of):
+    build_legacy_links(ROOT)
     with planning_snapshot() as (snapshot, year):
         for name in ('vendors', 'dates', 'home', 'chh', 'permits'):
             build_component(name, as_of, snapshot, year)

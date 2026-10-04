@@ -41,7 +41,7 @@ class DailyCommandTests(unittest.TestCase):
   stats={}
   with patch.object(imp,'fetch_rows',return_value=([],[self.row(),old,new])):
    rows=imp.prepare(None,{'R123'},stats=stats)
-  self.assertEqual(stats,{'checked':3,'skipped':1})
+  self.assertEqual(stats,{'checked':3,'skipped':1,'order_ids':['R123','R456','R9']})
   self.assertEqual([r[0] for r in rows],['R9','R456'])
  def test_cli_dry_run(self):
   with patch('sys.argv',['import_gmail_orders.py','--dry-run']),patch.object(imp,'process') as process:
@@ -87,3 +87,29 @@ class DailyCommandTests(unittest.TestCase):
   r=self.row();r[2]='2026-02-30'
   with patch.object(imp,'fetch_rows',return_value=([],[r])):
    with self.assertRaises(ValueError):imp.prepare(None,set())
+
+class AttentionTests(unittest.TestCase):
+ def planning(self, name='Example', sitemap='', year=1, email='a@example.invalid'):
+  row=['']*44
+  for i,v in {0:name,5:sitemap,10:year,12:email}.items():row[i]=v
+  return [['headers']]*9+[row]
+ def test_existing_order_error_and_setup_warn_without_mutation(self):
+  orders=[['key','#N/A (lookup failed)','R123','a@example.invalid']]
+  warnings=imp.attention_messages(orders,self.planning(),{'R123'})
+  self.assertEqual(warnings[0],'⚠ Order R123 has an unresolved Column B lookup (#N/A)')
+  self.assertIn('Example: Planning Column F',warnings[1])
+  self.assertEqual(orders[0][1],'#N/A (lookup failed)')
+ def test_no_warning_cases(self):
+  orders=[['key',25,'R123','a@example.invalid']]
+  for planning in [self.planning(sitemap='X'),self.planning(year=0),self.planning(email='other'),self.planning(name='zzCOMPANY NAME')]:
+   self.assertEqual(imp.attention_messages(orders,planning,{'R123'}),[])
+  self.assertEqual(imp.attention_messages([['key','#REF!','R9','a@example.invalid']],self.planning(),{'R123'}),[])
+ def test_alternate_email_duplicate_errors_and_other_error(self):
+  planning=self.planning(email='other');planning[9][43]='A@example.invalid'
+  row=['key','#REF!','R123','a@example.invalid']
+  warnings=imp.attention_messages([row,row],planning,{'R123'})
+  self.assertEqual(len(warnings),2)
+  self.assertIn('(#REF!)',warnings[0])
+ def test_attention_read_failure_is_only_warning(self):
+  with patch('builtins.print'):
+   self.assertIn('unavailable',imp.read_attention(lambda *a: (_ for _ in ()).throw(OSError()),['R123'])[0])

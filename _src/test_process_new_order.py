@@ -11,8 +11,8 @@ import import_gmail_orders as imp
 ORDER={'id':'R123','skus':['261004'],'needs_vendor_setup':False}
 
 class WorkflowTests(unittest.TestCase):
-    def exercise(self,status='complete',orders=None,code=0,build_fail=False):
-        receipt={'status':status,'orders':[] if orders is None else orders}
+    def exercise(self,status='complete',orders=None,code=0,build_fail=False,warnings=None):
+        receipt={'status':status,'orders':[] if orders is None else orders,'warnings':warnings or []}
         with patch.object(w,'check_repositories') as check,patch.object(w,'read_result',return_value=receipt),\
              patch.object(w,'run_logged') as run:
             def response(args,**kwargs):
@@ -31,6 +31,15 @@ class WorkflowTests(unittest.TestCase):
             self.assertEqual(len(builds),1)
             self.assertEqual(check.call_count,2)
             self.assertEqual(sum(c.args[0][0]=='./_src/process_orders.sh' for c in run.call_args_list),1)
+    def test_attention_warnings_still_build(self):
+        warning='⚠ Order R123 has an unresolved Column B lookup (#N/A)'
+        with patch('builtins.print') as output:
+            self.exercise(warnings=[warning])
+        self.assertIn(warning, output.call_args.args[0])
+        self.assertIn('Site refreshed and published', output.call_args.args[0])
+    def test_setup_receipt_keeps_attention_warning(self):
+        result={'status':'needs_vendor_setup','orders':[ORDER],'warnings':['⚠ Example: Planning Column F sitemap/setup unresolved']}
+        self.assertIn('Planning Column F',w.order_outcome(result,0))
     def test_zero_imports_still_builds(self):self.exercise()
     def test_one_import_builds(self):self.exercise(orders=[ORDER])
     def test_multiple_imports_build_once(self):self.exercise(orders=[ORDER,{**ORDER,'id':'R456'}])
@@ -75,6 +84,35 @@ class WorkflowTests(unittest.TestCase):
             p.write_text('{}')
             with self.assertRaises(w.Stop):w.read_result(p)
 class ReceiptTests(unittest.TestCase):
+    def test_already_imported_error_surfaces_and_refresh_still_completes(self):
+        gmail,sheets=MagicMock(),MagicMock()
+        gmail.users().getProfile().execute.return_value={'emailAddress':'admin@batshitcrazyfarms.com'}
+        sheets.spreadsheets().get().execute.return_value={'sheets':[{'properties':{'sheetId':123,'title':'DOWNLOAD orders','gridProperties':{'rowCount':10}}}]}
+        existing=[['header'],['=key','=lookup','R123','a@example.invalid']]
+        planning=[[] for _ in range(9)]+[['Example','','','','','', '', '', '', '', 1, '', 'a@example.invalid']]
+        sheets.spreadsheets().values().get().execute.side_effect=[
+            {'values':existing},
+            {'values':[['key','#N/A','R123','a@example.invalid']]},
+            {'values':planning}]
+        from test_import_gmail_orders import ImportTests
+        receipt={}
+        def report(value):receipt.update(value)
+        def process(args,**kwargs):
+            if args[0]=='./_src/process_orders.sh':imp.process(report=report)
+            return SimpleNamespace(returncode=0)
+        with patch('order_email_review.clients',return_value=(gmail,sheets)),patch('google_sheets.load_config',return_value={'spreadsheet_id':'test','orders_sheet_id':123}),patch.object(imp,'fetch_rows',return_value=([],[ImportTests().row()])),patch.object(w,'check_repositories'),patch.object(w,'read_result',side_effect=lambda p:receipt),patch.object(w,'run_logged',side_effect=process) as run,patch('builtins.print') as output:
+            w.run()
+        sheets.spreadsheets().batchUpdate.assert_not_called()
+        self.assertEqual(receipt['status'],'complete')
+        self.assertEqual(receipt['orders'],[])
+        self.assertEqual(len(receipt['warnings']),2)
+        final=output.call_args.args[0]
+        self.assertIn('✓ No new orders',final)
+        self.assertIn('⚠ Order R123 has an unresolved Column B lookup (#N/A)',final)
+        self.assertIn('Example: Planning Column F',final)
+        self.assertIn('✓ Site refreshed and published',final)
+        self.assertEqual(run.call_args.args[0],['./_src/build.sh','all'])
+
     def test_zero_import_receipt_no_write(self):
         gmail,sheets=MagicMock(),MagicMock()
         gmail.users().getProfile().execute.return_value={'emailAddress':'admin@batshitcrazyfarms.com'}

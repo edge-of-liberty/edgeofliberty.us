@@ -22,7 +22,8 @@ def prepare(gmail, existing, allowed=None, stats=None, query=QUERY):
         if allowed is None or row[0] in allowed:
             by_order[row[0]][row[17]].append(row)
     if stats is not None:
-        stats.update(checked=len(by_order), skipped=len(set(by_order) & existing))
+        stats.update(checked=len(by_order), skipped=len(set(by_order) & existing),
+                     order_ids=sorted(by_order))
     result = []
     for oid, messages in by_order.items():
         if oid in existing: continue
@@ -63,6 +64,43 @@ def requests_for(rows, sid, last, grid_rows, date_pattern='yyyy-mm-dd'):
     return requests
 
 
+def attention_messages(orders, planning, relevant):
+    """Read-only homework for the orders scanned by the existing Gmail importer."""
+    messages = []
+    emails = set()
+    for row in orders:
+        if len(row) < 3 or row[2] not in relevant:
+            continue
+        if len(row) > 3 and row[3]:
+            emails.add(str(row[3]).strip().casefold())
+        error = re.match(r"^(#(?:N/A|REF!|VALUE!|DIV/0!|NAME\?|NUM!|ERROR!|SPILL!|CALC!|LOADING!))(?:$|[ (])", str(row[1]))
+        if error:
+            messages.append(f'⚠ Order {row[2]} has an unresolved Column B lookup ({error[1]})')
+    # Live conditional formatting: =and(F1="",K1<>0). F is sitemap; K is 2026.
+    for row in planning[9:]:
+        row = list(row) + [''] * max(0, 44 - len(row))
+        name = str(row[0]).strip()
+        matched_email = any(str(row[i]).strip().casefold() in emails for i in (12, 43))
+        if (name and not name.casefold().startswith('zz') and matched_email
+                and row[5] == '' and row[10] not in ('', 0, '0')):
+            messages.append(f'⚠ {name}: Planning Column F sitemap/setup unresolved (blank F with 2026 participation)')
+    return list(dict.fromkeys(messages))
+
+
+def read_attention(read, relevant):
+    if not relevant:
+        return []
+    try:
+        orders = read("'DOWNLOAD orders'!A:D", 'UNFORMATTED_VALUE')
+        planning = read("'Craft Fair Planning'!A:AR", 'UNFORMATTED_VALUE')
+        messages = attention_messages(orders, planning, set(relevant))
+    except Exception:
+        messages = ['⚠ Order/setup attention checks unavailable; manual review required']
+    for message in messages:
+        print(message)
+    return messages
+
+
 def process(dry_run=False, report=None):
     report = report or (lambda result: None)
     report({"status": "before_write", "orders": []})
@@ -93,7 +131,8 @@ def process(dry_run=False, report=None):
             for oid in dict.fromkeys(r[0] for r in rows):
                 items = [r for r in rows if r[0] == oid]
                 print(f"PENDING: {oid} — {items[0][2]} — {len(items)} line-item row(s)")
-        report({"status": "dry_run" if dry_run else "complete", "orders": []})
+        warnings = read_attention(read, stats.get("order_ids", []))
+        report({"status": "dry_run" if dry_run else "complete", "orders": [], "warnings": warnings})
         return
     # Recheck live data after Gmail retrieval and immediately before mutation.
     prop=properties()
@@ -144,7 +183,9 @@ def process(dry_run=False, report=None):
     for warning in warnings:
         print(warning)
     missing = {r[0] for r, value in zip(rows, effective) if len(value)>1 and value[1]=='#N/A'}
+    attention = read_attention(read, stats.get('order_ids', []))
     report({'status': 'needs_vendor_setup' if warnings else 'complete',
+            'warnings': attention,
             'orders': [{'id': oid, 'skus': list(dict.fromkeys(r[7] for r in rows if r[0]==oid)),
                         'needs_vendor_setup': oid in missing}
                        for oid in dict.fromkeys(r[0] for r in rows)]})
