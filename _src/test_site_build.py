@@ -149,7 +149,7 @@ class RenderingTests(unittest.TestCase):
                     self.assertNotIn('Lower level', hero)
                     self.assertNotIn('00_BathCollage', hero)
                     self.assertNotIn('FutureKitchenCollage', page)
-                    bathroom_copy = 'The bathroom is shared with just one other roommate and has a shower rather than a tub.'
+                    bathroom_copy = 'The shared bathroom is used by just two roommates and includes a shower.'
                     self.assertIn(bathroom_copy, page)
                     if slug == 'teal':
                         self.assertNotIn('chh-bathroom-visual', page)

@@ -234,7 +234,7 @@ ROOM_AVAILABILITY = {
 }
 
 
-BATHROOM_COPY = 'The bathroom is shared with just one other roommate and has a shower rather than a tub.'
+BATHROOM_COPY = 'The shared bathroom is used by just two roommates and includes a shower.'
 
 
 def render_markdownish(text, page_slug="", bathroom_collage=""):
