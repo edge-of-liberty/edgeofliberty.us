@@ -134,11 +134,13 @@ class RenderingTests(unittest.TestCase):
                         self.assertIn('src="00_Collage.png"', hero)
                         self.assertIn('staged collage', hero)
                         self.assertEqual(page.count('src="00_Collage.png"'), 1)
-                    self.assertIn('Available Starting October 11, 2026', html.unescape(re.sub('<[^>]+>', '', hero)))
+                    self.assertIn('Available starting 10/11/26', html.unescape(re.sub('<[^>]+>', '', hero)))
                     for fact in ['Queen bed', 'closet', 'TV', 'Mini fridge']:
                         self.assertIn(fact.lower(), hero.lower())
                     self.assertNotIn('Included', hero)
                     self.assertNotIn('<figcaption>', hero)
+                    self.assertIn('Now accepting tour requests.', hero)
+                    self.assertIn('<li><strong>Bathroom</strong><br>Shared with 1 roommate</li>', hero)
                     # Descriptive paragraphs/highlights stay authored, in their original order.
                     original = (source / slug / 'description.txt').read_text()
                     cursor = page.index('chh-bedroom-hero')
@@ -173,7 +175,7 @@ class RenderingTests(unittest.TestCase):
                 (folder / 'rentedUntil.txt').write_text(value)
             for target in ['eol', 'chh']:
                 subprocess.run([sys.executable, str(build.SRC / 'build_chh.py'), str(source), '--target', target, '--output', str(root / target), '--as-of', '2026-09-18'], check=True, capture_output=True)
-            expected = {'blue': 'Available Starting September 20, 2026', 'green': 'Available Starting September 27, 2026', 'purple': 'Available Now', 'teal': 'Available Now'}
+            expected = {'blue': 'Available starting 9/20/26', 'green': 'Available starting 9/27/26', 'purple': 'Available now', 'teal': 'Available now'}
             for slug, label in expected.items():
                 eol = (root / 'eol' / slug / 'index.html').read_text()
                 chh = (root / 'chh' / slug / 'index.html').read_text()
@@ -322,7 +324,7 @@ class ApprovedPolicyTests(unittest.TestCase):
                 for slug, (monthly, weekly) in rates.items():
                     room = pages[f'{slug}/index.html']
                     self.assertIn(f'${int(monthly):,}/month</strong><span>1-month minimum', room)
-                    self.assertIn(f'Additional partial weeks: ${weekly}/week, only after the initial full month.', visible(room))
+                    self.assertIn(f'Additional weeks: ${weekly}/week', visible(room))
                     self.assertIn(f'<p class="chh-room-price">${int(monthly):,}/month</p>', pages['index.html'])
                     self.assertIn(f'1-month minimum. Additional partial weeks after the initial full month: ${weekly}/week.', visible(pages['index.html']))
                 self.assertIn(f'<a href="{prefix}/rental-terms/#guest-rules">house guest rules</a>', pages['teal/index.html'])

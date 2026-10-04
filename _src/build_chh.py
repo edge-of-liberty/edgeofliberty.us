@@ -407,11 +407,24 @@ def render_cta_block():
     )
 
 
-def render_availability_badge(availability):
+def render_availability_badge(availability, bedroom=False):
+    label, note = availability["label"], availability["note"]
+    if bedroom:
+        if label.startswith("Available Starting "):
+            value = label.removeprefix("Available Starting ")
+            try:
+                parsed = datetime.strptime(value, "%B %d, %Y")
+                value = f"{parsed.month}/{parsed.day}/{parsed.year % 100:02d}"
+            except ValueError:
+                pass  # Preserve authored non-date availability instead of guessing.
+            label = f"Available starting {value}"
+        elif label == "Available Now":
+            label = "Available now"
+        note = "Now accepting tour requests."
     return (
         '<div class="chh-availability-badge" aria-label="Rental availability">\n'
-        f'<strong>{html_text(availability["label"])}</strong>\n'
-        f'<span>{html_text(availability["note"])}</span>\n'
+        f'<strong>{html_text(label)}</strong>\n'
+        f'<span>{html_text(note)}</span>\n'
         '</div>\n'
     )
 
@@ -489,9 +502,9 @@ def render_bedroom_hero(slug, display_name, price, collage, body_text):
             '</figure>',
         ])
     out.append('<div class="chh-bedroom-details">')
-    out.append(render_availability_badge(ROOM_AVAILABILITY.get(slug, DEFAULT_AVAILABILITY)))
+    out.append(render_availability_badge(ROOM_AVAILABILITY.get(slug, DEFAULT_AVAILABILITY), bedroom=True))
     out.append(f'<p class="chh-bedroom-price"><strong>{monthly_price(price)}</strong><span>1-month minimum</span></p>')
-    out.append(f'<p class="chh-bedroom-extension">Additional partial weeks: <strong>${parse_price_amounts(price)["week"]}/week</strong>, only after the initial full month.</p>')
+    out.append(f'<p class="chh-bedroom-extension">Additional weeks: <strong>${parse_price_amounts(price)["week"]}/week</strong></p>')
     facts = list(ROOM_FACTS[slug])
     # The authored descriptions supply closet details; common TV comes from amenities.
     if not any("closet" in fact.lower() for fact in facts) and "well-appointed closet" in body_text:
@@ -500,6 +513,7 @@ def render_bedroom_hero(slug, display_name, price, collage, body_text):
         facts.append("TV")
     out.append('<ul class="chh-bedroom-basics" aria-label="Room features">')
     out.extend(f'<li>{html_text(fact)}</li>' for fact in facts)
+    out.append('<li><strong>Bathroom</strong><br>Shared with 1 roommate</li>')
     out.append('</ul>')
     out.append(f'<a class="chh-button" href="{html_attr(TOUR_URL)}">Request a Tour</a>')
     out.append(render_tour_intro())
