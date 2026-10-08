@@ -76,7 +76,7 @@ def fetch(gmail, query):
 
 
 def provisional_identity(row):
-    return bool('PayPal-only;' in str(row[63]) or (row[50] and not row[3]))
+    return bool('PayPal-only;' in str(row[62]) or (row[49] and not row[3]))
 
 
 def values(payment, item, row):

@@ -105,7 +105,7 @@ def read_attention(read, relevant):
 
 def merged_plan(before, primary, payments):
     """Exact invoice/line joins. Existing attendance/product edits remain authoritative."""
-    rows=[list(row)+['']*max(0,64-len(row)) for row in before]
+    rows=[list(row)+['']*max(0,63-len(row)) for row in before]
     last=max((i for i,row in enumerate(rows,1) if any(row[2:])),default=1)
     updates={};new=[];warnings=[]
     def put(index,column,value):
@@ -113,7 +113,7 @@ def merged_plan(before, primary, payments):
             rows[index][column]=value;updates[index,column]=value
     def append(oid):
         index=last+len(new)
-        while len(rows)<=index:rows.append(['']*64)
+        while len(rows)<=index:rows.append(['']*63)
         if any(rows[index]):raise RuntimeError('Append destination is not empty')
         new.append(index);put(index,2,oid)
         return index
@@ -131,16 +131,16 @@ def merged_plan(before, primary, payments):
             else:index=append(oid)
             provisional=paypal.provisional_identity(rows[index])
             provisional_date=None
-            if provisional and rows[index][52]:
-                provisional_date=sheets_date(datetime.strptime(rows[index][52],'%b %d, %Y').date().isoformat())
+            if provisional and rows[index][51]:
+                provisional_date=sheets_date(datetime.strptime(rows[index][51],'%b %d, %Y').date().isoformat())
             source={3:r[1],4:sheets_date(r[2]),6:r[3],26:r[5],27:r[4],38:r[13],40:r[6],41:r[7],44:r[8]}
             for col,value in source.items():
                 if rows[index][col]=='' or (col==3 and provisional) or (col==4 and provisional_date is not None and rows[index][col]==provisional_date):put(index,col,value)
             if provisional:
-                notes=[note for note in str(rows[index][63]).split('; ') if note and not note.startswith('PayPal-only')]
-                if str(rows[index][50]).casefold()!=str(rows[index][3]).casefold() and 'Payer email differs from reservation email' not in notes:
+                notes=[note for note in str(rows[index][62]).split('; ') if note and not note.startswith('PayPal-only')]
+                if str(rows[index][49]).casefold()!=str(rows[index][3]).casefold() and 'Payer email differs from reservation email' not in notes:
                     notes.append('Payer email differs from reservation email')
-                put(index,63,'; '.join(notes))
+                put(index,62,'; '.join(notes))
     for oid,payment in payments.items():
         if oid in grouped and oid not in {row[2] for row in before[1:] if len(row)>2}:
             source=grouped[oid]
@@ -154,7 +154,7 @@ def merged_plan(before, primary, payments):
         if not existing:
             for item in payment['items']:
                 index=append(oid)
-                for col,value in {3:payment['email'],4:sheets_date(payment['order_date']),6:'Paid',40:item['title'],41:item['sku'],44:item['qty'],63:'PayPal-only; reservation identity unavailable'}.items():put(index,col,value)
+                for col,value in {3:payment['email'],4:sheets_date(payment['order_date']),6:'Paid',40:item['title'],41:item['sku'],44:item['qty'],62:'PayPal-only; reservation identity unavailable'}.items():put(index,col,value)
             existing=[i for i,row in enumerate(rows[1:],1) if row[2]==oid]
         if len(existing)!=len(payment['items']):raise RuntimeError('PayPal line count conflicts for '+oid)
         used=set()
@@ -166,13 +166,13 @@ def merged_plan(before, primary, payments):
             # New two-source orders must agree on product/quantity. Older manual edits are retained.
             if index in new and (rows[index][41]!=item['sku'] or str(rows[index][44])!=item['qty']):
                 raise RuntimeError('GoDaddy/PayPal products conflict for '+oid)
-            existing_transaction=rows[index][53]
+            existing_transaction=rows[index][52]
             if existing_transaction and existing_transaction!=payment['transaction']:
                 raise RuntimeError('Different PayPal transaction already recorded for '+oid)
             if paypal.provisional_identity(rows[index]) and not rows[index][3]:
                 put(index,3,payment['email'])
             supplemental=paypal.values(payment,item,rows[index])
-            for col,value in enumerate(supplemental,50):put(index,col,value)
+            for col,value in enumerate(supplemental,49):put(index,col,value)
             if paypal.provisional_identity(rows[index]):warnings.append(f'⚠ Order {oid}: PayPal received; GoDaddy reservation identity missing — manual vendor review required')
     return rows,updates,new,list(dict.fromkeys(warnings))
 
@@ -190,13 +190,13 @@ def process(dry_run=False, report=None):
     def read(area,mode='FORMULA'):
         return sheets.spreadsheets().values().get(spreadsheetId=book,range=area,valueRenderOption=mode).execute(num_retries=2).get('values',[])
     prop=properties();assert prop['title']=='DOWNLOAD orders'
-    if prop['gridProperties']['columnCount']<64:raise RuntimeError('PayPal columns AY:BL are missing')
-    area=f"'DOWNLOAD orders'!A1:BL{prop['gridProperties']['rowCount']}"
+    if prop['gridProperties']['columnCount']<63:raise RuntimeError('PayPal columns AX:BK are missing')
+    area=f"'DOWNLOAD orders'!A1:BK{prop['gridProperties']['rowCount']}"
     before=read(area)
-    if not before or before[0][50:64]!=paypal.HEADERS:raise RuntimeError('PayPal headers AY:BL differ; manual review required')
+    if not before or before[0][49:63]!=paypal.HEADERS:raise RuntimeError('PayPal headers AX:BK differ; manual review required')
     existing={r[2] for r in before[1:] if len(r)>2 and r[2]}
     # A delayed GoDaddy email can complete an earlier PayPal-only row, without a duplicate.
-    incomplete={r[2] for r in before[1:] if len(r)>50 and paypal.provisional_identity(list(r)+['']*max(0,64-len(r)))}
+    incomplete={r[2] for r in before[1:] if len(r)>49 and paypal.provisional_identity(list(r)+['']*max(0,63-len(r)))}
     query,start,end=lookback();stats={'range':f'{start:%Y-%m-%d %H:%M:%S %Z} through {end:%Y-%m-%d %H:%M:%S %Z}'}
     print(f"Email lookback (45 days): {stats['range']}",flush=True)
     primary=prepare(gmail,existing-incomplete,stats=stats,query=query)
@@ -229,11 +229,11 @@ def process(dry_run=False, report=None):
             requests.append({'updateCells':{'start':{'sheetId':prop['sheetId'],'rowIndex':index,'columnIndex':column},'rows':[{'values':[{'userEnteredValue':{'numberValue':value} if isinstance(value,(int,float)) else {'stringValue':str(value)}}]}],'fields':'userEnteredValue'}})
         report({'status':'write_attempted','orders':[]})
         sheets.spreadsheets().batchUpdate(spreadsheetId=book,body={'requests':requests}).execute(num_retries=0)
-        after=read(f"'DOWNLOAD orders'!A1:BL{max(prop['gridProperties']['rowCount'],last+len(new))}")
+        after=read(f"'DOWNLOAD orders'!A1:BK{max(prop['gridProperties']['rowCount'],last+len(new))}")
         for index in range(len(planned)):
-            actual=(after[index] if index<len(after) else [])+['']*64
+            actual=(after[index] if index<len(after) else [])+['']*63
             expected=planned[index]
-            for column in range(2 if index in new else 0,64):
+            for column in range(2 if index in new else 0,63):
                 assert actual[column]==expected[column],(index+1,column+1)
             if index in new:assert all(str(actual[c]).startswith('=') for c in (0,1))
         verified=entered()

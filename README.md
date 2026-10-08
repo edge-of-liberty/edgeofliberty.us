@@ -409,7 +409,7 @@ Routine order processing scans the same 45-day window for both original GoDaddy
 new-order notifications and original PayPal payment notifications. Exact R-number
 (invoice ID) and product matches join the sources on the same DOWNLOAD orders row;
 a later email enriches that row rather than creating another order. Multi-item
-orders retain one row per product. PayPal evidence lives in AY:BL, including payer
+orders retain one row per product. PayPal evidence lives in AX:BK, including payer
 identity, payment/item details, source link, and comparison notes.
 
 Either source can create a row using verified details. PayPal-only rows use the PayPal payer email as a provisional identity email,
