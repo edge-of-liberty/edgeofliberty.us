@@ -73,7 +73,7 @@ class CombinedTests(unittest.TestCase):
     def test_paypal_first_then_godaddy_fills_same_row(self):
         s=MemorySheets();p=payment()
         receipt=self.run_import(s,[],{'R123':p})
-        self.assertEqual(s.rows[2][3],'')
+        self.assertEqual(s.rows[2][3],'payer@example.invalid')
         self.assertEqual(s.rows[2][41],'261018')
         self.assertTrue(any('identity missing' in w for w in receipt[-1]['warnings']))
         self.run_import(s,[godaddy()],{'R123':p})
@@ -82,6 +82,30 @@ class CombinedTests(unittest.TestCase):
         self.assertEqual(s.rows[2][27],'Example')
         self.assertEqual(s.rows[2][4],imp.sheets_date(godaddy()[2]))
         self.assertNotIn('PayPal-only',s.rows[2][63])
+    def test_same_email_godaddy_arrival_clears_provisional_without_duplicate(self):
+        s=MemorySheets();p=payment()
+        self.run_import(s,[],{'R123':p})
+        r=godaddy();r[1]=p['email']
+        self.run_import(s,[r],{'R123':p})
+        self.assertEqual(len(s.rows),3)
+        self.assertEqual(s.rows[2][3],p['email'])
+        self.assertNotIn('PayPal-only',s.rows[2][63])
+        calls=s.calls
+        self.run_import(s,[r],{'R123':p})
+        self.assertEqual(s.calls,calls)
+    def test_delayed_godaddy_completes_even_without_paypal_in_scan(self):
+        s=MemorySheets();self.run_import(s,[],{'R123':payment()})
+        self.run_import(s,[godaddy()],{})
+        self.assertEqual(s.rows[2][3],'a@example.invalid')
+        self.assertNotIn('PayPal-only',s.rows[2][63])
+        self.assertEqual(len(s.rows),3)
+    def test_repeated_paypal_only_scan_keeps_provisional_identity(self):
+        s=MemorySheets();p=payment()
+        self.run_import(s,[],{'R123':p});calls=s.calls
+        receipt=self.run_import(s,[],{'R123':p})
+        self.assertEqual(s.calls,calls)
+        self.assertEqual(s.rows[2][3],p['email'])
+        self.assertTrue(any('identity missing' in w for w in receipt[-1]['warnings']))
     def test_godaddy_first_then_paypal_enriches(self):
         s=MemorySheets()
         self.run_import(s,[godaddy()],{})

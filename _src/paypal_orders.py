@@ -75,9 +75,13 @@ def fetch(gmail, query):
     return payments
 
 
+def provisional_identity(row):
+    return bool('PayPal-only;' in str(row[63]) or (row[50] and not row[3]))
+
+
 def values(payment, item, row):
     notes=[]
-    if not row[3]:notes.append('PayPal-only; reservation identity unavailable')
+    if provisional_identity(row):notes.append('PayPal-only; reservation identity unavailable')
     elif str(row[3]).casefold()!=payment['email'].casefold():notes.append('Payer email differs from reservation email')
     customer=row[27] or row[19]
     if customer and ' '.join(str(customer).split()).casefold()!=' '.join(payment['name'].split()).casefold():

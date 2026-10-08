@@ -129,12 +129,18 @@ def merged_plan(before, primary, payments):
                 if len(candidates)!=1:raise RuntimeError('Ambiguous GoDaddy line join for '+oid)
                 index=candidates[0]
             else:index=append(oid)
+            provisional=paypal.provisional_identity(rows[index])
             provisional_date=None
-            if rows[index][50] and not rows[index][3] and rows[index][52]:
+            if provisional and rows[index][52]:
                 provisional_date=sheets_date(datetime.strptime(rows[index][52],'%b %d, %Y').date().isoformat())
             source={3:r[1],4:sheets_date(r[2]),6:r[3],26:r[5],27:r[4],38:r[13],40:r[6],41:r[7],44:r[8]}
             for col,value in source.items():
-                if rows[index][col]=='' or (col==4 and provisional_date is not None and rows[index][col]==provisional_date):put(index,col,value)
+                if rows[index][col]=='' or (col==3 and provisional) or (col==4 and provisional_date is not None and rows[index][col]==provisional_date):put(index,col,value)
+            if provisional:
+                notes=[note for note in str(rows[index][63]).split('; ') if note and not note.startswith('PayPal-only')]
+                if str(rows[index][50]).casefold()!=str(rows[index][3]).casefold() and 'Payer email differs from reservation email' not in notes:
+                    notes.append('Payer email differs from reservation email')
+                put(index,63,'; '.join(notes))
     for oid,payment in payments.items():
         if oid in grouped and oid not in {row[2] for row in before[1:] if len(row)>2}:
             source=grouped[oid]
@@ -148,7 +154,7 @@ def merged_plan(before, primary, payments):
         if not existing:
             for item in payment['items']:
                 index=append(oid)
-                for col,value in {4:sheets_date(payment['order_date']),6:'Paid',40:item['title'],41:item['sku'],44:item['qty']}.items():put(index,col,value)
+                for col,value in {3:payment['email'],4:sheets_date(payment['order_date']),6:'Paid',40:item['title'],41:item['sku'],44:item['qty'],63:'PayPal-only; reservation identity unavailable'}.items():put(index,col,value)
             existing=[i for i,row in enumerate(rows[1:],1) if row[2]==oid]
         if len(existing)!=len(payment['items']):raise RuntimeError('PayPal line count conflicts for '+oid)
         used=set()
@@ -163,9 +169,11 @@ def merged_plan(before, primary, payments):
             existing_transaction=rows[index][53]
             if existing_transaction and existing_transaction!=payment['transaction']:
                 raise RuntimeError('Different PayPal transaction already recorded for '+oid)
+            if paypal.provisional_identity(rows[index]) and not rows[index][3]:
+                put(index,3,payment['email'])
             supplemental=paypal.values(payment,item,rows[index])
             for col,value in enumerate(supplemental,50):put(index,col,value)
-            if not rows[index][3]:warnings.append(f'⚠ Order {oid}: PayPal received; GoDaddy reservation identity missing — manual vendor review required')
+            if paypal.provisional_identity(rows[index]):warnings.append(f'⚠ Order {oid}: PayPal received; GoDaddy reservation identity missing — manual vendor review required')
     return rows,updates,new,list(dict.fromkeys(warnings))
 
 
@@ -188,7 +196,7 @@ def process(dry_run=False, report=None):
     if not before or before[0][50:64]!=paypal.HEADERS:raise RuntimeError('PayPal headers AY:BL differ; manual review required')
     existing={r[2] for r in before[1:] if len(r)>2 and r[2]}
     # A delayed GoDaddy email can complete an earlier PayPal-only row, without a duplicate.
-    incomplete={r[2] for r in before[1:] if len(r)>50 and r[50] and not r[3]}
+    incomplete={r[2] for r in before[1:] if len(r)>50 and paypal.provisional_identity(list(r)+['']*max(0,64-len(r)))}
     query,start,end=lookback();stats={'range':f'{start:%Y-%m-%d %H:%M:%S %Z} through {end:%Y-%m-%d %H:%M:%S %Z}'}
     print(f"Email lookback (45 days): {stats['range']}",flush=True)
     primary=prepare(gmail,existing-incomplete,stats=stats,query=query)
