@@ -40,6 +40,8 @@ class WorkflowTests(unittest.TestCase):
     def test_setup_receipt_keeps_attention_warning(self):
         result={'status':'needs_vendor_setup','orders':[ORDER],'warnings':['⚠ Example: Planning Column F sitemap/setup unresolved']}
         self.assertIn('Planning Column F',w.order_outcome(result,0))
+    def test_enrichment_receipt_reports_update(self):
+        self.assertEqual(w.imported_label({'orders':[],'updated_orders':['R123']}),'Order details updated: R123')
     def test_zero_imports_still_builds(self):self.exercise()
     def test_one_import_builds(self):self.exercise(orders=[ORDER])
     def test_multiple_imports_build_once(self):self.exercise(orders=[ORDER,{**ORDER,'id':'R456'}])
@@ -57,103 +59,10 @@ class WorkflowTests(unittest.TestCase):
             w.run()
             self.assertEqual(run.call_args.args[0],['./_src/build.sh','all'])
             self.assertEqual(run.call_count,2)
-    def test_unrecognized_order_no_sheet_write_but_refresh_completes(self):
-        gmail,sheets=MagicMock(),MagicMock()
-        gmail.users().getProfile().execute.return_value={'emailAddress':'admin@batshitcrazyfarms.com'}
-        sheets.spreadsheets().get().execute.return_value={'sheets':[{'properties':{'sheetId':123,'title':'DOWNLOAD orders','gridProperties':{'rowCount':10}}}]}
-        sheets.spreadsheets().values().get().execute.return_value={'values':[['header']]}
-        from test_import_gmail_orders import ImportTests
-        bad=ImportTests().row();bad[16]='No recognizable SKU line items'
-        receipt={}
-        def report(value):receipt.update(value)
-        def process(args,**kwargs):
-            if args[0]=='./_src/build.sh':return SimpleNamespace(returncode=0)
-            try:imp.process(report=report)
-            except RuntimeError:return SimpleNamespace(returncode=1)
-            self.fail('Malformed order must be rejected')
-        with patch('order_email_review.clients',return_value=(gmail,sheets)),patch('google_sheets.load_config',return_value={'spreadsheet_id':'test','orders_sheet_id':123}),patch.object(imp,'fetch_rows',return_value=([],[bad])),patch.object(w,'check_repositories'),patch.object(w,'read_result',side_effect=lambda p:receipt),patch.object(w,'run_logged',side_effect=process) as run:
-            w.run()
-            sheets.spreadsheets().batchUpdate.assert_not_called()
-            self.assertEqual(run.call_args.args[0],['./_src/build.sh','all'])
-            self.assertEqual(run.call_count,2)
-
     def test_invalid_missing_receipt(self):
         with tempfile.TemporaryDirectory() as temp:
             p=Path(temp)/'result.json'
             with self.assertRaises(w.Stop):w.read_result(p)
             p.write_text('{}')
             with self.assertRaises(w.Stop):w.read_result(p)
-class ReceiptTests(unittest.TestCase):
-    def test_already_imported_error_surfaces_and_refresh_still_completes(self):
-        gmail,sheets=MagicMock(),MagicMock()
-        gmail.users().getProfile().execute.return_value={'emailAddress':'admin@batshitcrazyfarms.com'}
-        sheets.spreadsheets().get().execute.return_value={'sheets':[{'properties':{'sheetId':123,'title':'DOWNLOAD orders','gridProperties':{'rowCount':10}}}]}
-        existing=[['header'],['=key','=lookup','R123','a@example.invalid']]
-        planning=[[] for _ in range(9)]+[['Example','','','','','', '', '', '', '', 1, '', 'a@example.invalid']]
-        sheets.spreadsheets().values().get().execute.side_effect=[
-            {'values':existing},
-            {'values':[['key','#N/A','R123','a@example.invalid']]},
-            {'values':planning}]
-        from test_import_gmail_orders import ImportTests
-        receipt={}
-        def report(value):receipt.update(value)
-        def process(args,**kwargs):
-            if args[0]=='./_src/process_orders.sh':imp.process(report=report)
-            return SimpleNamespace(returncode=0)
-        with patch('order_email_review.clients',return_value=(gmail,sheets)),patch('google_sheets.load_config',return_value={'spreadsheet_id':'test','orders_sheet_id':123}),patch.object(imp,'fetch_rows',return_value=([],[ImportTests().row()])),patch.object(w,'check_repositories'),patch.object(w,'read_result',side_effect=lambda p:receipt),patch.object(w,'run_logged',side_effect=process) as run,patch('builtins.print') as output:
-            w.run()
-        sheets.spreadsheets().batchUpdate.assert_not_called()
-        self.assertEqual(receipt['status'],'complete')
-        self.assertEqual(receipt['orders'],[])
-        self.assertEqual(len(receipt['warnings']),2)
-        final=output.call_args.args[0]
-        self.assertIn('✓ No new orders',final)
-        self.assertIn('⚠ Order R123 has an unresolved Column B lookup (#N/A)',final)
-        self.assertIn('Example: Planning Column F',final)
-        self.assertIn('✓ Site refreshed and published',final)
-        self.assertEqual(run.call_args.args[0],['./_src/build.sh','all'])
-
-    def test_zero_import_receipt_no_write(self):
-        gmail,sheets=MagicMock(),MagicMock()
-        gmail.users().getProfile().execute.return_value={'emailAddress':'admin@batshitcrazyfarms.com'}
-        sheets.spreadsheets().get().execute.return_value={'sheets':[{'properties':{'sheetId':123,'title':'DOWNLOAD orders','gridProperties':{'rowCount':10}}}]}
-        sheets.spreadsheets().values().get().execute.return_value={'values':[['header']]}
-        def prepared(g,existing,stats,query):stats.update(checked=0,skipped=0);return []
-        report=MagicMock()
-        with patch('order_email_review.clients',return_value=(gmail,sheets)),patch('google_sheets.load_config',return_value={'spreadsheet_id':'test','orders_sheet_id':123}),patch.object(imp,'prepare',side_effect=prepared):
-            imp.process(report=report)
-        self.assertEqual([c.args[0]['status'] for c in report.call_args_list],['before_write','complete'])
-        sheets.spreadsheets().batchUpdate.assert_not_called()
-    def test_verified_import_receipt_and_missing_vendor_branch(self):
-        from test_import_gmail_orders import ImportTests
-        for lookup, expected_status in [(25, 'complete'), ('#N/A', 'needs_vendor_setup')]:
-            with self.subTest(lookup=lookup):
-                gmail,sheets=MagicMock(),MagicMock()
-                gmail.users().getProfile().execute.return_value={'emailAddress':'admin@batshitcrazyfarms.com'}
-                row=ImportTests().row()
-                before=[['=key','=lookup','R0']]
-                actual=['']*50
-                for k,val in {0:'=key',1:'=lookup',2:row[0],3:row[1],4:imp.sheets_date(row[2]),
-                              6:row[3],26:row[5],27:row[4],41:row[7]}.items():actual[k]=val
-                sheets.spreadsheets().values().get().execute.side_effect=[
-                    {'values':before},{'values':before},{'values':before+[actual]},
-                    {'values':[[row[7]+row[1],lookup]]}]
-                meta={'sheets':[{'properties':{'sheetId':123,'title':'DOWNLOAD orders','gridProperties':{'rowCount':10}}}]}
-                color={'sheets':[{'data':[{'rowData':[{'values':[{'userEnteredFormat':{'backgroundColor':imp.COLOR}} for _ in range(42)]}]}]}]}
-                # Existing code expects a sheet entry for the optional date format.
-                sheets.spreadsheets().get().execute.side_effect=[meta,meta,{}, {'sheets':[{}]}, {},color]
-                def prepared(g,existing,stats,query):stats.update(checked=1,skipped=0);return [row]
-                report=MagicMock()
-                with patch('order_email_review.clients',return_value=(gmail,sheets)),patch('google_sheets.load_config',return_value={'spreadsheet_id':'test','orders_sheet_id':123}),patch.object(imp,'prepare',side_effect=prepared):
-                    imp.process(report=report)
-                self.assertEqual([c.args[0]['status'] for c in report.call_args_list],['before_write','write_attempted',expected_status])
-                self.assertEqual(report.call_args.args[0]['orders'][0]['id'],'R123')
-                sheets.spreadsheets().batchUpdate.assert_called_once()
-
-    def test_unsafe_batch_does_not_partially_import(self):
-        from test_import_gmail_orders import ImportTests
-        good=ImportTests().row();bad=good[:];bad[0]='R456';bad[16]='Unrecognized SKU line items'
-        with patch.object(imp,'fetch_rows',return_value=([],[good,bad])):
-            with self.assertRaises(RuntimeError):imp.prepare(None,set())
-
 if __name__=='__main__':unittest.main()

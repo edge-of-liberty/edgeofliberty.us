@@ -1,9 +1,11 @@
 """Atomic, order-level Gmail import into DOWNLOAD orders; no website operations."""
 import collections
+from decimal import Decimal
 import re
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 from order_email_review import fetch_rows, QUERY
+import paypal_orders as paypal
 
 COLOR = {'red': 217/255, 'green': 234/255, 'blue': 247/255}
 
@@ -101,94 +103,152 @@ def read_attention(read, relevant):
     return messages
 
 
+def merged_plan(before, primary, payments):
+    """Exact invoice/line joins. Existing attendance/product edits remain authoritative."""
+    rows=[list(row)+['']*max(0,64-len(row)) for row in before]
+    last=max((i for i,row in enumerate(rows,1) if any(row[2:])),default=1)
+    updates={};new=[];warnings=[]
+    def put(index,column,value):
+        if rows[index][column]!=value:
+            rows[index][column]=value;updates[index,column]=value
+    def append(oid):
+        index=last+len(new)
+        while len(rows)<=index:rows.append(['']*64)
+        if any(rows[index]):raise RuntimeError('Append destination is not empty')
+        new.append(index);put(index,2,oid)
+        return index
+    grouped=collections.defaultdict(list)
+    for r in primary:grouped[r[0]].append(r)
+    for oid,items in grouped.items():
+        existing=[i for i,row in enumerate(rows[1:],1) if row[2]==oid]
+        if existing and len(existing)!=len(items):raise RuntimeError('Ambiguous existing line items for '+oid)
+        for r in items:
+            candidates=[i for i in existing if rows[i][41]==r[7]]
+            if len(existing)==1 and len(items)==1:candidates=existing
+            if existing:
+                if len(candidates)!=1:raise RuntimeError('Ambiguous GoDaddy line join for '+oid)
+                index=candidates[0]
+            else:index=append(oid)
+            provisional_date=None
+            if rows[index][50] and not rows[index][3] and rows[index][52]:
+                provisional_date=sheets_date(datetime.strptime(rows[index][52],'%b %d, %Y').date().isoformat())
+            source={3:r[1],4:sheets_date(r[2]),6:r[3],26:r[5],27:r[4],38:r[13],40:r[6],41:r[7],44:r[8]}
+            for col,value in source.items():
+                if rows[index][col]=='' or (col==4 and provisional_date is not None and rows[index][col]==provisional_date):put(index,col,value)
+    for oid,payment in payments.items():
+        if oid in grouped and oid not in {row[2] for row in before[1:] if len(row)>2}:
+            source=grouped[oid]
+            for item in payment['items']:
+                matching=[r for r in source if r[7]==item['sku']]
+                if len(matching)!=1 or any(matching[0][col] and Decimal(matching[0][col].replace(',',''))!=Decimal(item[key]) for col,key in [(9,'unit'),(10,'total')]):
+                    raise RuntimeError('GoDaddy/PayPal amounts or products conflict for '+oid)
+            if any(r[12] and Decimal(r[12].replace(',',''))!=Decimal(payment['total']) for r in source):
+                raise RuntimeError('GoDaddy/PayPal order total conflicts for '+oid)
+        existing=[i for i,row in enumerate(rows[1:],1) if row[2]==oid]
+        if not existing:
+            for item in payment['items']:
+                index=append(oid)
+                for col,value in {4:sheets_date(payment['order_date']),6:'Paid',40:item['title'],41:item['sku'],44:item['qty']}.items():put(index,col,value)
+            existing=[i for i,row in enumerate(rows[1:],1) if row[2]==oid]
+        if len(existing)!=len(payment['items']):raise RuntimeError('PayPal line count conflicts for '+oid)
+        used=set()
+        for item in payment['items']:
+            candidates=[i for i in existing if rows[i][41]==item['sku'] and i not in used]
+            if len(existing)==1 and len(payment['items'])==1:candidates=existing
+            if len(candidates)!=1:raise RuntimeError('Ambiguous PayPal line join for '+oid)
+            index=candidates[0];used.add(index)
+            # New two-source orders must agree on product/quantity. Older manual edits are retained.
+            if index in new and (rows[index][41]!=item['sku'] or str(rows[index][44])!=item['qty']):
+                raise RuntimeError('GoDaddy/PayPal products conflict for '+oid)
+            existing_transaction=rows[index][53]
+            if existing_transaction and existing_transaction!=payment['transaction']:
+                raise RuntimeError('Different PayPal transaction already recorded for '+oid)
+            supplemental=paypal.values(payment,item,rows[index])
+            for col,value in enumerate(supplemental,50):put(index,col,value)
+            if not rows[index][3]:warnings.append(f'⚠ Order {oid}: PayPal received; GoDaddy reservation identity missing — manual vendor review required')
+    return rows,updates,new,list(dict.fromkeys(warnings))
+
+
 def process(dry_run=False, report=None):
-    report = report or (lambda result: None)
-    report({"status": "before_write", "orders": []})
+    report=report or (lambda result:None)
+    report({'status':'before_write','orders':[]})
     from order_email_review import clients
     from google_sheets import load_config
-    config = load_config()
-    gmail, sheets = clients(config)
-    book = config['spreadsheet_id']
-    assert gmail.users().getProfile(userId='me').execute()['emailAddress'] == 'admin@batshitcrazyfarms.com'
+    config=load_config();gmail,sheets=clients(config);book=config['spreadsheet_id']
+    assert gmail.users().getProfile(userId='me').execute()['emailAddress']=='admin@batshitcrazyfarms.com'
     def properties():
-        tabs = sheets.spreadsheets().get(spreadsheetId=book, fields='sheets(properties)').execute(num_retries=2)['sheets']
+        tabs=sheets.spreadsheets().get(spreadsheetId=book,fields='sheets(properties)').execute(num_retries=2)['sheets']
         return next(t['properties'] for t in tabs if t['properties']['sheetId']==config['orders_sheet_id'])
-    def read(area, mode='FORMULA'):
+    def read(area,mode='FORMULA'):
         return sheets.spreadsheets().values().get(spreadsheetId=book,range=area,valueRenderOption=mode).execute(num_retries=2).get('values',[])
-    prop=properties()
-    assert prop['title']=='DOWNLOAD orders'
-    area=f"'DOWNLOAD orders'!A1:AX{prop['gridProperties']['rowCount']}"
+    prop=properties();assert prop['title']=='DOWNLOAD orders'
+    if prop['gridProperties']['columnCount']<64:raise RuntimeError('PayPal columns AY:BL are missing')
+    area=f"'DOWNLOAD orders'!A1:BL{prop['gridProperties']['rowCount']}"
     before=read(area)
-    existing={r[2].strip() for r in before[1:] if len(r)>2}
-    stats = {}
-    query, start, end = lookback()
-    stats["range"] = f"{start:%Y-%m-%d %H:%M:%S %Z} through {end:%Y-%m-%d %H:%M:%S %Z}"
-    print(f"Gmail lookback (45 days): {stats['range']}", flush=True)
-    rows = prepare(gmail, existing, stats=stats, query=query)
-    if dry_run or not rows:
-        print_summary(stats, rows, dry_run)
-        if dry_run:
-            for oid in dict.fromkeys(r[0] for r in rows):
-                items = [r for r in rows if r[0] == oid]
-                print(f"PENDING: {oid} — {items[0][2]} — {len(items)} line-item row(s)")
-        warnings = read_attention(read, stats.get("order_ids", []))
-        report({"status": "dry_run" if dry_run else "complete", "orders": [], "warnings": warnings})
-        return
-    # Recheck live data after Gmail retrieval and immediately before mutation.
-    prop=properties()
-    new_area=f"'DOWNLOAD orders'!A1:AX{prop['gridProperties']['rowCount']}"
-    current=read(new_area)
-    if current!=before:raise RuntimeError('Orders changed during preview; stopped.')
-    last=max(i for i,r in enumerate(current,1) if any(r[2:]))
-    if not all(str(x).startswith('=') for x in current[last-1][:2]) or len(current[last-1][:2])!=2:
-        raise RuntimeError('Last populated row does not contain both formulas.')
-    if any(any(r) for r in current[last:last+len(rows)]):
-        raise RuntimeError('Append destination is not empty.')
-    # Preserve all existing entered values/formulas/formats/notes/validation as evidence.
-    fields='sheets(data(rowData(values(userEnteredValue,userEnteredFormat,note,dataValidation))))'
-    def entered():
-        return sheets.spreadsheets().get(spreadsheetId=book,ranges=[f"'DOWNLOAD orders'!A1:AX{last}"],fields=fields).execute(num_retries=2)
-    original=entered()
-    formats=sheets.spreadsheets().get(spreadsheetId=book,ranges=[f"'DOWNLOAD orders'!E{last}"],fields='sheets(data(rowData(values(effectiveFormat.numberFormat))))').execute(num_retries=2)
-    cell=formats['sheets'][0].get('data',[{}])[0].get('rowData',[{}])[0].get('values',[{}])[0]
-    fmt=cell.get('effectiveFormat',{}).get('numberFormat',{})
-    pattern=fmt.get('pattern','yyyy-mm-dd') if fmt.get('type')=='DATE' else 'yyyy-mm-dd'
-    print(f'Appending {len(rows)} rows at {last+1}:{last+len(rows)}; copying A{last}:B{last}.',flush=True)
-    report({'status': 'write_attempted', 'orders': []})
-    sheets.spreadsheets().batchUpdate(spreadsheetId=book,body={'requests':requests_for(rows,prop['sheetId'],last,prop['gridProperties']['rowCount'],pattern)}).execute(num_retries=0)
-    if entered()!=original:raise RuntimeError('Existing-row verification differs; stop and inspect.')
-    after=read(f"'DOWNLOAD orders'!A1:AX{last+len(rows)}")
-    appended=after[last:]
-    effective=read(f"'DOWNLOAD orders'!A{last+1}:B{last+len(rows)}",'UNFORMATTED_VALUE')
-    for i,(actual,r) in enumerate(zip(appended,rows)):
-        actual=actual+['']*(50-len(actual))
-        expected={2:r[0],3:r[1],4:sheets_date(r[2]),5:'',6:r[3],26:r[5],27:r[4],41:r[7]}
-        assert all(actual[k]==v for k,v in expected.items())
-        assert all(str(actual[k]).startswith('=') for k in [0,1])
-        assert all(not actual[k] for k in range(2,50) if k not in expected)
-        assert effective[i][0]==r[7].split('-')[0]+r[1]
-        assert len(effective[i])==2
-        # A preserved lookup may legitimately report an unmatched vendor.
-        # Report this below; never rewrite Planning or retry an already-written order.
-    expected_counts = collections.Counter(r[0] for r in rows)
-    count=collections.Counter(r[2] for r in after[1:] if len(r)>2 and r[2] in expected_counts)
-    assert len(appended)==len(rows) and count==expected_counts
-    color_data=sheets.spreadsheets().get(spreadsheetId=book,ranges=[f"'DOWNLOAD orders'!A{last+1}:AP{last+len(rows)}"],fields='sheets(data(rowData(values(userEnteredFormat.backgroundColor))))').execute(num_retries=2)
-    for row in color_data['sheets'][0]['data'][0]['rowData']:
-        assert len(row['values'])==42
-        for cell in row['values']:
-            assert all(abs(cell['userEnteredFormat']['backgroundColor'][k]-v)<.001 for k,v in COLOR.items())
-    print_summary(stats, rows)
-    warnings = missing_vendor_messages(rows, effective)
-    for warning in warnings:
-        print(warning)
-    missing = {r[0] for r, value in zip(rows, effective) if len(value)>1 and value[1]=='#N/A'}
-    attention = read_attention(read, stats.get('order_ids', []))
-    report({'status': 'needs_vendor_setup' if warnings else 'complete',
-            'warnings': attention,
-            'orders': [{'id': oid, 'skus': list(dict.fromkeys(r[7] for r in rows if r[0]==oid)),
-                        'needs_vendor_setup': oid in missing}
-                       for oid in dict.fromkeys(r[0] for r in rows)]})
+    if not before or before[0][50:64]!=paypal.HEADERS:raise RuntimeError('PayPal headers AY:BL differ; manual review required')
+    existing={r[2] for r in before[1:] if len(r)>2 and r[2]}
+    # A delayed GoDaddy email can complete an earlier PayPal-only row, without a duplicate.
+    incomplete={r[2] for r in before[1:] if len(r)>50 and r[50] and not r[3]}
+    query,start,end=lookback();stats={'range':f'{start:%Y-%m-%d %H:%M:%S %Z} through {end:%Y-%m-%d %H:%M:%S %Z}'}
+    print(f"Email lookback (45 days): {stats['range']}",flush=True)
+    primary=prepare(gmail,existing-incomplete,stats=stats,query=query)
+    payments=paypal.fetch(gmail,query.replace(QUERY,'subject:"Notification of payment received"'))
+    relevant=set(stats.get('order_ids',[]))|set(payments)
+    planned,updates,new,warnings=merged_plan(before,primary,payments)
+    last=max((i for i,r in enumerate(before,1) if any(r[2:])),default=1)
+    new_ids=list(dict.fromkeys(planned[i][2] for i in new))
+    if dry_run:
+        print(f'Would append {len(new)} rows and annotate {len({i for i,c in updates}-set(new))} existing rows')
+        report({'status':'dry_run','orders':[],'warnings':warnings});return
+    if updates:
+        if properties()!=prop or read(area)!=before:raise RuntimeError('Orders changed during preview; no write attempted')
+        fields='sheets(data(startRow,startColumn,rowData(values(userEnteredValue,userEnteredFormat,note,dataValidation))))'
+        def entered():return sheets.spreadsheets().get(spreadsheetId=book,ranges=[area],fields=fields).execute(num_retries=2)
+        original=entered()
+        requests=[]
+        if last+len(new)>prop['gridProperties']['rowCount']:
+            requests.append({'appendDimension':{'sheetId':prop['sheetId'],'dimension':'ROWS','length':last+len(new)-prop['gridProperties']['rowCount']}})
+        if new:
+            if len(before[last-1])<2 or not all(str(v).startswith('=') for v in before[last-1][:2]):raise RuntimeError('Last row formulas missing')
+            requests.append({'copyPaste':{'source':{'sheetId':prop['sheetId'],'startRowIndex':last-1,'endRowIndex':last,'startColumnIndex':0,'endColumnIndex':2},'destination':{'sheetId':prop['sheetId'],'startRowIndex':last,'endRowIndex':last+len(new),'startColumnIndex':0,'endColumnIndex':2},'pasteType':'PASTE_FORMULA','pasteOrientation':'NORMAL'}})
+            formats=sheets.spreadsheets().get(spreadsheetId=book,ranges=[f"'DOWNLOAD orders'!E{last}"],fields='sheets(data(rowData(values(effectiveFormat.numberFormat))))').execute(num_retries=2)
+            cell=formats['sheets'][0].get('data',[{}])[0].get('rowData',[{}])[0].get('values',[{}])[0]
+            fmt=cell.get('effectiveFormat',{}).get('numberFormat',{})
+            pattern=fmt.get('pattern','yyyy-mm-dd') if fmt.get('type')=='DATE' else 'yyyy-mm-dd'
+            requests.append({'repeatCell':{'range':{'sheetId':prop['sheetId'],'startRowIndex':last,'endRowIndex':last+len(new),'startColumnIndex':4,'endColumnIndex':5},'cell':{'userEnteredFormat':{'numberFormat':{'type':'DATE','pattern':pattern}}},'fields':'userEnteredFormat.numberFormat'}})
+            requests.append({'repeatCell':{'range':{'sheetId':prop['sheetId'],'startRowIndex':last,'endRowIndex':last+len(new),'startColumnIndex':0,'endColumnIndex':42},'cell':{'userEnteredFormat':{'backgroundColor':COLOR}},'fields':'userEnteredFormat.backgroundColor'}})
+        for (index,column),value in sorted(updates.items()):
+            requests.append({'updateCells':{'start':{'sheetId':prop['sheetId'],'rowIndex':index,'columnIndex':column},'rows':[{'values':[{'userEnteredValue':{'numberValue':value} if isinstance(value,(int,float)) else {'stringValue':str(value)}}]}],'fields':'userEnteredValue'}})
+        report({'status':'write_attempted','orders':[]})
+        sheets.spreadsheets().batchUpdate(spreadsheetId=book,body={'requests':requests}).execute(num_retries=0)
+        after=read(f"'DOWNLOAD orders'!A1:BL{max(prop['gridProperties']['rowCount'],last+len(new))}")
+        for index in range(len(planned)):
+            actual=(after[index] if index<len(after) else [])+['']*64
+            expected=planned[index]
+            for column in range(2 if index in new else 0,64):
+                assert actual[column]==expected[column],(index+1,column+1)
+            if index in new:assert all(str(actual[c]).startswith('=') for c in (0,1))
+        verified=entered()
+        def native_cells(data):
+            cells={}
+            for tab in data.get('sheets',[]):
+                for block in tab.get('data',[]):
+                    for i,row in enumerate(block.get('rowData',[]),block.get('startRow',0)):
+                        for col,cell in enumerate(row.get('values',[]),block.get('startColumn',0)):
+                            cell=dict(cell)
+                            if (i,col) in updates:cell.pop('userEnteredValue',None)
+                            if cell:cells[i,col]=cell
+            return cells
+        # Appended-row formatting is intentional; all earlier cell metadata is preserved.
+        old={key:value for key,value in native_cells(original).items() if key[0] not in new}
+        now={key:value for key,value in native_cells(verified).items() if key[0] not in new}
+        assert old==now,'Existing cell formatting/formulas changed; manual review required'
+    else:after=before
+    warnings+=read_attention(read,relevant)
+    warnings=list(dict.fromkeys(warnings))
+    for warning in warnings:print(warning)
+    print(f'Checked {len(relevant)} orders across GoDaddy/PayPal. Imported {len(new_ids)} orders / {len(new)} rows; enriched {len({i for i,c in updates}-set(new))} existing rows.')
+    report({'status':'complete','warnings':warnings,'updated_orders':list(dict.fromkeys(planned[i][2] for i in sorted({i for i,c in updates}-set(new)))), 'orders':[{'id':oid,'skus':list(dict.fromkeys(planned[i][41] for i in new if planned[i][2]==oid)),'needs_vendor_setup':False} for oid in new_ids]})
 
 
 def print_summary(stats, rows, dry_run=False):

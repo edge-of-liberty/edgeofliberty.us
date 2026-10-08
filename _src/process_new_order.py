@@ -8,6 +8,9 @@ from vendor_absent import ROOT, Stop, check_repositories, run_logged
 
 def imported_label(result):
     ids = [o['id'] for o in result['orders']]
+    updated=result.get('updated_orders',[])
+    if not ids and updated:
+        return 'Order details updated: ' + ', '.join(updated)
     return ('No new orders' if not ids else
             ('Order ' + ids[0] + ' processed' if len(ids)==1 else 'Orders ' + ', '.join(ids) + ' processed'))
 
@@ -21,6 +24,8 @@ def read_result(path):
         if not isinstance(orders,list):raise ValueError()
         for order in orders:
             if not re.fullmatch(r'R\d+',order['id']) or not isinstance(order['skus'],list):raise ValueError()
+        if not all(isinstance(v,str) and re.fullmatch(r'R\d+',v) for v in result.get('updated_orders',[])):
+            raise ValueError()
         warnings = result.get('warnings', [])
         if not isinstance(warnings, list) or not all(isinstance(v, str) for v in warnings):
             raise ValueError()

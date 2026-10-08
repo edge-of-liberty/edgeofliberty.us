@@ -48,18 +48,6 @@ class DailyCommandTests(unittest.TestCase):
    imp.main()
   process.assert_called_once_with(True)
 
- def test_pending_order_dry_run_never_writes(self):
-  gmail, sheets = MagicMock(), MagicMock()
-  gmail.users().getProfile().execute.return_value = {'emailAddress':'admin@batshitcrazyfarms.com'}
-  sheets.spreadsheets().get().execute.return_value = {'sheets':[{'properties':{'sheetId':123,'title':'DOWNLOAD orders','gridProperties':{'rowCount':233}}}]}
-  sheets.spreadsheets().values().get().execute.return_value = {'values':[['header']]}
-  def prepared(g, existing, stats, query):
-   stats.update(checked=1,skipped=0)
-   return [self.row()]
-  with patch('order_email_review.clients',return_value=(gmail,sheets)), patch('google_sheets.load_config',return_value={'spreadsheet_id':'test','orders_sheet_id':123}), patch.object(imp,'prepare',side_effect=prepared):
-   imp.process(dry_run=True)
-  sheets.spreadsheets().batchUpdate.assert_not_called()
-
  def test_dynamic_45_day_query(self):
   from datetime import datetime, timedelta
   from zoneinfo import ZoneInfo

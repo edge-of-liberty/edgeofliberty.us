@@ -402,3 +402,21 @@ not changes to the website generators.
 Credentials/tokens, `_local/`, and `.venv-sheets/` are excluded from Git and the
 website staging policy. The existing tracked CSVs remain untouched in this phase;
 their historical presence in Git is not changed by adding ignore patterns.
+
+### GoDaddy and PayPal order evidence
+
+Routine order processing scans the same 45-day window for both original GoDaddy
+new-order notifications and original PayPal payment notifications. Exact R-number
+(invoice ID) and product matches join the sources on the same DOWNLOAD orders row;
+a later email enriches that row rather than creating another order. Multi-item
+orders retain one row per product. PayPal evidence lives in AY:BL, including payer
+identity, payment/item details, source link, and comparison notes.
+
+Either source can create a row using verified details. PayPal-only rows leave the
+reservation email/name/phone blank and warn that reservation identity needs review;
+the payer is not assumed to be the vendor. A later GoDaddy email fills those missing
+reservation fields and replaces an unchanged provisional PayPal payment date with
+the GoDaddy order date. Existing fulfillment, payment status, and manual product changes
+are preserved. Unknown products, conflicting transactions, or ambiguous joins need
+manual review; uncertain writes are never retried. Order issues still do not skip
+the normal site refresh.
