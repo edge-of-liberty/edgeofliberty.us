@@ -133,7 +133,7 @@ def merged_plan(before, primary, payments):
             provisional_date=None
             if provisional and rows[index][51]:
                 provisional_date=sheets_date(datetime.strptime(rows[index][51],'%b %d, %Y').date().isoformat())
-            source={3:r[1],4:sheets_date(r[2]),6:r[3],26:r[5],27:r[4],38:r[13],40:r[6],41:r[7],44:r[8]}
+            source={3:r[1],4:sheets_date(r[2]),6:r[3],26:r[5],27:r[4],48:r[13],40:r[6],41:r[7],44:r[8]}
             for col,value in source.items():
                 if rows[index][col]=='' or (col==3 and provisional) or (col==4 and provisional_date is not None and rows[index][col]==provisional_date):put(index,col,value)
             if provisional:

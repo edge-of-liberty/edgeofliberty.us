@@ -59,6 +59,11 @@ class CombinedTests(unittest.TestCase):
         with patch('order_email_review.clients',return_value=(gmail,sheet.api)),patch('google_sheets.load_config',return_value={'spreadsheet_id':'test','orders_sheet_id':123}),patch.object(imp,'fetch_rows',return_value=([],primary)),patch.object(paypal,'fetch',return_value=payments),patch('builtins.print'):
             imp.process(dry,report=receipt.append)
         return receipt
+    def test_godaddy_instructions_use_aw(self):
+        s=MemorySheets()
+        self.run_import(s,[godaddy()],{})
+        self.assertEqual(s.rows[2][48],'Business')
+        self.assertEqual(s.rows[2][38],'')
     def test_shifted_paypal_mapping_preserves_instructions(self):
         s=MemorySheets()
         self.run_import(s,[godaddy()],{})
