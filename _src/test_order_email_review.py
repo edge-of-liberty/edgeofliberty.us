@@ -44,6 +44,20 @@ class ReviewTests(unittest.TestCase):
         self.assertEqual(rows[0][16], '')
         self.assertEqual(rows[0][17], 'abc')
 
+    def test_order_date_formats_normalize_without_changing_identity(self):
+        for value in ['2026-10-17', '10-17-2026']:
+            with self.subTest(value=value):
+                rows = review.parse_message('abc', '1000', raw(BODY.replace('2026-09-18', value)))
+                self.assertTrue(all(r[2] == '2026-10-17' and r[16] == '' for r in rows))
+                self.assertEqual(rows[0][1], 'customer@example.invalid')
+
+    def test_invalid_order_dates_remain_blocked(self):
+        for value in ['02-30-2026', '2026-02-30', '17-10-2026', '10/17/2026', '']:
+            with self.subTest(value=value):
+                rows = review.parse_message('abc', '1000', raw(BODY.replace('2026-09-18', value)))
+                self.assertEqual(rows[0][2], '')
+                self.assertIn('order date', rows[0][16])
+
     def test_paid_and_mismatch(self):
         rows = review.parse_message('abc', '1000', raw(BODY.replace('Pay by Cash', 'Card').replace('$9.00', '$8.00')))
         self.assertEqual(rows[0][3], 'Paid')

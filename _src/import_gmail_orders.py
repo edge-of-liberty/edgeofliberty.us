@@ -35,7 +35,7 @@ def prepare(gmail, existing, allowed=None, stats=None, query=QUERY):
             raise RuntimeError('Conflicting notifications for ' + oid)
         for r in variants[0]:
             if r[16] or not re.fullmatch(r'R\d+', r[0]) or not all(r[i] for i in [1,2,4,7,8]):
-                raise RuntimeError('Incomplete/ambiguous order ' + oid)
+                raise RuntimeError('Incomplete/ambiguous order ' + oid + ': ' + (r[16] or 'Missing required fields or invalid order ID'))
             sheets_date(r[2])  # Validate before any write.
             result.append(r)
     return sorted(result, key=lambda r:(r[2],r[0]))

@@ -7,6 +7,19 @@ class ImportTests(unittest.TestCase):
   r=['']*24
   for i,v in {0:'R123',1:'a@example.invalid',2:'2026-09-11',3:'Paid',4:'Example',5:'+15555555555',7:sku,8:'1',17:message}.items():r[i]=v
   return r
+ def test_us_order_date_passes_import_validation(self):
+  from test_order_email_review import BODY, raw
+  from order_email_review import parse_message
+  rows=parse_message('m','1000',raw(BODY.replace('2026-09-18','10-17-2026')))
+  with patch.object(imp,'fetch_rows',return_value=([],rows)):
+   prepared=imp.prepare(None,set())
+  self.assertEqual(len(prepared),2)
+  self.assertEqual(prepared[0][2],'2026-10-17')
+ def test_parser_reason_in_import_error(self):
+  r=self.row();r[16]='Invalid order date'
+  with patch.object(imp,'fetch_rows',return_value=([],[r])):
+   with self.assertRaisesRegex(RuntimeError,'R123: Invalid order date'):
+    imp.prepare(None,set())
  def test_order_dedupe_keeps_multi_item(self):
   rows=[self.row(),self.row('261018'),self.row('261101')]
   with patch.object(imp,'fetch_rows',return_value=([],rows)):

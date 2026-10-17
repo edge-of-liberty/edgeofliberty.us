@@ -64,7 +64,18 @@ def parse_message(message_id, internal_date, raw):
         notes.append('MIME/body decode failed; inspect original Gmail message')
     subject = str(message.get('Subject', ''))
     order = match(r'Order:\s*(\w+)', text) or match(r'New Order\s*#([\w-]+)', subject, re.I)
-    date = match(r'Date:\s*(\d{4}-\d{2}-\d{2})', text)
+    source_date = match(r'^Date:[ \t]*\n?([^\n]*)', text, re.M)
+    date = ''
+    for pattern, fmt in [(r'\d{4}-\d{2}-\d{2}', '%Y-%m-%d'),
+                         (r'\d{2}-\d{2}-\d{4}', '%m-%d-%Y')]:
+        if re.fullmatch(pattern, source_date):
+            try:
+                date = datetime.strptime(source_date, fmt).date().isoformat()
+            except ValueError:
+                pass
+            break
+    if source_date and not date:
+        notes.append('Invalid order date (expected YYYY-MM-DD or MM-DD-YYYY)')
     customer = match(r'New order from:\s*([^\n]+)', text, re.I)
     contact = text.split('VIEW ORDER')[0]
     email = match(r'([\w.+-]+@[\w.-]+\.[A-Za-z]{2,})', contact)
