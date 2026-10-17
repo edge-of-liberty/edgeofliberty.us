@@ -172,7 +172,7 @@ home_vendors_path = os.path.join(includes_dir, "home_vendors.html")
 
 with open(home_vendors_path, "w", encoding="utf-8") as hf:
     hf.write("<h2>Look Who’s Attending</h2>\n")
-    hf.write("<p>Here’s who you’ll find at our upcoming craft fairs:</p>\n")
+    hf.write("<p>Our 2026 craft fair vendors:</p>\n")
     hf.write('<div class="home-vendor-list">\n')
     for v in sorted_vendors:
         name = v["name"]
