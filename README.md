@@ -74,6 +74,8 @@ the existing untracked `BCF.code-workspace` is ignored and must remain untouched
 Resolve blockers without stashing, reverting, pulling, or publishing unrelated work.
 Do not change the year gate or any vendor's year value to bypass an exclusion.
 
+**If the target attendance cell resolves to Unpaid, clear its formula/value instead of marking Absent.** Audit the original formula/value and displayed status, verify the blank readback, and retain the cleared cell if publication fails. This removes the vendor from that date’s roster and links. Other statuses still become literal Absent. Do not change other cells or the year eligibility rule.
+
 **The target attendance formula is intentionally replaced.** Read and record its
 underlying value/formula, then write literal `Absent` to that one vendor/date cell.
 A formula displaying Absent is not already a literal override. An existing literal

@@ -53,6 +53,28 @@ class OverrideTests(unittest.TestCase):
             'endRowIndex':10,'startColumnIndex':3,'endColumnIndex':4},'rows':[{'values':[
             {'userEnteredValue':{'stringValue':'Absent'}}]}],'fields':'userEnteredValue'}}]})
         self.assertEqual(audit.call_args_list[0].args[0]['before'],before)
+    def test_unpaid_formula_or_literal_cleared_even_if_year_becomes_zero(self):
+        for before in [{'formulaValue':'=LOOKUP(order)'}, {'stringValue':'Unpaid'}]:
+            data=rows(); data[9][3]='Unpaid'
+            after=rows(); after[9][3]=''; after[9][1]='0'
+            api=MagicMock(); audit=MagicMock()
+            with patch.object(v,'snapshot',side_effect=[data,data,after]), patch.object(v,'entered',side_effect=[before,before,{}]):
+                target=v.override(api,CONFIG,'Bright Beads','Oct 4',audit)
+            request=api.spreadsheets().batchUpdate.call_args.kwargs['body']['requests'][0]['updateCells']
+            self.assertEqual(request['rows'],[{'values':[{'userEnteredValue':{}}]}])
+            self.assertEqual(request['fields'],'userEnteredValue')
+            self.assertEqual(request['range']['endColumnIndex']-request['range']['startColumnIndex'],1)
+            self.assertTrue(target['cleared_unpaid'])
+            self.assertEqual(audit.call_args_list[-1].args[0]['after'],{})
+
+    def test_resolved_status_change_prevents_write(self):
+        initial=rows(); initial[9][3]='Unpaid'
+        api=MagicMock()
+        with patch.object(v,'snapshot',side_effect=[initial,rows()]), patch.object(v,'entered',return_value={'formulaValue':'=LOOKUP(order)'}):
+            with self.assertRaisesRegex(v.Stop,'changed'):
+                v.override(api,CONFIG,'Bright Beads','Oct 4',MagicMock())
+        api.spreadsheets().batchUpdate.assert_not_called()
+
     def test_other_literal_status_replaced(self):self.perform({'stringValue':'Paid'})
     def test_formula_displaying_absent_still_replaced(self):
         api,_,_=self.perform({'formulaValue':'="Absent"'})

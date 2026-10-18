@@ -50,7 +50,7 @@ def slugify(value):
     return re.sub(r'[^a-z0-9]+', '-', value.replace('&', '')).strip('-')
 
 
-def resolve(rows, vendor, requested, year):
+def resolve(rows, vendor, requested, year, *, require_eligible=True):
     if len(rows) < 9:
         raise Stop('Planning header row 9 is missing.')
     headers = rows[8]
@@ -74,7 +74,7 @@ def resolve(rows, vendor, requested, year):
                        if normalized(vendor) in normalized(cell(row, 'Company'))][:5]
         raise Stop('Which vendor? ' + (', '.join(suggestions) if suggestions else 'Use the exact Planning company name.'))
     i, row = matches[0]
-    if cell(row, str(year)) in ('', '0'):
+    if require_eligible and cell(row, str(year)) in ('', '0'):
         raise Stop(f'Vendor is excluded by the {year} publication gate; no cells changed.')
     name = cell(row, 'Company')
     slug = slugify(cell(row, 'slug') if 'slug' in headers and cell(row, 'slug') else name)
@@ -124,31 +124,38 @@ def entered(api, config, target):
 
 
 def override(api, config, vendor, day, audit):
-    target = resolve(snapshot(api, config), vendor, day, config['year'])
+    initial = snapshot(api, config)
+    target = resolve(initial, vendor, day, config['year'])
+    displayed = lambda rows: str(rows[target['row']][target['column']]).strip() if len(rows[target['row']]) > target['column'] else ''
+    status = displayed(initial)
+    desired = {} if status.casefold() == 'unpaid' else {'stringValue': 'Absent'}
     before = entered(api, config, target)
-    audit({'phase': 'before', 'target': target, 'before': before})
-    if resolve(snapshot(api, config), vendor, day, config['year']) != target or entered(api, config, target) != before:
+    audit({'phase': 'before', 'target': target, 'before': before, 'displayed_before': status, 'intended_after': desired})
+    checked = snapshot(api, config)
+    if resolve(checked, vendor, day, config['year']) != target or displayed(checked) != status or entered(api, config, target) != before:
         raise Stop('Planning changed during verification; retry after checking the sheet.')
-    if before != {'stringValue': 'Absent'}:
+    if before != desired:
         # Intentionally replace THIS cell's formula/status, never adjacent formulas or orders.
         request = {'updateCells': {
             'range': {'sheetId': config['planning_sheet_id'], 'startRowIndex': target['row'],
                       'endRowIndex': target['row']+1, 'startColumnIndex': target['column'],
                       'endColumnIndex': target['column']+1},
-            'rows': [{'values': [{'userEnteredValue': {'stringValue': 'Absent'}}]}],
+            'rows': [{'values': [{'userEnteredValue': desired}]}],
             'fields': 'userEnteredValue'}}
         try:
             api.spreadsheets().batchUpdate(spreadsheetId=config['spreadsheet_id'],
                 body={'requests': [request]}).execute(num_retries=0)
         except Exception:
             # A timeout may have happened after the write. Read back; never blindly retry.
-            if entered(api, config, target) != {'stringValue': 'Absent'}:
+            if entered(api, config, target) != desired:
                 raise Stop('Attendance write failed or is uncertain; inspect the cell. No rollback attempted.') from None
-    if entered(api, config, target) != {'stringValue': 'Absent'}:
-        raise Stop('Attendance readback is not literal Absent; stopped without rollback.')
-    if resolve(snapshot(api, config), vendor, day, config['year']) != target:
+    if entered(api, config, target) != desired:
+        raise Stop('Attendance readback does not match the requested override; stopped without rollback.')
+    if resolve(snapshot(api, config), vendor, day, config['year'], require_eligible=False) != target:
         raise Stop('Planning identity changed after write; inspect before publishing. No rollback attempted.')
-    audit({'phase': 'verified', 'target': target, 'after': {'stringValue': 'Absent'}})
+    audit({'phase': 'verified', 'target': target, 'after': desired})
+    if not desired:
+        target['cleared_unpaid'] = True
     return target
 
 
@@ -199,13 +206,15 @@ def run(vendor, day):
         records.append({'time': datetime.now(timezone.utc).isoformat(), **record})
         private_write(audit_path, json.dumps(records, indent=2) + '\n')
     target = override(api, config, vendor, day, audit)
+    action = 'cleared (was Unpaid)' if target.get('cleared_unpaid') else 'marked Absent'
+    retained = 'Cleared cell was not restored' if target.get('cleared_unpaid') else 'Absent was not undone'
     try:
         run_logged(['bash', '-c', './_src/process_orders.sh && ./_src/build.sh all'], check=True)
     except Exception as exc:
         audit({'phase': 'production_failed', 'target': target})
-        raise Stop(f"{target['name']} — {target['date']} marked Absent; rebuild/push failed. Absent was not undone. {exc}") from None
+        raise Stop(f"{target['name']} — {target['date']} {action}; rebuild/push failed. {retained}. {exc}") from None
     audit({'phase': 'published', 'target': target})
-    print(f"✓ {target['name']} — {target['date']} marked Absent\n✓ Site rebuilt and published")
+    print(f"✓ {target['name']} — {target['date']} {action}\n✓ Site rebuilt and published")
 
 
 def main():
