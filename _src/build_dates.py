@@ -553,7 +553,13 @@ for date_slug, date_info in sorted_dates:
         if nd_url:
             f.write(f'<p><strong>Nextdoor event:</strong> <a href="{nd_url}" target="_blank" rel="noopener">View on Nextdoor</a></p>\n')
 
-        if vendor_space_available or food_truck_space_available:
+        if year == 2027:
+            f.write('<div class="date-booking-actions">\n')
+            f.write('<div class="date-booking-card">\n')
+            f.write('<div><h3>2027 Craft Fair Booking</h3></div>\n')
+            f.write('<a class="date-booking-button" href="/book/">Book a Craft Fair</a>\n')
+            f.write('</div>\n</div>\n')
+        elif vendor_space_available or food_truck_space_available:
             f.write('<div class="date-booking-actions">\n')
             if vendor_space_available:
                 booth_heading, booth_para, booth_css = vendor_booth_pitch(date_info)

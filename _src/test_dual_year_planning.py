@@ -141,13 +141,30 @@ class RenderingTests(unittest.TestCase):
                 p=root/slug/'index.html';self.assertTrue(p.exists())
                 if slug.endswith('2027'):
                     text=p.read_text();self.assertNotIn('/ols/',text);self.assertNotIn('/checkout',text);self.assertNotIn('Book a Vendor Booth',text)
+                    self.assertIn('class="date-booking-button" href="/book/"',text)
                     self.assertIn('/images/event-default.jpg',text)
             self.assertEqual(len(list(root.glob('*-2027/index.html'))),13)
             self.assertIn('unable to attend',(root/'october-18-2026/index.html').read_text())
             self.assertIn('/v/261101',(root/'november-01-2026/index.html').read_text())
+            self.assertNotIn('/book/',upcoming)
+            self.assertNotIn('/book/',(root/'_includes/dates_dropdown.html').read_text())
+            self.assertNotIn('/book/',body)
         css=(ROOT/'css/site.css').read_text()
         self.assertIn('grid-template-columns: repeat(2, minmax(0, 1fr))',css)
         self.assertIn('.vendor-year-columns { grid-template-columns: 1fr; }',css)
+
+
+class BookingInfoTests(unittest.TestCase):
+    def test_exact_information_and_no_ordering_controls(self):
+        text=(ROOT/'book/index.html').read_text()
+        for phrase in ['<h1>Book a Craft Fair</h1>', '2027 Season Passes — $200',
+                       'all 13 of our 2027 craft fairs', 'in person at Batshit Crazy Farms through December 31, 2026.',
+                       '<strong>Online season pass sales begin in January 2027.</strong>',
+                       'Individual craft fair dates will be available to book beginning April 1, 2027.']:
+            self.assertIn(phrase,text)
+        for forbidden in ['<form', '<input', 'paypal', '/ols/', 'checkout', '<script']:
+            self.assertNotIn(forbidden,text.lower())
+        self.assertIn('layout: default',text)
 
 
 if __name__=='__main__':unittest.main()
