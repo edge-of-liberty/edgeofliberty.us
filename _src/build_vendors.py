@@ -304,29 +304,28 @@ for v in regular_vendors:
         else:
             f.write('<p class="vendor-inperson-only">This vendor currently sells in person at our craft fairs only.</p>\n')
 
-        f.write('<div class="vendor-dates">\n')
-        f.write("<h3>Find us at these craft fair dates</h3>\n")
-        if data.get("years"):
-            f.write('<div class="vendor-year-columns">\n')
-            for year in data["years"]:
-                f.write(f'<section class="vendor-year"><h4>{year} Craft Fairs</h4>\n')
-                entries = [d for d in v.get("dates", []) if d["slug"].endswith(f"-{year}")]
-                entries.sort(key=lambda d: datetime.strptime(d["display"], "%B %d, %Y"))
-                if entries:
-                    f.write("<ul>\n")
-                    for d in entries:
+        entries = sorted(v.get("dates", []),
+                         key=lambda d: datetime.strptime(d["display"], "%B %d, %Y"))
+        year_entries = [(year, [d for d in entries if d["slug"].endswith(f"-{year}")])
+                        for year in data.get("years", [])]
+        populated_years = [(year, dates) for year, dates in year_entries if dates]
+        if entries:
+            f.write('<div class="vendor-dates">\n')
+            f.write("<h3>Find us at these craft fair dates</h3>\n")
+            if len(populated_years) == 2:
+                f.write('<div class="vendor-year-columns">\n')
+                for year, dates in populated_years:
+                    f.write(f'<section class="vendor-year"><h4>{year} Craft Fairs</h4>\n<ul>\n')
+                    for d in dates:
                         f.write(f'<li><a href="/{html_attr(d["slug"])}/">{html_text(d["display"])}</a></li>\n')
-                    f.write("</ul>\n")
-                else:
-                    f.write('<p>No dates listed.</p>\n')
-                f.write('</section>\n')
-            f.write('</div>\n')
-        else:
-            f.write("<ul>\n")
-            for d in v.get("dates", []):
-                f.write(f'<li><a href="/{html_attr(d["slug"])}/">{html_text(d["display"])}</a></li>\n')
-            f.write("</ul>\n")
-        f.write("</div>\n")
+                    f.write("</ul>\n</section>\n")
+                f.write('</div>\n')
+            else:
+                f.write("<ul>\n")
+                for d in entries:
+                    f.write(f'<li><a href="/{html_attr(d["slug"])}/">{html_text(d["display"])}</a></li>\n')
+                f.write("</ul>\n")
+            f.write("</div>\n")
 
         # Photos section
         if images:

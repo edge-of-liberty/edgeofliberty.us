@@ -116,7 +116,21 @@ class RenderingTests(unittest.TestCase):
             oldcol=body.split('2026 Craft Fairs')[1]
             self.assertLess(oldcol.index('October 18'),oldcol.index('November 01'))
             self.assertEqual(body.count('<h4>2027 Craft Fairs'),1)
-            self.assertIn('No dates listed.',(root/'old/index.html').read_text())
+            # Single-year vendors retain the original list, without empty columns.
+            for slug, label in [('old','November 01, 2026'),('new','May 16, 2027')]:
+                single=(root/slug/'index.html').read_text()
+                self.assertIn('Find us at these craft fair dates',single)
+                self.assertIn(label,single)
+                self.assertNotIn('vendor-year-columns',single)
+                self.assertNotIn('2027 Craft Fairs',single)
+                self.assertNotIn('2026 Craft Fairs',single)
+                self.assertNotIn('No dates listed',single)
+            empty=(root/'archived/index.html').read_text()
+            self.assertNotIn('vendor-dates',empty)
+            self.assertNotIn('Find us at these craft fair dates',empty)
+            self.assertNotIn('No dates listed',empty)
+            self.assertIn('vendor-year-columns',body)
+            self.assertNotIn('No dates listed',body)
             listing=(root/'_includes/home_vendors.html').read_text()
             for slug in ['both','old','new']:self.assertEqual(listing.count(f'href="/{slug}/"'),1)
             self.assertNotIn('href="/neither/"',listing);self.assertNotIn('href="/archived/"',listing)
