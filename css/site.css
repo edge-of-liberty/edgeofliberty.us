@@ -1458,3 +1458,9 @@ body.menu-open {
 }
 /* Contain the illustration within bedroom prose, before gallery and CTA. */
 .chh-bedroom-description { display: flow-root; }
+
+/* Vendor participation: newest season first, stacked on phones. */
+.vendor-year-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; }
+@media (max-width: 700px) {
+  .vendor-year-columns { grid-template-columns: 1fr; }
+}

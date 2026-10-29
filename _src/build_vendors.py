@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from datetime import datetime
 import html
 import json
 import os
@@ -135,8 +136,14 @@ with open(BUILD_JSON, encoding="utf-8") as f:
     for v in data.get("vendors", []):
         print("[DEBUG] RAW type field for", v.get("name"), "=>", repr(v.get("type")), type(v.get("type")), file=sys.stderr)
 
-regular_vendors = [v for v in data["vendors"] if v.get("type") != "Sponsor"]
-sponsors = [v for v in data["vendors"] if v.get("type") == "Sponsor"]
+# Identity ingestion is independent of annual directory/publication eligibility.
+identity_vendors = data["vendors"]
+directory_vendors = [v for v in identity_vendors
+                     if "participation" not in v or any(v["participation"].values())]
+page_vendors = [v for v in identity_vendors
+                if v in directory_vendors or os.path.isfile(os.path.join(ROOT, v["slug"], "index.html"))]
+regular_vendors = [v for v in page_vendors if v.get("type") != "Sponsor"]
+sponsors = [v for v in directory_vendors if v.get("type") == "Sponsor"]
 print("[DEBUG] Regular vendors:", [v.get("name") for v in regular_vendors], file=sys.stderr)
 print("[DEBUG] Sponsors:", [v.get("name") for v in sponsors], file=sys.stderr)
 
@@ -157,7 +164,7 @@ os.makedirs(includes_dir, exist_ok=True)
 
 dropdown_path = os.path.join(includes_dir, "vendors_dropdown.html")
 
-sorted_vendors = sorted(regular_vendors, key=lambda v: v["name"].lower())
+sorted_vendors = sorted([v for v in directory_vendors if v.get("type") != "Sponsor"], key=lambda v: v["name"].lower())
 
 with open(dropdown_path, "w", encoding="utf-8") as df:
     df.write('<div class="dropdown-menu dropdown-scroll">\n')
@@ -171,7 +178,7 @@ with open(dropdown_path, "w", encoding="utf-8") as df:
 home_vendors_path = os.path.join(includes_dir, "home_vendors.html")
 
 with open(home_vendors_path, "w", encoding="utf-8") as hf:
-    hf.write("<h2>Our 2026 Vendors</h2>\n")
+    hf.write("<h2>Our Craft Fair Vendors</h2>\n")
     hf.write('<div class="home-vendor-list">\n')
     for v in sorted_vendors:
         name = v["name"]
@@ -297,14 +304,28 @@ for v in regular_vendors:
         else:
             f.write('<p class="vendor-inperson-only">This vendor currently sells in person at our craft fairs only.</p>\n')
 
-        # Dates (preserve CSV column order)
         f.write('<div class="vendor-dates">\n')
-        f.write("<h3>Find us at these craft fair dates</h3>\n<ul>\n")
-        for d in v.get("dates", []):
-            # Do NOT sort; parse_csv.py already appends in CSV column order.
-            # Show the date link regardless of the per-date status value.
-            f.write(f'<li><a href="/{html_attr(d["slug"])}/">{html_text(d["display"])}</a></li>\n')
-        f.write("</ul>\n")
+        f.write("<h3>Find us at these craft fair dates</h3>\n")
+        if data.get("years"):
+            f.write('<div class="vendor-year-columns">\n')
+            for year in data["years"]:
+                f.write(f'<section class="vendor-year"><h4>{year} Craft Fairs</h4>\n')
+                entries = [d for d in v.get("dates", []) if d["slug"].endswith(f"-{year}")]
+                entries.sort(key=lambda d: datetime.strptime(d["display"], "%B %d, %Y"))
+                if entries:
+                    f.write("<ul>\n")
+                    for d in entries:
+                        f.write(f'<li><a href="/{html_attr(d["slug"])}/">{html_text(d["display"])}</a></li>\n')
+                    f.write("</ul>\n")
+                else:
+                    f.write('<p>No dates listed.</p>\n')
+                f.write('</section>\n')
+            f.write('</div>\n')
+        else:
+            f.write("<ul>\n")
+            for d in v.get("dates", []):
+                f.write(f'<li><a href="/{html_attr(d["slug"])}/">{html_text(d["display"])}</a></li>\n')
+            f.write("</ul>\n")
         f.write("</div>\n")
 
         # Photos section

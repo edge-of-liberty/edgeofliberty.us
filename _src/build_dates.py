@@ -131,6 +131,12 @@ def slug_to_date(slug):
     return date(year, month, day)
 
 
+def event_image(slug):
+    if slug.endswith("-2027") and not os.path.isfile(os.path.join(ROOT, slug, "hero.jpg")):
+        return "/images/event-default.jpg"
+    return f"/{slug}/hero.jpg"
+
+
 def date_booking_url(slug):
     variant = BOOKING_VARIANTS.get(slug)
     if not variant:
@@ -364,7 +370,7 @@ for slug, display in date_links:
         "startDate": f"{iso_date}T{START_TIME}{TZ_OFFSET}",
         "endDate": f"{iso_date}T{END_TIME}{TZ_OFFSET}",
         "url": f"/{slug}/",
-        "image": f"/{slug}/hero.jpg",
+        "image": event_image(slug),
         "description": EVENT_DESC,
         "hasMap": GOOGLE_MAPS_PLACE_URL
     }
@@ -446,7 +452,7 @@ for date_slug, date_info in sorted_dates:
     year, month, day = ymd
     iso_date = f"{year:04d}-{month:02d}-{day:02d}"
     event_date = date(year, month, day)
-    hero_image = f"/{date_slug}/hero.jpg"
+    hero_image = event_image(date_slug)
 
     outdir = os.path.join(ROOT, date_slug)
     os.makedirs(outdir, exist_ok=True)
@@ -522,7 +528,12 @@ for date_slug, date_info in sorted_dates:
         f.write('<div class="date-hero-row">\n')
         f.write('<div class="date-hero-text">\n')
         f.write(f"<h2>{html_text(display)}</h2>\n")
-        f.write(date_intro_html)
+        if year == 2027:
+            # Shared intro includes the 2026 checkout; do not offer it for 2027.
+            intro = re.sub(r'<p>Be a <a.*?</p>', '', date_intro_html, flags=re.S)
+            f.write(intro)
+        else:
+            f.write(date_intro_html)
         f.write('</div>\n')
         f.write('<div class="date-hero-media">\n')
         f.write(f'  <img class="event-hero-image" src="{html_attr(hero_image)}" alt="{html_attr(EVENT_NAME)}" loading="lazy">\n')

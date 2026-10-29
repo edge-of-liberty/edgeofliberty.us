@@ -32,6 +32,7 @@ TOOL_FILES = {
     '_src/build.sh', '_src/build_chh.py', '_src/build_dates.py', '_src/build_home.py',
     '_src/build_permits.py', '_src/build_vendors.py', '_src/parse_csv.py',
     '_src/render_markdownish.py', '_src/chh_output.py', '_src/site_build.py',
+    '_src/dual_year_planning.py', '_src/test_dual_year_planning.py',
     '_src/sites.json', '_src/templates/chh.html', '_src/templates/chh-404.html',
     '_src/test_site_build.py', '_src/build_legacy_links.py', '_src/test_build_legacy_links.py',
     '_src/google_sheets.py', '_src/fetch_planning_sheet.py',
@@ -79,9 +80,9 @@ def planning_snapshot():
     local = ROOT / '_local/google-sheets'
     local.mkdir(parents=True, exist_ok=True, mode=0o700)
     with tempfile.TemporaryDirectory(prefix='build-', dir=local) as temp:
-        output = Path(temp) / 'planning.csv'
-        print('[INFO] Retrieving one fresh Planning snapshot from Google Sheets...', flush=True)
-        result = run(*python_command, SRC / 'fetch_planning_sheet.py', 'snapshot', '--output', output, capture=True)
+        output = Path(temp) / 'website-planning.json'
+        print('[INFO] Retrieving fresh 2026 and 2027 Planning snapshots from Google Sheets...', flush=True)
+        result = run(*python_command, SRC / 'fetch_planning_sheet.py', 'website-snapshot', '--output', output, capture=True)
         receipt = json.loads(result.stdout)
         if receipt.get('path') != str(output.resolve()) or not output.is_file():
             raise RuntimeError('Sheets retrieval did not return the expected fresh snapshot.')
@@ -106,7 +107,7 @@ def build_component(name, as_of, planning_csv=None, year=None):
                     break
             else:
                 raise RuntimeError('Could not install permit dependencies: pypdf and reportlab')
-    data = run(sys.executable, SRC / 'parse_csv.py', planning_csv, year, capture=True).stdout
+    data = Path(planning_csv).read_text() if year == 'dual' else run(sys.executable, SRC / 'parse_csv.py', planning_csv, year, capture=True).stdout
     json.loads(data)  # Do not replace valid data with a failed/empty parse.
     (ROOT / '_data/build.json').write_text(data)
     run(sys.executable, SRC / f'build_{name}.py', ROOT, ROOT / '_data/build.json')

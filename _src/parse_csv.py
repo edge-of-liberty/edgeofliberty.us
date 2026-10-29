@@ -2,12 +2,13 @@
 import csv, json, re, sys
 import unicodedata
 
-if len(sys.argv) != 3:
-    print("Usage: parse_csv.py <csv_file> <year>", file=sys.stderr)
+if len(sys.argv) not in (3, 4) or (len(sys.argv) == 4 and sys.argv[3] != "--identities"):
+    print("Usage: parse_csv.py <csv_file> <year> [--identities]", file=sys.stderr)
     sys.exit(1)
 
 CSV_FILE = sys.argv[1]
 YEAR = int(sys.argv[2])
+IDENTITIES = len(sys.argv) == 4
 
 def is_truthy(v):
     return (v or "").strip().upper() in ("X", "Y", "YES", "TRUE", "1")
@@ -99,7 +100,8 @@ with open(CSV_FILE, encoding="utf-8-sig", newline="") as f:
             if field
         }
 
-        if (row.get(str(YEAR)) or "").strip() in ("", "0"):
+        participating = (row.get(str(YEAR)) or "").strip() not in ("", "0")
+        if not IDENTITIES and not participating:
             continue
 
         name = (row.get("Company") or "").strip()
@@ -130,9 +132,12 @@ with open(CSV_FILE, encoding="utf-8-sig", newline="") as f:
             "dates": []
         }
 
+        if IDENTITIES:
+            vendor["participation"] = {str(YEAR): participating}
+
         for d in date_cols:
             cell = (row.get(d["header"]) or "").strip()
-            if cell:
+            if cell and participating:
                 vendor["dates"].append({
                     "slug": d["slug"],
                     "display": d["display"],

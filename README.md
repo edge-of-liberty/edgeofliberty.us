@@ -261,30 +261,26 @@ local links/assets, canonical URLs, and unresolved templates before syncing outp
 Edge of Liberty still uses Jekyll for final layout rendering; for local previews use
 `bundle exec jekyll build` with the Ruby/Bundler installation matching Gemfile.lock.
 
-## Known architecture issue — address before 2027 reservations open
+## 2026 and 2027 website participation
 
-Vendor identity and year-specific participation must become separate concepts.
-The `2026` field should mean participation in 2026, not whether a vendor exists
-in the parsed dataset. A vendor may participate in 2026, 2027, both, or neither.
+Website generation reads `Craft Fair Planning` (1777984672, 2026) and
+`2027 Craft Fair Planning` (514124464, 2027). Row 9 supplies column names;
+underlying date-header values must agree with each tab's configured year.
+`_src/dual_year_planning.py` validates both sources, passes their CSV through
+`parse_csv.py --identities`, and merges identities by unique slug. Type conflicts
+stop the build. Established 2026 public metadata wins; missing fields can be
+filled from 2027. Local descriptions and photos remain in their existing folders.
 
-Currently, `_src/parse_csv.py` excludes rows whose selected-year field is blank
-or `0` before creating either vendor or per-date records. `_src/build_vendors.py`
-relies on that upstream eligibility gate: its vendor-page and directory/dropdown/
-homepage-list generation has no independent year-specific publication filtering.
-`_src/build_home.py` embeds the generated vendor list without further filtering.
-Simply removing the parser gate would therefore broaden publication.
+Annual participation is separate from identity. A nonzero year value qualifies
+that year's participation; directory entries require participation in either year.
+Existing vendor pages are retained even without current participation. Attendance
+comes only from that year's tab and requires that year's participation. Vendor
+pages show 2027 then 2026, side by side on desktop and stacked on mobile.
 
-Before opening 2027 reservations, design support for overlapping years: ingest
-2027 reservations/vendors while retaining existing 2026 vendors and event/history
-content. Do not require deleting or deactivating 2026 vendors to open the next
-season, or lose historical vendor/event information when a vendor does not
-participate in the newest season. Define year-specific publication rules for each
-consumer separately from general vendor identity and participation data.
-
-**This is a deferred redesign, not authorization to remove the current year gate.**
-Keep current behavior until that coordinated change is approved. The immediate
-2026 sponsor issue was resolved in the sheet by explicitly setting the three
-current Sponsor rows' `2026` fields to `1`.
+The website snapshot does not change operational configuration: order importing
+and attendance commands still use the existing 2026 tab. No 2027 checkout variants
+or order import support are configured. New event pages use the existing default
+event image until a date-specific hero is supplied.
 
 ## Google Sheets Phase 1 — live build input
 

@@ -179,17 +179,27 @@ def compare_snapshots(baseline, candidate, year):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=['auth', 'fetch', 'compare', 'snapshot'])
+    parser.add_argument('command', choices=['auth', 'fetch', 'compare', 'snapshot', 'website-snapshot'])
     parser.add_argument('--config', type=Path, default=DEFAULT_CONFIG)
     parser.add_argument('--output', type=Path, help='Local output for the build-only snapshot command')
     args = parser.parse_args()
-    if args.output is not None and args.command != 'snapshot':
+    if args.output is not None and args.command not in ('snapshot', 'website-snapshot'):
         parser.error('--output is only supported by snapshot')
     try:
         config = load_config(args.config)
         if args.command == 'auth':
             get_client(config, args.config.expanduser().parent, interactive=True)
             print('Read-only authorization saved locally. No spreadsheet data has been changed.')
+            return 0
+        if args.command == 'website-snapshot':
+            from dual_year_planning import fetch_website
+            service = get_client(config, args.config.expanduser().parent)
+            output = (args.output or LOCAL / 'website-planning.json').resolve()
+            if not output.is_relative_to(LOCAL.resolve()):
+                raise SheetsError('Website snapshot must stay inside _local/google-sheets')
+            data = fetch_website(service, config)
+            private_write(output, json.dumps(data, ensure_ascii=False))
+            print(json.dumps({'path': str(output), 'year': 'dual'}))
             return 0
         if args.command == 'snapshot':
             service = get_client(config, args.config.expanduser().parent)
