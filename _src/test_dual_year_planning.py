@@ -157,14 +157,17 @@ class RenderingTests(unittest.TestCase):
 class BookingInfoTests(unittest.TestCase):
     def test_exact_information_and_no_ordering_controls(self):
         text=(ROOT/'book/index.html').read_text()
-        for phrase in ['<h1>Book a Craft Fair</h1>', '2027 Season Passes — $200',
-                       'all 13 of our 2027 craft fairs', 'in person at Batshit Crazy Farms through December 31, 2026.',
-                       '<strong>Online season pass sales begin in January 2027.</strong>',
+        for phrase in ['<h1>Book a Craft Fair</h1>', '2027 Season Pass — Early-Bird Special!',
+                       'all 13 Edge of Liberty craft fairs', '$200 when you purchase by December 31, 2026',
+                       '$50 off', '$250 price beginning January 1, 2027',
                        'Individual craft fair dates will be available to book beginning April 1, 2027.']:
             self.assertIn(phrase,text)
-        for forbidden in ['<form', '<input', 'paypal', '/ols/', 'checkout', '<script']:
+        for forbidden in ['<form', '<input', 'paypal', 'checkout', '<script', 'online season pass sales begin in january', 'available in person']:
             self.assertNotIn(forbidden,text.lower())
         self.assertIn('layout: default',text)
+        url='https://batshitcrazyfarms.com/off-season-market/ols/products/the-edge-of-liberty-craft-fair-space/v/27SEASON'
+        self.assertEqual(text.count(f'href="{url}"'),1)
+        self.assertIn('Get Your 2027 Season Pass</a>',text)
 
 
 if __name__=='__main__':unittest.main()
