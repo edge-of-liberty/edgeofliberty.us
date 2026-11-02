@@ -93,6 +93,25 @@ class AcquisitionTests(unittest.TestCase):
 
 
 class RenderingTests(unittest.TestCase):
+    def test_absent_dates_do_not_create_columns_or_empty_sections(self):
+        a=parse(2026,[entry('Only Absent',2026,**{'Nov-1':'Absent'}),
+                      entry('Single',2026,**{'Nov-1':'Paid'})])
+        b=parse(2027,[entry('Only Absent',2027,**{'May-16':'Absent'}),
+                      entry('Single',2027,**{'May-16':' aBsEnT '})])
+        data=dual.merge([(2026,a),(2027,b)])
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);p=root/'build.json';p.write_text(json.dumps(data))
+            result=subprocess.run([sys.executable,'-B',str(ROOT/'_src/build_vendors.py'),str(root),str(p)],capture_output=True,text=True)
+            self.assertEqual(result.returncode,0,result.stderr)
+            absent=(root/'only-absent/index.html').read_text()
+            self.assertNotIn('vendor-dates',absent)
+            single=(root/'single/index.html').read_text()
+            self.assertIn('November 01, 2026',single)
+            self.assertNotIn('May 16, 2027',single)
+            self.assertNotIn('vendor-year-columns',single)
+            self.assertNotIn('2027 Craft Fairs',single)
+        self.assertEqual(data['dates']['may-16-2027']['vendors'][0]['status'],'Absent')
+
     def test_two_year_pages_directory_history_and_no_2027_checkout(self):
         a=parse(2026,[entry('Both',2026,**{'Nov-1':'Paid','Oct-18':'Absent'}),entry('Old',2026,**{'Nov-1':'Paid'}),entry('Neither',2026,'0'),entry('Archived',2026,'0')])
         b=parse(2027,[entry('Both',2027,**{h:'Paid' for h in DATES27}),entry('New',2027,**{'May-16':'Paid'}),entry('Neither',2027,'0'),entry('Archived',2027,'0')])
@@ -114,7 +133,8 @@ class RenderingTests(unittest.TestCase):
             body=(root/'both/index.html').read_text()
             self.assertLess(body.index('2027 Craft Fairs'),body.index('2026 Craft Fairs'))
             oldcol=body.split('2026 Craft Fairs')[1]
-            self.assertLess(oldcol.index('October 18'),oldcol.index('November 01'))
+            self.assertNotIn('October 18',oldcol)
+            self.assertIn('November 01',oldcol)
             self.assertEqual(body.count('<h4>2027 Craft Fairs'),1)
             # Single-year vendors retain the original list, without empty columns.
             for slug, label in [('old','November 01, 2026'),('new','May 16, 2027')]:

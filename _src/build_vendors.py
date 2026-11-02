@@ -310,7 +310,8 @@ for v in regular_vendors:
         else:
             f.write('<p class="vendor-inperson-only">This vendor currently sells in person at our craft fairs only.</p>\n')
 
-        entries = sorted(v.get("dates", []),
+        entries = sorted((d for d in v.get("dates", [])
+                          if (d.get("status") or "").strip().casefold() != "absent"),
                          key=lambda d: datetime.strptime(d["display"], "%B %d, %Y"))
         year_entries = [(year, [d for d in entries if d["slug"].endswith(f"-{year}")])
                         for year in data.get("years", [])]
