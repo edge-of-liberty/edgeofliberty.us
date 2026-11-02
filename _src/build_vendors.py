@@ -178,18 +178,24 @@ with open(dropdown_path, "w", encoding="utf-8") as df:
 home_vendors_path = os.path.join(includes_dir, "home_vendors.html")
 
 with open(home_vendors_path, "w", encoding="utf-8") as hf:
-    hf.write("<h2>Our Craft Fair Vendors</h2>\n")
-    hf.write('<div class="home-vendor-list">\n')
-    for v in sorted_vendors:
-        name = v["name"]
-        slug = v["slug"]
-        short_desc = (v.get("short_description") or "").strip()
-
-        if short_desc:
-            hf.write(f'<p><a href="/{html_attr(slug)}/">{html_text(name)}</a> — {html_text(short_desc)}</p>\n')
-        else:
-            hf.write(f'<p><a href="/{html_attr(slug)}/">{html_text(name)}</a></p>\n')
-    hf.write('</div>\n')
+    vendors_2027 = [v for v in sorted_vendors if v.get("participation", {}).get("2027")]
+    other_vendors = [v for v in sorted_vendors if v not in vendors_2027]
+    groups = [("Our 2027 Craft Fair Vendors", vendors_2027),
+              ("Other Craft Fair Vendors", other_vendors)] if data.get("years") else [("Our Craft Fair Vendors", sorted_vendors)]
+    for heading, vendors in groups:
+        if not vendors:
+            continue
+        hf.write(f"<h2>{heading}</h2>\n")
+        hf.write('<div class="home-vendor-list">\n')
+        for v in vendors:
+            name = v["name"]
+            slug = v["slug"]
+            short_desc = (v.get("short_description") or "").strip()
+            if short_desc:
+                hf.write(f'<p><a href="/{html_attr(slug)}/">{html_text(name)}</a> — {html_text(short_desc)}</p>\n')
+            else:
+                hf.write(f'<p><a href="/{html_attr(slug)}/">{html_text(name)}</a></p>\n')
+        hf.write('</div>\n')
 
 count = 0
 
